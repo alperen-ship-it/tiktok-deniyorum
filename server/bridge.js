@@ -197,8 +197,16 @@ function emit(ev) {
 
   wss.broadcast(ev);
   if (args.verbose) {
-    const who = ev.user?.nickname || ev.user?.uniqueId || '-';
-    console.log(`  ${String(ev.type).padEnd(9)} ${who} ${ev.comment || ev.gift?.name || ev.likes || ''}`);
+    const who = ev.user?.nickname || ev.user?.uniqueId || '';
+    let ayrinti = '';
+    switch (ev.type) {
+      case 'chat':    ayrinti = ev.comment ?? ''; break;
+      case 'gift':    ayrinti = `${ev.gift?.name} x${ev.gift?.count} (${ev.gift?.value} elmas)`; break;
+      case 'like':    ayrinti = `+${ev.likes}` + (ev.totalLikes ? ` (toplam ${ev.totalLikes})` : ''); break;
+      case 'viewers': ayrinti = `${ev.count} izleyici`; break;   // eskiden bos basiyordu
+      default:        ayrinti = '';
+    }
+    console.log(`  ${String(ev.type).padEnd(9)} ${who.padEnd(16)} ${ayrinti}`);
   }
 }
 
