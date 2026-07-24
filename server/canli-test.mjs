@@ -50,13 +50,17 @@ async function erisim(ad, url) {
     const r = await fetch(url, { signal: ac.signal, redirect: 'manual' });
     clearTimeout(zamanlayici);
 
-    // DIKKAT: "cevap geldi" ile "erisim var" ayni sey degil. Kurumsal proxy,
-    // VPN ya da filtreleyici bir ag, istegi kendisi karsilayip 403/407/502
-    // dondurur — TCP kurulur ama TikTok'a hic ulasilmaz. Gercek tiktok.com
-    // ana sayfasi 2xx/3xx doner; 4xx/5xx neredeyse her zaman araya giren
-    // bir sey demektir.
+    // "cevap geldi" ile "erisim var" ayni sey degil: kurumsal proxy ya da VPN
+    // istegi kendisi karsilayip bir hata dondurebilir — TCP kurulur ama hedefe
+    // hic ulasilmaz.
+    //
+    // AMA her 4xx engel degil. api.eulerstream.com'un KOK yolu (/) zaten 404
+    // donuyor cunku orada bir sayfa yok — sunucunun kendisi cevap veriyor,
+    // yani erisim VAR. Sadece araya giren bir seyin tipik imzalarini engel say.
+    const ENGEL_KODLARI = [403, 407, 451, 502, 503, 511];
     const sure = Date.now() - t0;
-    if (r.status >= 400) {
+
+    if (ENGEL_KODLARI.includes(r.status)) {
       console.log(`  ${ad.padEnd(22)} ENGELLENMIS?  (HTTP ${r.status}, ${sure}ms — araya giren bir sey var)`);
       return false;
     }
@@ -89,9 +93,14 @@ if (!eulerVar) {
 // ---------------------------------------------------------------------------
 const TESHIS = {
   UserOfflineError: [
-    '>>> BORU HATTI CALISIYOR <<<',
-    'Odayi bulabildi, imzalama gecti — sadece bu kisi su an canli yayinda degil.',
-    'Canli birini dene ya da kendi yayinini ac. Teknik olarak her sey saglam.',
+    '>>> OKUMA TARAFI CALISIYOR <<<',
+    'TikTok\'a ulasildi, hesap bulundu, "canli degil" cevabi alindi.',
+    '',
+    'AMA dikkat: bu, IMZALAMANIN calistigini KANITLAMAZ. Imzalama ancak canli',
+    'bir odanin websocket\'ine baglanirken devreye giriyor; o kisi canli olmadigi',
+    'icin o asamaya hic gelinmedi.',
+    '',
+    'Kesin sonuc icin CANLI bir hesapla test et — en pratigi kendi yayinini acmak.',
   ],
   InvalidUniqueIdError: [
     'Kullanici adi gecersiz. Basindaki @ olmadan, birebir yaz.',
