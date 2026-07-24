@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Hediye yağmuru + kalp balonları</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  canvas { position: fixed; inset: 0; display: block; }
+
+  #combo {
+    position: fixed;
+    right: 46px;
+    top: 46px;
+    text-align: right;
+    opacity: 0;
+    transition: opacity .25s;
+  }
+  #combo.on { opacity: 1; }
+  #combo .n {
+    font-size: 84px;
+    font-weight: 900;
+    line-height: .9;
+    letter-spacing: -3px;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(180deg, #fff, #ffd6de);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 14px rgba(254, 44, 85, .7));
+  }
+  #combo .l { font-size: 17px; opacity: .85; letter-spacing: 3px; margin-top: 2px; }
+  #combo.bump .n { animation: bump .28s cubic-bezier(.2, 1.7, .4, 1); }
+  @keyframes bump { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+<div id="combo"><div class="n">0</div><div class="l">ELMAS</div></div>
+
+<div class="tt-hint" id="hint">
+  <div>Hediye yağmuru hazır.</div>
+  <div>Sunucusuz denemek için adrese <code>?mock=1</code> ekle.</div>
+</div>
+
+<script src="_shared/tt.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const hint = document.getElementById('hint');
+  const comboEl = document.getElementById('combo');
+  const comboN = comboEl.querySelector('.n');
+
+  let W = 0, H = 0, dpr = 1;
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  const MAX = Number(new URLSearchParams(location.search).get('max')) || 400;
+  let items = [];
+
+  // -- dusen hediye ---------------------------------------------------------
+  function dropGift(emoji, size, n) {
+    for (let i = 0; i < n; i++) {
+      items.push({
+        kind: 'gift',
+        emoji,
+        x: Math.random() * W,
+        y: -60 - Math.random() * H * 0.5,
+        vx: (Math.random() - .5) * 60,
+        vy: 120 + Math.random() * 160,
+        size: size * (.75 + Math.random() * .5),
+        rot: (Math.random() - .5) * 1.2,
+        vr: (Math.random() - .5) * 2.2,
+        sway: Math.random() * 6.28,
+        life: 1,
+      });
+    }
+    trim();
+  }
+
+  // -- yukari suzulen kalp --------------------------------------------------
+  function floatHeart(n) {
+    for (let i = 0; i < n; i++) {
+      items.push({
+        kind: 'heart',
+        emoji: Math.random() < .25 ? '💖' : Math.random() < .5 ? '❤️' : '🩷',
+        x: W - 70 - Math.random() * 90,
+        y: H + 20,
+        vx: (Math.random() - .5) * 30,
+        vy: -(90 + Math.random() * 120),
+        size: 18 + Math.random() * 22,
+        rot: 0,
+        vr: (Math.random() - .5) * 1.4,
+        sway: Math.random() * 6.28,
+        life: 1,
+      });
+    }
+    trim();
+  }
+
+  function trim() {
+    // Performans kalkani: kalabalik yayinda parcacik sayisi patlamasin
+    if (items.length > MAX) items = items.slice(-MAX);
+  }
+
+  // -- kombo sayaci ---------------------------------------------------------
+  let combo = 0, comboTimer = null;
+  function addCombo(v) {
+    combo += v;
+    comboN.textContent = TT.short(combo);
+    comboEl.classList.add('on', 'bump');
+    setTimeout(() => comboEl.classList.remove('bump'), 300);
+
+    clearTimeout(comboTimer);
+    // 6 sn hediye gelmezse kombo sifirlanir
+    comboTimer = setTimeout(() => {
+      comboEl.classList.remove('on');
+      combo = 0;
+    }, 6000);
+  }
+
+  // -- olaylar --------------------------------------------------------------
+  TT.on('gift', (ev) => {
+    if (ev.gift.streaking) return;
+    hint.classList.add('gone');
+
+    const value = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    // Deger buyudukce hem daha cok hem daha buyuk hediye dussun.
+    // log10 kullaniyoruz ki 35.000 elmaslik hediye ekrani kilitlemesin.
+    const mag = Math.log10(Math.max(1, value));           // 1 elmas -> 0, 1000 -> 3
+    const count = Math.min(120, Math.round(4 + mag * 14));
+    const size = Math.min(96, 26 + mag * 16);
+
+    dropGift(TT.giftEmoji(ev.gift), size, count);
+    addCombo(value);
+  });
+
+  TT.on('like', (ev) => {
+    hint.classList.add('gone');
+    floatHeart(Math.min(12, Math.ceil((ev.likes || 1) / 2)));
+  });
+
+  TT.on('follow', () => { hint.classList.add('gone'); dropGift('💜', 40, 14); });
+  TT.on('share',  () => { hint.classList.add('gone'); dropGift('🔁', 34, 10); });
+
+  // -- dongu ----------------------------------------------------------------
+  TT.loop((dt, now) => {
+    ctx.clearRect(0, 0, W, H);
+    if (!items.length) return;
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (const p of items) {
+      if (p.kind === 'gift') {
+        p.vy += 240 * dt;                                  // yercekimi
+        p.x += (p.vx + Math.sin(now / 600 + p.sway) * 26) * dt;  // salinim
+      } else {
+        p.vy += 26 * dt;                                   // kalpler yavaslasin
+        p.x += (p.vx + Math.sin(now / 420 + p.sway) * 34) * dt;
+        p.life -= dt / 4.2;                                // yukarida sonsun
+      }
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+      ctx.font = `${p.size}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+      ctx.fillText(p.emoji, 0, 0);
+      ctx.restore();
+    }
+
+    items = items.filter((p) => p.life > 0 && p.y < H + 120 && p.y > -H * 2);
+  });
+})();
+</script>
+</body>
+</html>

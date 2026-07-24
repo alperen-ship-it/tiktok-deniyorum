@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Yarış — yorum yaz, yarışa katıl</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  #panel {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(1000px, calc(100vw - 60px));
+    padding: 20px 24px 24px;
+    border-radius: 22px;
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -.4px;
+  }
+  .sub { font-size: 15px; opacity: .65; margin-bottom: 16px; }
+  .sub b { color: var(--tt-cyan); }
+
+  .lane {
+    position: relative;
+    height: 46px;
+    margin-bottom: 8px;
+    border-radius: 23px;
+    background: rgba(255, 255, 255, .06);
+    overflow: hidden;
+  }
+  /* Bitis cizgisi — damali serit */
+  .lane::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 10px;
+    background: repeating-conic-gradient(#fff 0 25%, #000 0 50%) 0 0 / 10px 10px;
+    opacity: .55;
+  }
+
+  .runner {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 12px;
+    /* Konum degisimi yumusak olsun; her olayda ziplamasin */
+    transition: transform .6s cubic-bezier(.16, 1, .3, 1);
+    will-change: transform;
+  }
+  .runner img {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 2px solid hsl(var(--h) 85% 62%);
+    flex: none;
+    background: #222;
+  }
+  .runner .n {
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, .9);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .runner .boost {
+    font-size: 18px;
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  .runner.boosted .boost {
+    animation: boostFx .8s ease-out;
+  }
+  @keyframes boostFx {
+    0%   { opacity: 1; transform: translateX(-6px) scale(.6); }
+    40%  { opacity: 1; transform: translateX(-14px) scale(1.2); }
+    100% { opacity: 0; transform: translateX(-26px) scale(.9); }
+  }
+
+  #win {
+    position: fixed; inset: 0;
+    display: grid; place-content: center;
+    background: rgba(0, 0, 0, .6);
+    opacity: 0; pointer-events: none; transition: opacity .4s;
+    text-align: center;
+  }
+  #win.on { opacity: 1; }
+  #win img { width: 130px; height: 130px; border-radius: 50%; border: 4px solid var(--tt-cyan); }
+  #win .t { font-size: 64px; font-weight: 900; letter-spacing: -3px; margin-top: 12px; }
+  #win .s { font-size: 22px; opacity: .8; }
+</style>
+</head>
+<body>
+
+<div id="panel" class="tt-card tt-outline">
+  <h1 id="title">🏁 SOHBET YARIŞI</h1>
+  <div class="sub">Sohbete yaz → yarışa katıl · her yorum <b id="stepTxt">+2</b> · hediye <b id="boostTxt">+25</b></div>
+  <div id="lanes"></div>
+</div>
+
+<div id="win"><div><img id="winAv" alt=""><div class="t" id="winName"></div><div class="s">kazandı! 🏆</div></div></div>
+
+<script src="_shared/tt.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+
+  // ?lanes=8  kac yarismaci gorunsun
+  // ?step=2   her yorumun ilerlemesi (%)
+  // ?boost=25 hediyenin ilerlemesi (%)   ?perdiamond=1 -> elmasla oranti
+  // ?auto=1   kazanan cikinca 6 sn sonra yarisi sifirla
+  const LANES = Math.max(3, Math.min(12, Number(q.get('lanes')) || 8));
+  const STEP = Number(q.get('step')) || 2;
+  const BOOST = Number(q.get('boost')) || 25;
+  const PER_DIAMOND = q.get('perdiamond') === '1';
+  const AUTO = q.get('auto') === '1';
+  const DECAY = Number(q.get('decay')) || 0;   // %/sn geri kayma (0 = kapali)
+
+  document.getElementById('stepTxt').textContent = '+' + STEP;
+  document.getElementById('boostTxt').textContent = PER_DIAMOND ? '💎 kadar' : '+' + BOOST;
+  if (q.get('title')) document.getElementById('title').textContent = q.get('title');
+
+  const lanesEl = document.getElementById('lanes');
+  const runners = new Map();   // uniqueId -> { p, user, el }
+  let finished = false;
+
+  // Serit havuzu: DOM'u surekli yeniden kurmak yerine sabit sayida serit tutup
+  // icindeki yarismaciyi degistiriyoruz. Boylece CSS gecisleri bozulmuyor.
+  const lanePool = [];
+  for (let i = 0; i < LANES; i++) {
+    const lane = document.createElement('div');
+    lane.className = 'lane';
+    lanesEl.appendChild(lane);
+    lanePool.push({ lane, holder: null });
+  }
+
+  function makeRunner(user) {
+    const el = document.createElement('div');
+    el.className = 'runner';
+    el.style.setProperty('--h', TT.hue(user.uniqueId));
+    el.innerHTML =
+      `<span class="boost">💨</span>` +
+      `<img src="${TT.esc(TT.avatar(user))}" alt="">` +
+      `<span class="n">${TT.esc(user.nickname)}</span>`;
+    return el;
+  }
+
+  function advance(user, amount) {
+    if (finished) return;
+
+    let r = runners.get(user.uniqueId);
+    if (!r) {
+      r = { p: 0, user, el: makeRunner(user) };
+      runners.set(user.uniqueId, r);
+    }
+    r.p = Math.min(100, r.p + amount);
+
+    if (amount >= BOOST * 0.8) {
+      r.el.classList.remove('boosted');
+      void r.el.offsetWidth;          // animasyonu bastan tetiklemek icin reflow
+      r.el.classList.add('boosted');
+    }
+
+    if (r.p >= 100) win(r);
+    layout();
+  }
+
+  function layout() {
+    // En ondeki LANES kadar yarismaciyi goster
+    const top = [...runners.values()].sort((x, y) => y.p - x.p).slice(0, LANES);
+
+    top.forEach((r, i) => {
+      const slot = lanePool[i];
+      if (slot.holder !== r) {
+        if (r.el.parentElement) r.el.parentElement.removeChild(r.el);
+        slot.lane.appendChild(r.el);
+        slot.holder = r;
+      }
+      // Serit genisliginin %'si kadar ilerlet; yarismaci kutusu tasmasin diye
+      // sagdan ~200px pay birakiyoruz.
+      const w = slot.lane.clientWidth - 200;
+      r.el.style.transform = `translateX(${(r.p / 100) * Math.max(0, w)}px)`;
+    });
+
+    // Bosalan seritleri temizle
+    for (let i = top.length; i < lanePool.length; i++) {
+      if (lanePool[i].holder) {
+        lanePool[i].lane.replaceChildren();
+        lanePool[i].holder = null;
+      }
+    }
+  }
+
+  function win(r) {
+    finished = true;
+    document.getElementById('winAv').src = TT.avatar(r.user);
+    document.getElementById('winName').textContent = r.user.nickname;
+    document.getElementById('win').classList.add('on');
+
+    if (AUTO) {
+      setTimeout(() => {
+        document.getElementById('win').classList.remove('on');
+        runners.clear();
+        for (const s of lanePool) { s.lane.replaceChildren(); s.holder = null; }
+        finished = false;
+      }, 6000);
+    }
+  }
+
+  // ---- olaylar ------------------------------------------------------------
+  TT.on('chat', (ev) => advance(ev.user, STEP));
+  TT.on('like', (ev) => advance(ev.user, Math.min(STEP, (ev.likes || 1) * 0.15)));
+  TT.on('follow', (ev) => advance(ev.user, BOOST * 0.4));
+  TT.on('share', (ev) => advance(ev.user, BOOST * 0.4));
+  TT.on('gift', (ev) => {
+    if (ev.gift.streaking) return;
+    const value = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    advance(ev.user, PER_DIAMOND ? Math.min(60, value / 10) : BOOST);
+  });
+
+  // ---- geri kayma (istege bagli) -----------------------------------------
+  if (DECAY > 0) {
+    setInterval(() => {
+      if (finished) return;
+      let changed = false;
+      for (const r of runners.values()) {
+        if (r.p > 0) { r.p = Math.max(0, r.p - DECAY); changed = true; }
+      }
+      if (changed) layout();
+    }, 1000);
+  }
+
+  addEventListener('resize', layout);
+})();
+</script>
+</body>
+</html>

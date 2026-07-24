@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Takım savaşı — yorumla oy ver, hediyeyle güçlendir</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  #wrap {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(1100px, calc(100vw - 60px));
+    text-align: center;
+  }
+
+  #timer {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    opacity: .8;
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  #timer.hot { color: #fb923c; animation: tick 1s steps(2) infinite; }
+  @keyframes tick { 50% { opacity: .35; } }
+
+  .heads {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 10px;
+    gap: 20px;
+  }
+  .side { flex: 1; min-width: 0; }
+  .side.b { text-align: right; }
+  .team {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .side.a .team { color: var(--tt-cyan); }
+  .side.b .team { color: var(--tt-pink); }
+  .score { font-size: 46px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+  .key { font-size: 15px; opacity: .6; letter-spacing: 2px; margin-top: 2px; }
+
+  #bar {
+    position: relative;
+    height: 56px;
+    border-radius: 28px;
+    overflow: hidden;
+    background: var(--tt-pink);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .5), inset 0 2px 8px rgba(0, 0, 0, .35);
+    border: 2px solid rgba(255, 255, 255, .16);
+  }
+  #a {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 50%;
+    background: var(--tt-cyan);
+    transition: width .5s cubic-bezier(.16, 1, .3, 1);
+  }
+  /* Iki takimin arasindaki cizgi — carpisma noktasi */
+  #seam {
+    position: absolute;
+    top: -6px; bottom: -6px;
+    width: 4px;
+    left: 50%;
+    background: #fff;
+    box-shadow: 0 0 18px 4px rgba(255, 255, 255, .8);
+    transition: left .5s cubic-bezier(.16, 1, .3, 1);
+  }
+
+  #hintline { margin-top: 14px; font-size: 19px; opacity: .78; }
+  #hintline b.a { color: var(--tt-cyan); }
+  #hintline b.b { color: var(--tt-pink); }
+
+  /* Oy veren yuzler ucusarak kendi tarafina gitsin */
+  .voter {
+    position: fixed;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    pointer-events: none;
+    animation: fly 1.5s cubic-bezier(.3, .8, .4, 1) forwards;
+  }
+  @keyframes fly {
+    0%   { opacity: 0; transform: scale(.4); }
+    18%  { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: translateY(-120px) scale(.6); }
+  }
+
+  #winner {
+    position: fixed; inset: 0;
+    display: grid; place-content: center;
+    background: rgba(0, 0, 0, .55);
+    opacity: 0; pointer-events: none; transition: opacity .4s;
+  }
+  #winner.on { opacity: 1; }
+  #winner .t {
+    font-size: 92px; font-weight: 900; letter-spacing: -4px;
+    animation: punch .55s cubic-bezier(.2, 1.6, .4, 1);
+  }
+  @keyframes punch { from { transform: scale(.3); opacity: 0; } }
+  #winner .s { font-size: 26px; opacity: .8; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="wrap" class="tt-outline">
+  <div id="timer"></div>
+  <div class="heads">
+    <div class="side a">
+      <div class="team" id="nameA">A TAKIMI</div>
+      <div class="score" id="scoreA">0</div>
+      <div class="key">yaz: <span id="keyA">A</span></div>
+    </div>
+    <div class="side b">
+      <div class="team" id="nameB">B TAKIMI</div>
+      <div class="score" id="scoreB">0</div>
+      <div class="key">yaz: <span id="keyB">B</span></div>
+    </div>
+  </div>
+  <div id="bar"><div id="a"></div><div id="seam"></div></div>
+  <div id="hintline">
+    Sohbete <b class="a" id="h1">A</b> veya <b class="b" id="h2">B</b> yaz · hediye = <b id="gw">10</b> oy
+  </div>
+</div>
+
+<div id="winner"><div><div class="t" id="wt"></div><div class="s" id="ws"></div></div></div>
+
+<script src="_shared/tt.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+
+  // ?a=Kediler&b=Köpekler   ?ka=kedi&kb=köpek   ?dur=180 (saniye, 0=süresiz)
+  // ?giftw=10  hediyenin kac oy degerinde oldugu (elmas basina carpan degil, sabit)
+  // ?perdiamond=1  -> hediye oyu elmas degeriyle orantili olsun
+  const NAME_A = q.get('a') || 'A TAKIMI';
+  const NAME_B = q.get('b') || 'B TAKIMI';
+  const KEY_A = (q.get('ka') || 'a').toLowerCase();
+  const KEY_B = (q.get('kb') || 'b').toLowerCase();
+  const DUR = q.has('dur') ? Number(q.get('dur')) : 0;
+  const GIFT_W = Number(q.get('giftw')) || 10;
+  const PER_DIAMOND = q.get('perdiamond') === '1';
+
+  document.getElementById('nameA').textContent = NAME_A;
+  document.getElementById('nameB').textContent = NAME_B;
+  document.getElementById('keyA').textContent = KEY_A.toUpperCase();
+  document.getElementById('keyB').textContent = KEY_B.toUpperCase();
+  document.getElementById('h1').textContent = KEY_A.toUpperCase();
+  document.getElementById('h2').textContent = KEY_B.toUpperCase();
+  document.getElementById('gw').textContent = PER_DIAMOND ? '💎 kadar' : GIFT_W;
+
+  let a = 0, b = 0, over = false;
+  // Kim hangi takimda — hediye gelince o kisinin takimina yazalim
+  const team = new Map();
+
+  const elA = document.getElementById('a');
+  const elSeam = document.getElementById('seam');
+  const elSA = document.getElementById('scoreA');
+  const elSB = document.getElementById('scoreB');
+
+  function render() {
+    const total = a + b;
+    // Hic oy yokken cubuk ortada dursun
+    const rawPct = total === 0 ? 50 : (a / total) * 100;
+    // Kenarlarda pay birak: bir taraf ezici one gecince cubuk tamamen dolup
+    // "bozuk" gorunmesin, kaybeden takimin rengi hep bir serit olarak kalsin.
+    const pct = Math.max(3, Math.min(97, rawPct));
+
+    elA.style.width = pct + '%';
+    elSeam.style.left = pct + '%';
+    // Sayilar gercek degeri gostersin — kirpma sadece gorsel
+    elSA.textContent = TT.short(a);
+    elSB.textContent = TT.short(b);
+  }
+
+  function flyAvatar(user, side) {
+    const img = document.createElement('img');
+    img.className = 'voter';
+    img.src = TT.avatar(user);
+    // kendi tarafinin ortasinda bir yerden ciksin
+    const x = side === 'a'
+      ? innerWidth * (0.10 + Math.random() * 0.28)
+      : innerWidth * (0.62 + Math.random() * 0.28);
+    img.style.left = x + 'px';
+    img.style.top = (innerHeight * 0.5 + 70 + Math.random() * 40) + 'px';
+    document.body.appendChild(img);
+    setTimeout(() => img.remove(), 1600);
+  }
+
+  function vote(user, side, weight) {
+    if (over) return;
+    if (side === 'a') a += weight; else b += weight;
+    team.set(user.uniqueId, side);
+    render();
+    flyAvatar(user, side);
+  }
+
+  TT.on('chat', (ev) => {
+    const t = (ev.comment || '').toLowerCase().trim();
+    if (!t) return;
+
+    // "a", "aaa", "A takım", "kedi" gibi yazimlari yakala.
+    // Tek harfli anahtarlarda kelime sinirina bakiyoruz ki "araba" A sayilmasin.
+    const hitA = KEY_A.length === 1
+      ? new RegExp(`(^|\\s)${KEY_A}+($|\\s|!|\\.)`, 'i').test(t)
+      : t.includes(KEY_A);
+    const hitB = KEY_B.length === 1
+      ? new RegExp(`(^|\\s)${KEY_B}+($|\\s|!|\\.)`, 'i').test(t)
+      : t.includes(KEY_B);
+
+    if (hitA === hitB) return;      // ikisi de yok ya da ikisi de var -> gecersiz
+    vote(ev.user, hitA ? 'a' : 'b', 1);
+  });
+
+  TT.on('gift', (ev) => {
+    if (ev.gift.streaking) return;
+    const value = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    const w = PER_DIAMOND ? Math.max(1, value) : GIFT_W * (ev.gift.count || 1);
+
+    // Daha once oy verdiyse kendi takimina, vermediyse geride kalan takima
+    const side = team.get(ev.user.uniqueId) || (a <= b ? 'a' : 'b');
+    vote(ev.user, side, w);
+  });
+
+  // ---- geri sayim ---------------------------------------------------------
+  const elTimer = document.getElementById('timer');
+  if (DUR > 0) {
+    let left = DUR;
+    const paint = () => {
+      const m = Math.floor(left / 60), s = left % 60;
+      elTimer.textContent = `${m}:${String(s).padStart(2, '0')}`;
+      elTimer.classList.toggle('hot', left <= 10);
+    };
+    paint();
+    const iv = setInterval(() => {
+      left--;
+      paint();
+      if (left <= 0) {
+        clearInterval(iv);
+        finish();
+      }
+    }, 1000);
+  } else {
+    elTimer.style.display = 'none';
+  }
+
+  function finish() {
+    over = true;
+    const win = a === b ? null : (a > b ? NAME_A : NAME_B);
+    const wt = document.getElementById('wt');
+    wt.textContent = win ? win + ' KAZANDI' : 'BERABERE';
+    wt.style.color = win === NAME_A ? 'var(--tt-cyan)' : win === NAME_B ? 'var(--tt-pink)' : '#fff';
+    document.getElementById('ws').textContent = `${TT.short(a)} — ${TT.short(b)}`;
+    document.getElementById('winner').classList.add('on');
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

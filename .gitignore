@@ -1,0 +1,15 @@
+node_modules/
+package-lock.json
+
+# recon ciktilari — makineye ozel, kullanici adi/makine adi icerebilir
+recon/tls-recon-raporu.txt
+recon/asar-cikti/
+recon/asar-dosya-listesi.txt
+
+# ttls-sahne.js yedekleri
+*.yedek-*
+
+# ortam
+.env
+.DS_Store
+Thumbs.db

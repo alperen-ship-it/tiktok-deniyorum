@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Uyarılar — hediye / takip / paylaşım</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  #stage {
+    position: fixed;
+    left: 40px;
+    top: 40px;
+    width: 620px;
+  }
+
+  .alert {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px 16px 16px;
+    margin-bottom: 12px;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    /* giris animasyonu; cikisi JS class ile yapiyor */
+    animation: slideIn .45s cubic-bezier(.16, 1, .3, 1) both;
+  }
+  .alert.out { animation: slideOut .35s cubic-bezier(.5, 0, .75, 0) both; }
+
+  @keyframes slideIn  { from { opacity: 0; transform: translateX(-60px) scale(.94); } }
+  @keyframes slideOut { to   { opacity: 0; transform: translateX(-40px) scale(.96); } }
+
+  /* Renkli kenar seridi degil — sol tarafta yumusak bir isik lekesi.
+     Seffaf zeminde daha temiz duruyor. */
+  .alert::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 100% at 0% 50%, var(--glow, transparent) 0%, transparent 62%);
+    opacity: .55;
+    pointer-events: none;
+  }
+
+  .avatar { width: 66px; height: 66px; border: 2px solid rgba(255,255,255,.25); }
+
+  .body { position: relative; min-width: 0; flex: 1; }
+  .who {
+    font-size: 22px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -.2px;
+  }
+  .what { font-size: 16px; opacity: .82; margin-top: 3px; }
+  .what b { color: var(--accent, #fff); font-weight: 700; }
+
+  .icon {
+    font-size: 46px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,.5));
+    animation: pop .5s cubic-bezier(.2, 1.6, .4, 1) both;
+  }
+  @keyframes pop { from { transform: scale(0) rotate(-25deg); } }
+
+  .count {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent, #fff);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Elmas degerine gore seviye: buyuk hediye daha gosterisli olsun */
+  .tier-3 { transform-origin: left center; animation: slideIn .45s cubic-bezier(.16,1,.3,1) both, shake 2.6s .45s ease-in-out infinite; }
+  @keyframes shake {
+    0%, 92%, 100% { transform: rotate(0deg); }
+    94% { transform: rotate(-.7deg); }
+    96% { transform: rotate(.7deg); }
+    98% { transform: rotate(-.4deg); }
+  }
+
+  canvas#confetti { position: fixed; inset: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<div id="stage"></div>
+
+<div class="tt-hint" id="hint">
+  <div>Uyarı katmanı hazır — olay bekleniyor.</div>
+  <div>Sunucusuz denemek için adrese <code>?mock=1</code> ekle.</div>
+</div>
+
+<script src="_shared/tt.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const stage = document.getElementById('stage');
+  const hint  = document.getElementById('hint');
+
+  const HOLD  = 4200;   // bir uyari ekranda ne kadar kalsin (ms)
+  const MAXQ  = 12;     // kuyruk siniri — hediye yagmurunda birikmesin
+
+  const queue = [];
+  let busy = false;
+
+  // Hediye elmas degerine gore gorsel seviye
+  function tierOf(diamonds) {
+    if (diamonds >= 1000) return 3;
+    if (diamonds >= 100)  return 2;
+    if (diamonds >= 10)   return 1;
+    return 0;
+  }
+
+  const TIER_STYLE = [
+    { glow: 'rgba(37,244,238,.30)',  accent: '#25f4ee' },
+    { glow: 'rgba(139,92,246,.35)',  accent: '#a78bfa' },
+    { glow: 'rgba(251,146,60,.38)',  accent: '#fb923c' },
+    { glow: 'rgba(254,44,85,.45)',   accent: '#fe2c55' },
+  ];
+
+  function enqueue(item) {
+    hint.classList.add('gone');
+    if (queue.length >= MAXQ) queue.shift();   // en eskiyi at, akis tikanmasin
+    queue.push(item);
+    if (!busy) next();
+  }
+
+  function next() {
+    const item = queue.shift();
+    if (!item) { busy = false; return; }
+    busy = true;
+    show(item);
+    setTimeout(() => {
+      const el = stage.firstElementChild;
+      if (el) {
+        el.classList.add('out');
+        setTimeout(() => el.remove(), 350);
+      }
+      setTimeout(next, 120);
+    }, HOLD);
+  }
+
+  function show(item) {
+    const st = TIER_STYLE[item.tier];
+    const el = document.createElement('div');
+    el.className = 'alert tt-card tt-outline' + (item.tier === 3 ? ' tier-3' : '');
+    el.style.setProperty('--glow', st.glow);
+    el.style.setProperty('--accent', st.accent);
+
+    el.innerHTML = `
+      <img class="avatar tt-avatar" src="${TT.esc(item.avatar)}" alt="">
+      <div class="body">
+        <div class="who">${TT.esc(item.name)}</div>
+        <div class="what">${item.text}</div>
+      </div>
+      ${item.count ? `<div class="count">×${item.count}</div>` : ''}
+      <div class="icon">${item.icon}</div>`;
+
+    stage.replaceChildren(el);
+    if (item.tier >= 2) confetti(item.tier === 3 ? 140 : 60, st.accent);
+  }
+
+  // ---- olaylar ------------------------------------------------------------
+
+  TT.on('gift', (ev) => {
+    // Seri hediyede (kullanici basili tutuyor) her tik icin olay gelir.
+    // Sadece seri bitince goster, yoksa ekran uyari kusar.
+    if (ev.gift.streaking) return;
+
+    const value = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    enqueue({
+      tier: tierOf(value),
+      avatar: TT.avatar(ev.user),
+      name: ev.user.nickname,
+      text: `<b>${TT.esc(ev.gift.name)}</b> gönderdi · ${TT.short(value)} 💎`,
+      icon: TT.giftEmoji(ev.gift),
+      count: (ev.gift.count || 1) > 1 ? ev.gift.count : 0,
+    });
+  });
+
+  TT.on('follow', (ev) => enqueue({
+    tier: 1, avatar: TT.avatar(ev.user), name: ev.user.nickname,
+    text: 'seni <b>takip etti</b>', icon: '💜', count: 0,
+  }));
+
+  TT.on('share', (ev) => enqueue({
+    tier: 0, avatar: TT.avatar(ev.user), name: ev.user.nickname,
+    text: 'yayını <b>paylaştı</b>', icon: '🔁', count: 0,
+  }));
+
+  TT.on('subscribe', (ev) => enqueue({
+    tier: 2, avatar: TT.avatar(ev.user), name: ev.user.nickname,
+    text: '<b>abone oldu</b>', icon: '⭐', count: 0,
+  }));
+
+  // ---- konfeti ------------------------------------------------------------
+  const cv = document.getElementById('confetti');
+  const ctx = cv.getContext('2d');
+  let parts = [];
+
+  function resize() {
+    cv.width = innerWidth;
+    cv.height = innerHeight;
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  function confetti(n, color) {
+    const ox = 260, oy = 90;   // uyari kartinin ortasindan fisirsin
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (Math.random() - .5) * 2.2;
+      const sp = 260 + Math.random() * 520;
+      parts.push({
+        x: ox, y: oy,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        r: 3 + Math.random() * 5,
+        rot: Math.random() * 6.28,
+        vr: (Math.random() - .5) * 12,
+        life: 1,
+        color: Math.random() < .45 ? color : (Math.random() < .5 ? '#fff' : '#25f4ee'),
+      });
+    }
+    if (parts.length > 900) parts = parts.slice(-900);
+  }
+
+  TT.loop((dt) => {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (!parts.length) return;
+
+    for (const p of parts) {
+      p.vy += 900 * dt;          // yercekimi
+      p.vx *= 1 - 1.2 * dt;      // hava surtunmesi
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      p.life -= dt / 2.4;
+
+      if (p.life <= 0) continue;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 1.6));
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r, -p.r * .6, p.r * 2, p.r * 1.2);
+      ctx.restore();
+    }
+    parts = parts.filter((p) => p.life > 0 && p.y < cv.height + 60);
+  });
+})();
+</script>
+</body>
+</html>

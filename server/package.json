@@ -1,0 +1,26 @@
+{
+  "name": "tiktok-yayin-koprusu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TikTok LIVE olaylarini yerel WebSocket'e kopruleyip HTML overlay'leri besler",
+  "main": "bridge.js",
+  "scripts": {
+    "start": "node bridge.js",
+    "mock": "node bridge.js --mock",
+    "live": "node bridge.js --user"
+  },
+  "dependencies": {
+    "tiktok-live-connector": "^2.4.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "notlar": {
+    "bagimlilik": "tiktok-live-connector SADECE gercek yayina baglanmak icin gerekli. Kurmadan da --mock modu ve tum overlay'ler calisir; kopru paketi bulamazsa otomatik mock'a duser.",
+    "kurulum": "cd server && npm install",
+    "esm": "Paketin 2.x surumu ESM-only. bridge.js CommonJS oldugu icin dinamik import() ile yukluyor; require() ile v2 sinifina ulasilamiyor.",
+    "imzalama": "TikTok'un webcast adresi imzalanmak zorunda; bunu EulerStream yapiyor. Ucretsiz katman 2500 istek/gun (bir istek = bir baglanti, mesaj basina degil). Anahtar: https://www.eulerstream.com -> set EULER_API_KEY=<anahtar>",
+    "node": "Paket node >=20 istiyor.",
+    "tikfinity": "Alternatif: TikFinity Desktop kuruluysa kopruye hic gerek yok — overlay'ler dogrudan ws://127.0.0.1:21213/ adresine baglanabiliyor (tt.js iki formati da konusuyor)."
+  }
+}

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Sohbet duvarı</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  #wall {
+    position: fixed;
+    left: 32px;
+    bottom: 32px;
+    width: 480px;
+    max-height: calc(100vh - 64px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+    /* ustte yumusakca kaybolsun — sert kesim yerine maske */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 90px, #000 100%);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 90px, #000 100%);
+  }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 9px 14px 9px 9px;
+    border-radius: 14px;
+    background: rgba(12, 14, 22, .74);
+    border: 1px solid rgba(255, 255, 255, .07);
+    animation: rise .32s cubic-bezier(.16, 1, .3, 1) both;
+    word-break: break-word;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+  .msg.leaving { animation: fade .4s ease forwards; }
+  @keyframes fade { to { opacity: 0; transform: translateY(-8px); max-height: 0; margin-top: -8px; padding-block: 0; } }
+
+  .av { width: 34px; height: 34px; }
+
+  .txt { flex: 1; min-width: 0; font-size: 17px; line-height: 1.36; }
+
+  .name {
+    font-weight: 700;
+    margin-right: 7px;
+    color: hsl(var(--h, 200) 85% 68%);
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 5px;
+    margin-right: 5px;
+    vertical-align: 2px;
+    letter-spacing: .3px;
+  }
+  .badge.mod { background: #22c55e; color: #052e13; }
+  .badge.sub { background: var(--tt-pink); color: #fff; }
+
+  /* Hediye satiri sohbetten ayrissin */
+  .msg.gift {
+    background: linear-gradient(100deg, rgba(254, 44, 85, .30), rgba(12, 14, 22, .80) 62%);
+    border-color: rgba(254, 44, 85, .38);
+  }
+  .msg.gift .txt { font-weight: 600; }
+  .gift-icon { font-size: 21px; margin-right: 6px; vertical-align: -3px; }
+  .diamonds { color: #25f4ee; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .msg.join {
+    background: rgba(12, 14, 22, .5);
+    font-size: 14px;
+    opacity: .72;
+    padding-block: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div id="wall"></div>
+
+<div class="tt-hint" id="hint">
+  <div>Sohbet duvarı hazır — yorum bekleniyor.</div>
+  <div>Sunucusuz denemek için adrese <code>?mock=1</code> ekle.</div>
+</div>
+
+<script src="_shared/tt.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const wall = document.getElementById('wall');
+  const hint = document.getElementById('hint');
+
+  // ?limit=14  kac mesaj dursun   ?ttl=0  mesajlar kendiliginden silinmesin
+  const q     = new URLSearchParams(location.search);
+  const LIMIT = Number(q.get('limit')) || 14;
+  const TTL   = q.has('ttl') ? Number(q.get('ttl')) * 1000 : 0;  // 0 = suresiz
+  const SHOW_JOINS = q.get('joins') === '1';
+
+  function add(node) {
+    hint.classList.add('gone');
+    wall.appendChild(node);
+
+    // Limiti asanlari yumusakca kaldir
+    while (wall.children.length > LIMIT) {
+      const old = wall.firstElementChild;
+      if (old.classList.contains('leaving')) break;
+      old.classList.add('leaving');
+      setTimeout(() => old.remove(), 400);
+      // leaving olanlar hala DOM'da oldugu icin sonsuz donguye girmeyelim
+      if (wall.querySelectorAll(':scope > :not(.leaving)').length <= LIMIT) break;
+    }
+
+    if (TTL > 0) {
+      setTimeout(() => {
+        node.classList.add('leaving');
+        setTimeout(() => node.remove(), 400);
+      }, TTL);
+    }
+  }
+
+  TT.on('chat', (ev) => {
+    const el = document.createElement('div');
+    el.className = 'msg';
+    el.style.setProperty('--h', TT.hue(ev.user.uniqueId));
+
+    const badges =
+      (ev.user.isModerator ? '<span class="badge mod">MOD</span>' : '') +
+      (ev.user.isSubscriber ? '<span class="badge sub">ABONE</span>' : '');
+
+    el.innerHTML = `
+      <img class="av tt-avatar" src="${TT.esc(TT.avatar(ev.user))}" alt="">
+      <div class="txt">${badges}<span class="name">${TT.esc(ev.user.nickname)}</span>${TT.esc(ev.comment)}</div>`;
+    add(el);
+  });
+
+  TT.on('gift', (ev) => {
+    if (ev.gift.streaking) return;   // seri bitene kadar bekle
+    const value = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+
+    const el = document.createElement('div');
+    el.className = 'msg gift';
+    el.style.setProperty('--h', TT.hue(ev.user.uniqueId));
+    el.innerHTML = `
+      <img class="av tt-avatar" src="${TT.esc(TT.avatar(ev.user))}" alt="">
+      <div class="txt">
+        <span class="name">${TT.esc(ev.user.nickname)}</span>
+        <span class="gift-icon">${TT.giftEmoji(ev.gift)}</span>${TT.esc(ev.gift.name)}
+        ${(ev.gift.count || 1) > 1 ? '×' + ev.gift.count : ''}
+        <span class="diamonds">${TT.short(value)}💎</span>
+      </div>`;
+    add(el);
+  });
+
+  TT.on('follow share subscribe', (ev) => {
+    const label = { follow: 'takip etti 💜', share: 'yayını paylaştı 🔁', subscribe: 'abone oldu ⭐' }[ev.type];
+    const el = document.createElement('div');
+    el.className = 'msg join';
+    el.style.setProperty('--h', TT.hue(ev.user.uniqueId));
+    el.innerHTML = `
+      <img class="av tt-avatar" style="width:22px;height:22px" src="${TT.esc(TT.avatar(ev.user))}" alt="">
+      <div class="txt"><span class="name">${TT.esc(ev.user.nickname)}</span>${label}</div>`;
+    add(el);
+  });
+
+  if (SHOW_JOINS) {
+    TT.on('member', (ev) => {
+      const el = document.createElement('div');
+      el.className = 'msg join';
+      el.style.setProperty('--h', TT.hue(ev.user.uniqueId));
+      el.innerHTML = `
+        <img class="av tt-avatar" style="width:22px;height:22px" src="${TT.esc(TT.avatar(ev.user))}" alt="">
+        <div class="txt"><span class="name">${TT.esc(ev.user.nickname)}</span>yayına katıldı</div>`;
+      add(el);
+    });
+  }
+})();
+</script>
+</body>
+</html>

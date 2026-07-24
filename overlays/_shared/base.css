@@ -1,0 +1,133 @@
+/* base.css — tum overlay'lerin ortak zemini.
+   Varsayilan arka plan SEFFAF: OBS browser source'ta dogrudan calisir.
+   TikTok LIVE Studio pencere yakalamasinda seffaflik yok -> ?bg=green ile
+   yesil zemine gecip chroma key uygula. */
+
+:root {
+  --tt-pink: #fe2c55;
+  --tt-cyan: #25f4ee;
+  --tt-ink: #10121a;
+  --tt-scale: 1;
+  --tt-font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--tt-font);
+  color: #fff;
+  /* Yayin gorunumu icin: metin kenar yumusatmasi ve secim kapali */
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: none;
+}
+
+/* Chroma key modunda scrollbar/kenarlik hicbir sey gorunmesin */
+html.tt-chroma, html.tt-chroma body { overflow: hidden; }
+
+/* Yayinda okunakli olsun diye her yazida kontur */
+.tt-outline {
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, .55),
+    0 0 12px rgba(0, 0, 0, .45),
+    0 0 2px rgba(0, 0, 0, .9);
+}
+
+.tt-card {
+  background: linear-gradient(135deg, rgba(18, 20, 30, .92), rgba(28, 30, 45, .92));
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .45);
+  backdrop-filter: blur(6px);
+}
+
+.tt-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  background: #333;
+  flex: none;
+}
+
+/* Yayinci gozu icin: sayfa bos oldugunda ne yapacagini soyleyen ipucu.
+   Ilk olay gelince JS bunu kaldiriyor. */
+.tt-hint {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  text-align: center;
+  font-size: 15px;
+  color: rgba(255, 255, 255, .5);
+  letter-spacing: .3px;
+  pointer-events: none;
+}
+.tt-hint code {
+  font-family: 'Cascadia Code', Consolas, monospace;
+  background: rgba(255, 255, 255, .08);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--tt-cyan);
+}
+.tt-hint.gone { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   LITE MOD  (?lite=1)
+   TikTok LIVE Studio'nun gomulu tarayicisi GPU hizlandirmasiz calisiyor.
+   blur / backdrop-filter / drop-shadow yazilimda hesaplaniyor ve kare hizini
+   yerle bir ediyor. Bu modda pahalı olan her seyi ucuz esdegeriyle degistiriyoruz.
+   Gorunum %90 ayni kaliyor, maliyet ~10 kati dusuyor.
+--------------------------------------------------------------------------- */
+html.tt-lite * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+/* Golge gidince okunakligi kaybetmeyelim: yaziya ucuz bir kontur birak.
+   -webkit-text-stroke GPU istemiyor. */
+html.tt-lite .tt-outline,
+html.tt-lite .name,
+html.tt-lite .who {
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px rgba(0, 0, 0, .75);
+}
+
+/* Yarisaydam katmanlar yerine duz zemin — kompozisyon maliyetini dusurur */
+html.tt-lite .tt-card {
+  background: #151824 !important;
+  border-color: rgba(255, 255, 255, .16) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   DIKEY MOD  (?v=1)
+   TikTok LIVE 9:16. Yatay icin yazilmis genislikler tasmasin diye
+   overlay'lerin ana kutusunu daraltip dikeye yayiyoruz.
+--------------------------------------------------------------------------- */
+html.tt-vertical #stage,
+html.tt-vertical #wall {
+  left: 16px !important;
+  right: 16px !important;
+  width: auto !important;
+}
+html.tt-vertical #box,
+html.tt-vertical #wrap,
+html.tt-vertical #panel {
+  width: calc(100vw - 32px) !important;
+}
+html.tt-vertical #combo { right: 20px !important; top: 20px !important; }
+html.tt-vertical #combo .n { font-size: 58px !important; }
