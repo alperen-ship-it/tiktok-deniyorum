@@ -260,39 +260,109 @@ async function listen(port) {
   console.log('Cikmak icin Ctrl+C.\n');
 }
 
-async function info(port) {
+async function info(port, asJson) {
   const c = await connectAny(port, false);
 
-  const done = new Promise((resolve) => {
-    c.on(CH.SYNC, (raw) => {
-      let d = raw;
-      if (typeof raw === 'string') { try { d = JSON.parse(raw); } catch { /* duz metin */ } }
-      const s = d?.lsSettings || d || {};
+  // Uygulama sync_settings'i BIRDEN FAZLA kez yolluyor: ilkinde bazi listeler
+  // (ses efektleri gibi) henuz bos, ikincisinde doluyor. Bu yuzden hemen basmak
+  // yerine bir sure toplayip en dolu olani kullaniyoruz.
+  let enIyi = null;
+  let enIyiPuan = -1;
 
-      console.log('AKTIF SAHNE :', s.scene ?? '(bilinmiyor)');
-      console.log('');
-      const scenes = s.scene_list || s.sceneList || [];
-      if (!scenes.length) {
-        console.log('Sahne listesi gelmedi. Ham cevap:');
-        console.log(JSON.stringify(d, null, 2).slice(0, 3000));
-      } else {
-        for (const sc of scenes) {
-          console.log(`SAHNE: ${sc.name}`);
-          for (const src of sc.sources || []) {
-            console.log(`   - ${src.label ?? src.name ?? '?'}   (${src.value ?? src.id ?? '?'})`);
-          }
-          console.log('');
-        }
-      }
-      resolve();
-    });
+  const puanla = (d) =>
+    JSON.stringify(d || {}).length; // daha uzun = daha dolu
+
+  c.on(CH.SYNC, (raw) => {
+    let d = raw;
+    if (typeof raw === 'string') { try { d = JSON.parse(raw); } catch { /* duz metin */ } }
+    const s = d?.lsSettings || d || {};
+    const p = puanla(s);
+    if (p > enIyiPuan) { enIyiPuan = p; enIyi = s; }
   });
 
   c.emit(CH.JOIN);
   c.on(CH.JOIN, () => c.emit(CH.SYNC));
 
-  await Promise.race([done, new Promise((r) => setTimeout(r, 8000))]);
+  // Ikinci (dolu) paketi bekle
+  await new Promise((r) => setTimeout(r, 5000));
   c.close();
+
+  if (!enIyi) {
+    console.log('Ayar paketi gelmedi. `listen` ile ham trafige bak.');
+    process.exit(1);
+  }
+
+  if (asJson) {
+    console.log(JSON.stringify(enIyi, null, 2));
+    process.exit(0);
+  }
+
+  const s = enIyi;
+  const yaz = (x) => console.log(x);
+
+  yaz('');
+  yaz('================ SAHNELER ================');
+  yaz(`Aktif sahne: ${s.scene ?? '(bilinmiyor)'}`);
+  yaz('');
+
+  const scenes = s.scene_list || s.sceneList || [];
+  if (!scenes.length) {
+    yaz('(sahne listesi gelmedi)');
+  }
+  for (const sc of scenes) {
+    const aktif = sc.name === s.scene ? '  <-- AKTIF' : '';
+    yaz(`SAHNE: ${sc.name}${aktif}`);
+
+    // visible_sources, sources'in alt kumesi: gorunurlugu boyle okuyoruz
+    const gorunur = new Set((sc.visible_sources || []).map((x) => x.value));
+    const kaynaklar = sc.sources || [];
+    if (!kaynaklar.length) yaz('   (bos)');
+
+    for (const src of kaynaklar) {
+      const id = src.value ?? src.id ?? '?';
+      const isaret = gorunur.has(id) ? '[G]' : '[ ]';
+      yaz(`   ${isaret} ${String(src.label ?? src.name ?? '?').padEnd(18)} ${id}`);
+    }
+    yaz('');
+  }
+  yaz('  [G] = su an gorunur');
+
+  yaz('');
+  yaz('================ SES ================');
+  yaz(`Hoparlor susturulmus : ${s.audio_mute}`);
+  yaz(`Mikrofon susturulmus : ${s.mic_mute}`);
+  for (const d of s.audio_filter?.deviceList || []) {
+    yaz(`  cihaz: ${d.label}   (${d.value})`);
+  }
+  const aktifFiltre = s.audio_filter?.enableTypes || {};
+  for (const [cihaz, f] of Object.entries(aktifFiltre)) {
+    const acik = Object.entries(f || {}).map(([k, v]) => `${k}=${v}`).join(', ');
+    if (acik) yaz(`  aktif filtre (${cihaz}): ${acik}`);
+  }
+
+  const sesler = s.sound_effect?.sound_Info || [];
+  if (sesler.length) {
+    yaz('');
+    yaz(`  Ses efektleri (${sesler.length}): ${sesler.join(', ')}`);
+    yaz(`  Su an calan: ${s.sound_effect?.currentsound || '(yok)'}`);
+  }
+
+  const efektGruplari = s.camera_effect?.effectList || [];
+  if (efektGruplari.length) {
+    yaz('');
+    yaz('================ KAMERA EFEKTLERI ================');
+    let toplam = 0;
+    for (const g of efektGruplari) {
+      const n = (g.effects || []).length;
+      toplam += n;
+      yaz(`  ${String(g.name ?? g.key).padEnd(14)} ${n} efekt`);
+    }
+    yaz(`  toplam ${toplam} efekt`);
+    yaz('');
+    yaz('  Tam listeyi gormek icin:  node tools/ttls-control.js info --json');
+  }
+
+  yaz('');
   process.exit(0);
 }
 
@@ -319,7 +389,7 @@ async function raw(port, json) {
   try {
     if (cmd === 'scan') await scan();
     else if (cmd === 'listen') await listen(port);
-    else if (cmd === 'info') await info(port);
+    else if (cmd === 'info') await info(port, argv.includes('--json'));
     else if (cmd === 'raw') await raw(port, argv[1]);
     else {
       console.log(`
