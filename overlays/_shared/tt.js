@@ -51,6 +51,16 @@
     lite: flag('lite'),
     // 9:16 dikey yayin yerlesimi
     vertical: flag('v') || flag('vertical'),
+    // Oyunlarda arkayi karartan perde (okunakliligi garantiler)
+    perde: flag('perde'),
+    // Olu bolge (dead zone) paylari — TikTok'un kendi arayuzunun kapladigi yer
+    dz: {
+      ust: q.get('dzust'),
+      alt: q.get('dzalt'),
+      sag: q.get('dzsag'),
+      sol: q.get('dzsol'),
+    },
+    guvenli: flag('guvenli'),
   };
 
   // -------------------------------------------------------------------------
@@ -63,6 +73,23 @@
     // saniyede 5 kareye dusuruyor. lite modda hepsini kapatiyoruz.
     if (cfg.lite) root.classList.add('tt-lite');
     if (cfg.vertical) root.classList.add('tt-vertical');
+
+    // Perde en arkada dursun: body'nin ilk cocugu olarak ekliyoruz
+    if (cfg.perde && !document.getElementById('tt-perde')) {
+      const p = document.createElement('div');
+      p.id = 'tt-perde';
+      document.body.insertBefore(p, document.body.firstChild);
+    }
+
+    // Olu bolge paylarini URL'den ezme
+    for (const [k, v] of Object.entries(cfg.dz)) {
+      if (v == null || v === '') continue;
+      // Ciplak sayi verildiyse yuzde say: ?dzalt=32  ->  32%
+      const deger = /^[\d.]+$/.test(v) ? v + '%' : v;
+      root.style.setProperty('--dz-' + k, deger);
+    }
+
+    if (cfg.guvenli) kilavuzCiz();
 
     if (cfg.bg) {
       const color = CHROMA[cfg.bg.toLowerCase()] || (cfg.bg.startsWith('#') ? cfg.bg : '#' + cfg.bg);
@@ -437,6 +464,53 @@
       requestAnimationFrame(step);
     },
   };
+
+  // -------------------------------------------------------------------------
+  // Olu bolge kilavuzu (?guvenli=1)
+  // -------------------------------------------------------------------------
+  /**
+   * TikTok'un canli yayin arayuzunun kapladigi bolgeleri tarali kirmiziyla,
+   * kullanilabilir alani kesikli mavi cerceveyle gosterir.
+   * Yerlesim ayarlarken ac, yayina almadan once KAPAT.
+   */
+  function kilavuzCiz() {
+    const k = document.createElement('div');
+    k.id = 'tt-guvenli-kilavuz';
+
+    const bolgeler = [
+      { stil: 'top:0;left:0;right:0;height:var(--dz-ust)', ad: 'ÜST — yayıncı bilgisi, en çok hediye gönderenler' },
+      { stil: 'bottom:0;left:0;right:0;height:var(--dz-alt)', ad: 'ALT — yorum akışı, hediye çubuğu (en büyük ölü bölge)' },
+      { stil: 'top:var(--dz-ust);bottom:var(--dz-alt);right:0;width:var(--dz-sag)', ad: 'SAĞ — beğeni / paylaş / hediye ikonları' },
+      { stil: 'top:var(--dz-ust);bottom:var(--dz-alt);left:0;width:var(--dz-sol)', ad: 'SOL' },
+    ];
+
+    for (const b of bolgeler) {
+      const d = document.createElement('div');
+      d.className = 'dz';
+      d.setAttribute('style', b.stil);
+      k.appendChild(d);
+    }
+
+    const alan = document.createElement('div');
+    alan.className = 'alan';
+    k.appendChild(alan);
+
+    const et = document.createElement('div');
+    et.className = 'etiket';
+    et.style.cssText = 'top:calc(var(--dz-ust) + 6px);left:calc(var(--dz-sol) + 6px)';
+    et.textContent = 'GÜVENLİ ALAN — oyun buraya sığmalı';
+    k.appendChild(et);
+
+    for (const b of bolgeler) {
+      const e = document.createElement('div');
+      e.className = 'etiket';
+      e.style.cssText = b.stil + ';background:rgba(120,0,20,.85);height:auto;width:auto;max-width:70%';
+      e.textContent = b.ad;
+      k.appendChild(e);
+    }
+
+    document.body.appendChild(k);
+  }
 
   // -------------------------------------------------------------------------
   // Baslat

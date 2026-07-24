@@ -9,6 +9,54 @@
   --tt-ink: #10121a;
   --tt-scale: 1;
   --tt-font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+
+  /* -------------------------------------------------------------------------
+     ÖLÜ BÖLGELER (dead zones)
+     TikTok LIVE izlerken ekranin buyuk kismini TikTok'un KENDI arayuzu
+     kapliyor: ustte yayinci bilgisi ve en cok hediye gonderenler, altta
+     kayan yorum akisi ve hediye cubugu, sagda begeni/paylas/hediye ikonlari.
+     Oraya koydugun her sey izleyicide GORUNMEZ.
+
+     Degerler yuzde olarak tutuluyor ki her cozunurlukte calissin.
+     URL'den ayarlanabilir: ?dzust=14&dzalt=32&dzsag=17&dzsol=4
+     Gormek icin: ?guvenli=1
+  ------------------------------------------------------------------------- */
+  --dz-ust: 14%;
+  --dz-alt: 32%;
+  --dz-sag: 17%;
+  --dz-sol: 4%;
+}
+
+/* Icerigi guvenli alana hapseden yardimci: oyunlar bunu kullaniyor */
+.tt-guvenli {
+  position: fixed;
+  top: var(--dz-ust);
+  bottom: var(--dz-alt);
+  left: var(--dz-sol);
+  right: var(--dz-sag);
+}
+
+/* ?guvenli=1 — olu bolgeleri kirmizi tarayarak goster (yayina alma!) */
+#tt-guvenli-kilavuz { position: fixed; inset: 0; pointer-events: none; z-index: 2147482000; }
+#tt-guvenli-kilavuz .dz {
+  position: absolute;
+  background: repeating-linear-gradient(45deg,
+    rgba(254,44,85,.30) 0 12px, rgba(254,44,85,.12) 12px 24px);
+  border: 1px solid rgba(254,44,85,.65);
+}
+#tt-guvenli-kilavuz .alan {
+  position: absolute;
+  top: var(--dz-ust); bottom: var(--dz-alt); left: var(--dz-sol); right: var(--dz-sag);
+  border: 2px dashed rgba(37,244,238,.9);
+}
+#tt-guvenli-kilavuz .etiket {
+  position: absolute;
+  font: 700 13px/1.3 var(--tt-font);
+  color: #fff;
+  background: rgba(0,0,0,.75);
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
 }
 
 * { box-sizing: border-box; }
@@ -37,6 +85,36 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
     0 2px 0 rgba(0, 0, 0, .55),
     0 0 12px rgba(0, 0, 0, .45),
     0 0 2px rgba(0, 0, 0, .9);
+}
+
+/* ---------------------------------------------------------------------------
+   OYUN OKUNAKLILIGI
+   Overlay seffaf zeminde duruyor ve arkasindan NE gelecegini bilmiyoruz.
+   Koyu bir oyun goruntusu de gelebilir, bembeyaz bir menu de. Beyaz yazi
+   beyaz zemine dusunce oyun gorunmez oluyor — bu yuzden oyun ekranlarindaki
+   TUM yazi ve cizgilere zorunlu kontur veriyoruz.
+--------------------------------------------------------------------------- */
+.tt-oyun,
+.tt-oyun * {
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, .95),
+    0 2px 0 rgba(0, 0, 0, .7),
+    0 0 14px rgba(0, 0, 0, .6);
+}
+/* Kendi arka plani olan kutularda cift golge gereksiz */
+.tt-oyun .tt-card,
+.tt-oyun .satir,
+.tt-oyun .s { text-shadow: 0 1px 3px rgba(0, 0, 0, .9); }
+
+/* Istege bagli koyu perde: ?perde=1
+   Arkadaki goruntuyu bastirip oyunu one cikarir. Oyun ana icerikse ac,
+   kamera/oyun goruntusu ana icerikse kapali birak. */
+#tt-perde {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, .55), rgba(0, 0, 0, .82));
 }
 
 .tt-card {

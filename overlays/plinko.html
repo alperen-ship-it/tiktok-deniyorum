@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Plinko — yaz, topun düşsün</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  /* TikTok arayuzunun kapladigi olu bolgelerin disinda dur (?guvenli=1 ile gor) */
+  #kok {
+    position: fixed;
+    top: var(--dz-ust); bottom: var(--dz-alt);
+    left: var(--dz-sol); right: var(--dz-sag);
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  #baslik {
+    flex: none;
+    text-align: center;
+    padding: 14px 16px 8px;
+  }
+  #baslik h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -.3px; }
+  #baslik .alt { font-size: 15px; opacity: .85; margin-top: 3px; margin-bottom: 8px; }
+  #baslik .alt b { color: var(--tt-cyan); }
+  #baslik .alt .h { color: var(--tt-pink); }
+  #baslik .alt .k { color: #7ee787; }
+  #komboSar { width: min(560px, 100%); margin: 0 auto; }
+
+  #bonus {
+    height: 20px; margin-top: 5px;
+    font-size: 14px; font-weight: 800; letter-spacing: 1px;
+    color: #ffd93d; opacity: 0; transition: opacity .2s;
+  }
+  #bonus.on { opacity: 1; animation: bonusYanip 1s steps(2) infinite; }
+  @keyframes bonusYanip { 50% { opacity: .45; } }
+
+  #tahtaSar { flex: 1; position: relative; width: 100%; min-height: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  #skorlar {
+    flex: none;
+    width: min(560px, calc(100% - 24px));
+    margin: 0 auto 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .s {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 11px; border-radius: 9px;
+    background: rgba(10, 12, 20, .7);
+    font-size: 15px;
+  }
+  .s .n { width: 18px; opacity: .5; font-weight: 800; }
+  .s .ad { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .s .p { font-variant-numeric: tabular-nums; font-weight: 800; color: #ffd93d; }
+  .s.bir { background: linear-gradient(90deg, rgba(255,217,61,.26), rgba(10,12,20,.7)); }
+</style>
+</head>
+<body>
+
+<div id="kok" class="tt-oyun">
+  <div id="baslik">
+    <h1>🎯 PLINKO</h1>
+    <div class="alt"><b>Yaz</b> = topun düşer · <span class="k">beğeni</span> = sohbet gücü · <span class="h">hediye</span> = ULTİ</div>
+    <div id="komboSar"></div>
+    <div id="bonus"></div>
+  </div>
+  <div id="tahtaSar"><canvas id="cv"></canvas></div>
+  <div id="skorlar"></div>
+</div>
+
+<script src="_shared/tt.js"></script>
+<script src="_shared/ulti.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const SATIR   = Number(q.get('satir')) || 12;     // civi satiri sayisi
+  const MAXTOP  = Number(q.get('maxtop')) || 90;    // ayni anda en fazla kac top
+  const LISTE_N = Number(q.get('liste')) || 5;
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const skorEl = document.getElementById('skorlar');
+
+  let W = 0, H = 0, dpr = 1;
+  let civiler = [];      // {x,y}
+  let kovalar = [];      // {x0,x1,carpan,renk}
+  const CIVI_R = 5;
+  let TOP_R = 11;
+
+  // Klasik plinko dagilimi: ortada dusuk, kenarda yuksek.
+  const CARPANLAR = [25, 10, 5, 3, 1.5, 0.5, 0.5, 1.5, 3, 5, 10, 25];
+
+  function kovaRengi(c) {
+    if (c >= 20) return '#ff3b5c';
+    if (c >= 8)  return '#ff8c3b';
+    if (c >= 4)  return '#ffd93d';
+    if (c >= 1.5) return '#7ee787';
+    return '#4a5568';
+  }
+
+  function kur() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    const kutu = document.getElementById('tahtaSar').getBoundingClientRect();
+    W = kutu.width; H = kutu.height;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Tahta genisligi: dar ekranda tam, genis ekranda ortada
+    const tahta = Math.min(W, 560);
+    const solPay = (W - tahta) / 2;
+
+    TOP_R = Math.max(7, Math.min(13, tahta / 46));
+
+    // --- civiler ---
+    civiler = [];
+    const kovaYuk = 46;
+    const ustPay = 54;
+    const kullanilir = H - ustPay - kovaYuk - 16;
+    const satirAralik = kullanilir / SATIR;
+
+    for (let r = 0; r < SATIR; r++) {
+      // her satirda bir fazla/eksik civi, kaydirmali dizilim
+      const adet = 3 + r;
+      const aralik = tahta / (adet + 1);
+      for (let i = 0; i < adet; i++) {
+        civiler.push({
+          x: solPay + aralik * (i + 1),
+          y: ustPay + satirAralik * (r + 0.5),
+          satir: r,
+        });
+      }
+    }
+    // Satir -> civi indeksi araligi (carpisma kontrolunu daraltmak icin)
+    satirBasi = [];
+    let idx = 0;
+    for (let r = 0; r < SATIR; r++) {
+      satirBasi[r] = idx;
+      idx += 3 + r;
+    }
+    satirBasi[SATIR] = idx;
+    satirAralikG = satirAralik;
+    ustPayG = ustPay;
+
+    // --- kovalar ---
+    kovalar = [];
+    const n = CARPANLAR.length;
+    const kg = tahta / n;
+    for (let i = 0; i < n; i++) {
+      kovalar.push({
+        x0: solPay + kg * i,
+        x1: solPay + kg * (i + 1),
+        carpan: CARPANLAR[i],
+        renk: kovaRengi(CARPANLAR[i]),
+      });
+    }
+    kovaUst = H - kovaYuk;
+    tahtaSol = solPay;
+    tahtaSag = solPay + tahta;
+  }
+
+  let satirBasi = [], satirAralikG = 0, ustPayG = 0, kovaUst = 0, tahtaSol = 0, tahtaSag = 0;
+
+  addEventListener('resize', kur);
+  new ResizeObserver(kur).observe(document.getElementById('tahtaSar'));
+  kur();
+
+  // ---------------------------------------------------------------------------
+  const toplar = [];
+  const skorlar = new Map();   // uniqueId -> {ad, puan}
+
+  function topBirak(user, altin, deger, nisanli) {
+    if (toplar.length >= MAXTOP) toplar.shift();   // en eskisini at, akis tikanmasin
+
+    const ad = user?.nickname || user?.uniqueId || '?';
+    // "Nisanli" top (INFAZ ultisi): kenardaki yuksek carpanli kovaya dogru
+    // guclu bir yatay hizla baslar. Fizik yine karar verir — garanti degil,
+    // ama sansi ciddi olcude kenara kayar.
+    const yon = Math.random() < 0.5 ? -1 : 1;
+    toplar.push({
+      x: (tahtaSol + tahtaSag) / 2 + (Math.random() - .5) * 34,
+      y: ustPayG - 26,
+      vx: nisanli ? yon * (190 + Math.random() * 90) : (Math.random() - .5) * 40,
+      vy: 0,
+      r: altin ? TOP_R * 1.45 : TOP_R,
+      altin,
+      deger,                                   // hediye degeri (altin toplar icin)
+      renk: `hsl(${TT.hue(user?.uniqueId || ad)} 75% 55%)`,
+      harf: (ad[0] || '?').toUpperCase(),
+      ad,
+      id: user?.uniqueId || ad,
+      izDusen: 0,
+    });
+  }
+
+  function puanEkle(id, ad, puan) {
+    let s = skorlar.get(id);
+    if (!s) { s = { ad, puan: 0 }; skorlar.set(id, s); }
+    s.puan += puan;
+    skorCiz();
+  }
+
+  let skorZaman = 0;
+  function skorCiz() {
+    const t = performance.now();
+    if (t - skorZaman < 250) return;
+    skorZaman = t;
+
+    const ilk = [...skorlar.values()].sort((a, b) => b.puan - a.puan).slice(0, LISTE_N);
+    skorEl.replaceChildren(...ilk.map((s, i) => {
+      const d = document.createElement('div');
+      d.className = 's' + (i === 0 ? ' bir' : '');
+      d.innerHTML =
+        `<span class="n">${i + 1}</span>` +
+        `<span class="ad">${TT.esc(s.ad)}</span>` +
+        `<span class="p">${TT.short(Math.round(s.puan))}</span>`;
+      return d;
+    }));
+  }
+
+  // ---- ULTI + kombo ---------------------------------------------------------
+  // Tum kovalarin carpanini gecici olarak yukselten bonus
+  let bonusCarpan = 1;
+  let bonusBitis = 0;
+  const bonusEl = document.getElementById('bonus');
+
+  function bonusVer(kat, saniye) {
+    bonusCarpan = kat;
+    bonusBitis = performance.now() + saniye * 1000;
+    bonusEl.textContent = `⚡ TÜM KOVALAR ×${kat} — ${saniye} SANİYE`;
+    bonusEl.classList.add('on');
+  }
+
+  function bonusKontrol() {
+    if (bonusCarpan !== 1 && performance.now() > bonusBitis) {
+      bonusCarpan = 1;
+      bonusEl.classList.remove('on');
+      bonusEl.textContent = '';
+    }
+  }
+
+  /** Ulti: kademeye gore FARKLI bir hamle — sadece "daha cok top" degil. */
+  function ulti(user, kademe, deger) {
+    ULTI.duyur(user?.nickname || user?.uniqueId || '?', kademe, 1400);
+
+    if (kademe.guc === 1) {
+      // ATES TOPU: 3 altin top
+      for (let i = 0; i < 3; i++) setTimeout(() => topBirak(user, true, deger / 3), i * 130);
+
+    } else if (kademe.guc === 2) {
+      // YILDIRIM: hizli 8 top
+      for (let i = 0; i < 8; i++) setTimeout(() => topBirak(user, true, deger / 8), i * 70);
+
+    } else if (kademe.guc === 3) {
+      // METEOR YAGMURU: 18 top, genis dagilim
+      for (let i = 0; i < 18; i++) setTimeout(() => topBirak(user, true, deger / 18), i * 55);
+
+    } else if (kademe.guc === 4) {
+      // KIYAMET: tum kovalar 2 kat + 14 top
+      bonusVer(2, 20);
+      for (let i = 0; i < 14; i++) setTimeout(() => topBirak(user, true, deger / 14), i * 60);
+
+    } else {
+      // INFAZ: tum kovalar 3 kat + kenardaki en yuksek kovaya NISANLI toplar
+      bonusVer(3, 25);
+      for (let i = 0; i < 10; i++) {
+        setTimeout(() => topBirak(user, true, deger / 10, true), i * 70);
+      }
+    }
+  }
+
+  // ---- olaylar --------------------------------------------------------------
+  TT.on('chat', (ev) => { topBirak(ev.user, false, 1); kombo.ekle(1); });
+  TT.on('like', (ev) => kombo.ekle(Math.min(20, ev.likes || 1) * 0.5));
+  TT.on('follow', (ev) => { topBirak(ev.user, false, 3); kombo.ekle(15); });
+  TT.on('share',  (ev) => { topBirak(ev.user, false, 3); kombo.ekle(10); });
+
+  TT.on('gift', (ev) => {
+    if (ev.gift.streaking) return;
+    const deger = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    ulti(ev.user, ULTI.kademe(deger), Math.max(10, deger));
+  });
+
+  // Kombo dolunca: sohbetin tamamina bedava top yagmuru
+  const kombo = ULTI.KomboBari({
+    hedef: Number(q.get('kombo')) || 120,
+    kap: document.getElementById('komboSar'),
+    dolunca: () => {
+      ULTI.duyur('SOHBET', ULTI.TAKIM, 1400);
+      bonusVer(2, 12);
+      // Son yorum yazanlara bedava top dagit
+      const kisiler = [...skorlar.entries()].slice(-12);
+      kisiler.forEach(([id, s], i) => {
+        setTimeout(() => topBirak({ uniqueId: id, nickname: s.ad }, true, 20), i * 90);
+      });
+    },
+  });
+
+  // ---- fizik + cizim --------------------------------------------------------
+  const YERCEKIMI = 1500;
+  const ZIPLAMA = 0.55;
+  const SURTUNME = 0.995;
+
+  let patlamalar = [];   // kovaya dusunce cikan parcaciklar
+
+  function kovayaDustu(top) {
+    const k = kovalar.find((k) => top.x >= k.x0 && top.x < k.x1) || kovalar[kovalar.length - 1];
+    const puan = Math.round(k.carpan * (top.altin ? top.deger : 10) * bonusCarpan);
+    puanEkle(top.id, top.ad, puan);
+
+    for (let i = 0; i < (top.altin ? 26 : 12); i++) {
+      const a = -Math.PI / 2 + (Math.random() - .5) * 2.4;
+      const h = 90 + Math.random() * 260;
+      patlamalar.push({
+        x: top.x, y: kovaUst, vx: Math.cos(a) * h, vy: Math.sin(a) * h,
+        omur: 1, renk: top.altin ? '#ffd93d' : k.renk,
+      });
+    }
+    if (patlamalar.length > 400) patlamalar = patlamalar.slice(-400);
+  }
+
+  TT.loop((dt) => {
+    // dt sicramasi fizigi patlatmasin
+    const h = Math.min(dt, 1 / 30);
+
+    bonusKontrol();
+    ctx.clearRect(0, 0, W, H);
+
+    // --- kovalar ---
+    for (const k of kovalar) {
+      ctx.fillStyle = k.renk;
+      ctx.globalAlpha = .22;
+      ctx.fillRect(k.x0 + 1, kovaUst, k.x1 - k.x0 - 2, H - kovaUst);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = k.renk;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(k.x0 + 1, kovaUst, k.x1 - k.x0 - 2, H - kovaUst);
+
+      ctx.fillStyle = k.renk;
+      ctx.font = `800 ${Math.min(16, (k.x1 - k.x0) * 0.42)}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('×' + k.carpan, (k.x0 + k.x1) / 2, kovaUst + (H - kovaUst) / 2);
+    }
+
+    // --- civiler ---
+    ctx.fillStyle = 'rgba(255,255,255,.62)';
+    for (const c of civiler) {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, CIVI_R, 0, 6.283);
+      ctx.fill();
+    }
+
+    // --- toplar ---
+    for (let i = toplar.length - 1; i >= 0; i--) {
+      const t = toplar[i];
+      t.vy += YERCEKIMI * h;
+      t.vx *= SURTUNME;
+      t.x += t.vx * h;
+      t.y += t.vy * h;
+
+      // yan duvarlar
+      if (t.x < tahtaSol + t.r) { t.x = tahtaSol + t.r; t.vx = Math.abs(t.vx) * ZIPLAMA; }
+      if (t.x > tahtaSag - t.r) { t.x = tahtaSag - t.r; t.vx = -Math.abs(t.vx) * ZIPLAMA; }
+
+      // Sadece yakin satirlardaki civilerle carpisma kontrolu yap:
+      // tum civileri taramak kalabalik yayinda kare hizini dusurur.
+      const yakinSatir = Math.floor((t.y - ustPayG) / satirAralikG);
+      for (let r = yakinSatir - 1; r <= yakinSatir + 1; r++) {
+        if (r < 0 || r >= SATIR) continue;
+        for (let ci = satirBasi[r]; ci < satirBasi[r + 1]; ci++) {
+          const c = civiler[ci];
+          const dx = t.x - c.x, dy = t.y - c.y;
+          const mesafe = Math.hypot(dx, dy);
+          const min = t.r + CIVI_R;
+          if (mesafe < min && mesafe > 0.0001) {
+            const nx = dx / mesafe, ny = dy / mesafe;
+            t.x = c.x + nx * min;
+            t.y = c.y + ny * min;
+            const nokta = t.vx * nx + t.vy * ny;
+            t.vx = (t.vx - 2 * nokta * nx) * ZIPLAMA;
+            t.vy = (t.vy - 2 * nokta * ny) * ZIPLAMA;
+            // civiye tam tepeden gelirse sonsuza kadar ziplamasin
+            t.vx += (Math.random() - .5) * 26;
+          }
+        }
+      }
+
+      // kovaya vardi mi
+      if (t.y >= kovaUst - t.r) {
+        kovayaDustu(t);
+        toplar.splice(i, 1);
+        continue;
+      }
+
+      // ciz
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.r, 0, 6.283);
+      ctx.fillStyle = t.altin ? '#ffd93d' : t.renk;
+      ctx.fill();
+      if (t.altin) {
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+      }
+      ctx.fillStyle = t.altin ? '#3a2c00' : '#fff';
+      ctx.font = `800 ${t.r * 1.05}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(t.harf, t.x, t.y + 0.5);
+    }
+
+    // --- patlama parcaciklari ---
+    for (const p of patlamalar) {
+      p.vy += 1100 * h;
+      p.x += p.vx * h; p.y += p.vy * h;
+      p.omur -= h / 0.85;
+      if (p.omur <= 0) continue;
+      ctx.globalAlpha = Math.max(0, p.omur);
+      ctx.fillStyle = p.renk;
+      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+    patlamalar = patlamalar.filter((p) => p.omur > 0);
+  });
+
+  skorCiz();
+})();
+</script>
+</body>
+</html>
