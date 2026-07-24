@@ -218,17 +218,29 @@ foreach ($dir in $found) {
 # ---------------------------------------------------------------------------
 Section "5) KULLANICI VERISI, AYAR VE LOG DOSYALARI"
 
+# DIKKAT: bir boru hattinin ciktisi TEK eleman dondururse PowerShell onu
+# dizi degil SKALER (String) olarak atar. Sonra `$a + $b` yaparsak
+# String + String = METIN BIRLESTIRME olur, dizi birlestirme degil:
+#   'C:\...\TikTok LIVE Studio' + 'C:\...\TikTok LIVE Studio'
+#     -> 'C:\...\TikTok LIVE StudioC:\...\TikTok LIVE Studio'
+# Bu cop yol sessizce hicbir sey bulmaz ve 5. bolum bombos cikar.
+# Cozum: her iki tarafi da @( ... ) ile GERCEK diziye zorla.
 $dataDirs = @(
-    "$env:APPDATA\TikTok LIVE Studio",
-    "$env:LOCALAPPDATA\TikTok LIVE Studio",
-    "$env:APPDATA\TikTokLiveStudio",
-    "$env:LOCALAPPDATA\TikTokLiveStudio"
-) | Where-Object { Test-Path -LiteralPath $_ }
+    @(
+        "$env:APPDATA\TikTok LIVE Studio",
+        "$env:LOCALAPPDATA\TikTok LIVE Studio",
+        "$env:APPDATA\TikTokLiveStudio",
+        "$env:LOCALAPPDATA\TikTokLiveStudio"
+    ) | Where-Object { Test-Path -LiteralPath $_ }
+)
 
 # genis arama
-$more = Get-ChildItem -LiteralPath $env:APPDATA, $env:LOCALAPPDATA -Directory -ErrorAction SilentlyContinue |
+$more = @(
+    Get-ChildItem -LiteralPath $env:APPDATA, $env:LOCALAPPDATA -Directory -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -match '(?i)tiktok|livestudio' } | ForEach-Object { $_.FullName }
-$dataDirs = @($dataDirs + $more) | Select-Object -Unique
+)
+
+$dataDirs = @(@($dataDirs) + @($more) | Where-Object { $_ } | Select-Object -Unique)
 
 if ($dataDirs.Count -eq 0) { W "  (kullanici verisi klasoru bulunamadi)" }
 
@@ -446,8 +458,12 @@ if (-not $procs) {
             }
     } catch {
         W "    (Get-NetTCPConnection kullanilamadi, netstat deneniyor)"
-        netstat -ano | Select-String -Pattern ($pids -join '|') | Select-Object -First 40 |
-            ForEach-Object { W "    $_" }
+        # PID'leri capasiz bir regex'e cevirmek yanlis eslesme uretir: netstat
+        # ciktisinda 4816 numarali PID, 54816 portunda da eslesir. PID daima
+        # SON sutun oldugu icin satir sonuna capaliyoruz.
+        $pat = '\s(' + (($pids | ForEach-Object { [string]$_ }) -join '|') + ')\s*$'
+        netstat -ano | Select-String -Pattern $pat | Select-Object -First 40 |
+            ForEach-Object { W ("    " + $_.Line.Trim()) }
     }
 }
 
@@ -558,6 +574,24 @@ Section "BITTI"
 W "  Rapor dosyasi: $OutFile"
 W "  Bu dosyayi bana oldugu gibi yapistir; ona gore devam edecegiz."
 
-$script:Report.ToString() | Out-File -FilePath $OutFile -Encoding UTF8
+# DIKKAT: Out-File kullanma. PS 5.1'de Out-File ciktiyi formatlayiciya sokar ve
+# uzun satirlari konsol genisliginde (80 ya da 120 sutun) ZORLA KIRAR — hem de
+# kelime sonunda degil, tam ortasindan. Bu raporun en degerli satirlari uzun:
+# Electron komut satirlari (300+ karakter), tam dosya yollari, services.json'daki
+# Link adresleri, minified JSON. Ekranda dogru gorunur, DOSYADA bozuk cikar.
+# -Width 4096 bile yetmez (24 KB'lik minified JSON tek satirdir).
+# Ayrica PS 5.1'de -Encoding UTF8 dosyanin basina BOM koyar.
+#
+# .NET'e dogrudan yazmak formatlayiciyi tamamen atlar: kirpma yok, BOM yok.
+# .NET goreli yolu PowerShell'in konumuna degil process'in calisma dizinine
+# gore cozdugu icin once MUTLAK yola ceviriyoruz.
+try {
+    $tamYol = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutFile)
+    [System.IO.File]::WriteAllText($tamYol, $script:Report.ToString(), (New-Object System.Text.UTF8Encoding($false)))
+    $OutFile = $tamYol
+} catch {
+    Write-Host "  [!] .NET ile yazilamadi ($($_.Exception.Message)), Out-File'a dusuluyor." -ForegroundColor Yellow
+    $script:Report.ToString() | Out-File -FilePath $OutFile -Encoding UTF8 -Width 32767
+}
 Write-Host ""
 Write-Host "==> Rapor yazildi: $OutFile" -ForegroundColor Green

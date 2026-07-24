@@ -54,21 +54,84 @@ if (-not (Test-Path -LiteralPath $hosts)) {
 }
 
 # --- Yedek ---
+# DIKKAT: Copy-Item hatasi da sonlandirici DEGIL. Yedek alinamadiysa geri donus
+# yolumuz yok demektir; o durumda hic dokunmadan cikiyoruz.
 $yedek = "$hosts.yedek-" + (Get-Date -Format 'yyyyMMdd-HHmmss')
-Copy-Item -LiteralPath $hosts -Destination $yedek -Force
-Write-Host "  Yedek alindi: $yedek" -ForegroundColor DarkGray
+try {
+    Copy-Item -LiteralPath $hosts -Destination $yedek -Force -ErrorAction Stop
+    Write-Host "  Yedek alindi: $yedek" -ForegroundColor DarkGray
+} catch {
+    Write-Host "  YEDEK ALINAMADI: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host '  hosts dosyasi kilitli ya da salt-okunur olabilir (antivirus / ReadOnly).' -ForegroundColor Red
+    Write-Host '  Hicbir sey degistirilmedi.' -ForegroundColor Red
+    Write-Host ''
+    Write-Host '  Alternatif — hicbir kurulum gerektirmez:' -ForegroundColor Cyan
+    Write-Host '     http://localtest.me:8787/overlays/alerts.html?lite=1'
+    exit 1
+}
 
 $satirlar = Get-Content -LiteralPath $hosts
 
 if ($Kaldir) {
-    $yeni = $satirlar | Where-Object { $_ -notmatch [regex]::Escape($isaret) }
-    Set-Content -LiteralPath $hosts -Value $yeni -Encoding ASCII
+    $yeni = @($satirlar | Where-Object { $_ -notmatch [regex]::Escape($isaret) })
+    try {
+        # Set-Content once dosyayi bosaltip sonra yazar: yarida patlarsa hosts
+        # dosyasi BOZULUR. Bu yuzden hatayi sonlandirici yapip yakaliyoruz.
+        Set-Content -LiteralPath $hosts -Value $yeni -Encoding ASCII -ErrorAction Stop
+    } catch {
+        Write-Host "  YAZILAMADI: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host '  DIKKAT: hosts dosyasi yarim yazilmis olabilir. Yedekten geri don:' -ForegroundColor Red
+        Write-Host "     Copy-Item -LiteralPath '$yedek' -Destination '$hosts' -Force" -ForegroundColor Yellow
+        exit 1
+    }
+    # Yazma hatasiz gorunse bile dosyayi GERI OKUYUP dogrula
+    if (Select-String -LiteralPath $hosts -SimpleMatch $isaret -Quiet) {
+        Write-Host '  Yazma hatasiz gorundu ama kayit hala dosyada.' -ForegroundColor Red
+        Write-Host "  Yedek: $yedek" -ForegroundColor Yellow
+        exit 1
+    }
     Write-Host "  '$AlanAdi' kaydi kaldirildi." -ForegroundColor Green
+
 } else {
-    if ($satirlar -match [regex]::Escape($AlanAdi)) {
+    # Yorum satirlarini sayma: bozuk bir kayit yuzunden 'zaten var' deyip
+    # sorunu kalici hale getirmeyelim.
+    $zatenVar = $satirlar | Where-Object {
+        $_ -notmatch '^\s*#' -and $_ -match ('^\s*127\.0\.0\.1\s+' + [regex]::Escape($AlanAdi) + '\b')
+    }
+
+    if ($zatenVar) {
         Write-Host "  '$AlanAdi' zaten hosts dosyasinda kayitli." -ForegroundColor Yellow
     } else {
-        Add-Content -LiteralPath $hosts -Value "127.0.0.1`t$AlanAdi`t$isaret" -Encoding ASCII
+        # Add-Content degerden SONRA satir sonu yazar, ONCE yazmaz. hosts dosyasi
+        # son satirdan sonra CRLF icermiyorsa (Notepad ile duzenlenmisse tipik)
+        # yeni kayit son satira YAPISIR. Son satir yorumsa ('# ::1  localhost')
+        # tum satir yorum sayilir ve kayit hic islemez.
+        try {
+            $mevcut = [System.IO.File]::ReadAllText($hosts)
+            if ($mevcut.Length -gt 0 -and -not ($mevcut.EndsWith("`n") -or $mevcut.EndsWith("`r"))) {
+                Add-Content -LiteralPath $hosts -Value '' -Encoding ASCII -ErrorAction Stop
+            }
+            Add-Content -LiteralPath $hosts -Value "127.0.0.1`t$AlanAdi`t$isaret" -Encoding ASCII -ErrorAction Stop
+        } catch {
+            Write-Host "  YAZILAMADI: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host '  Muhtemel sebep: hosts salt-okunur, antivirus kilidi (Malwarebytes/Avast/Norton)' -ForegroundColor Red
+            Write-Host '  ya da Defender HostsFileHijack korumasi.' -ForegroundColor Red
+            Write-Host ''
+            Write-Host '  Alternatif — hicbir kurulum gerektirmez:' -ForegroundColor Cyan
+            Write-Host '     http://localtest.me:8787/overlays/alerts.html?lite=1'
+            exit 1
+        }
+
+        # Yazma "basarili" gorunse bile geri okuyup DOGRULA: antivirus yazmayi
+        # sessizce geri almis olabilir.
+        $dogrula = Select-String -LiteralPath $hosts `
+            -Pattern ('^\s*127\.0\.0\.1\s+' + [regex]::Escape($AlanAdi) + '\b') -Quiet
+        if (-not $dogrula) {
+            Write-Host '  Yazma gorunuste basarili ama satir dosyada yok.' -ForegroundColor Red
+            Write-Host '  (Antivirus geri almis olabilir.) Alternatif:' -ForegroundColor Cyan
+            Write-Host '     http://localtest.me:8787/overlays/alerts.html?lite=1'
+            exit 1
+        }
         Write-Host "  Eklendi: 127.0.0.1 -> $AlanAdi" -ForegroundColor Green
     }
 }

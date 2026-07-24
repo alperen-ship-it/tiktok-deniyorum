@@ -35,6 +35,7 @@ function parseArgs(argv) {
     else if (a === '--port' || a === '-p') out.port = Number(argv[++i]) || out.port;
     else if (a === '--rate') out.rate = Number(argv[++i]) || 1;
     else if (a === '--key' || a === '-k') out.key = String(argv[++i] || '');
+    else if (a === '--gifts') out.gifts = true;
     else if (a === '--no-80') out.no80 = true;
     else if (a === '--help' || a === '-h') out.help = true;
   }
@@ -52,6 +53,8 @@ TikTok LIVE koprusu
   --port, -p <n>     HTTP/WS portu (varsayilan 8787)
   --rate <n>         Mock modda olay hizi carpani (varsayilan 1)
   --key, -k <k>      EulerStream imzalama anahtari (ya da EULER_API_KEY ortam degiskeni)
+  --gifts            Hediye katalogunu da cek (ikon URL'leri icin) — UCRETLI uc,
+                     varsayilan kapali. Kapaliyken hediye adi/elmas degeri yine gelir.
   --no-80            Port 80'i da dinleme (varsayilan: dener)
   --verbose, -v      Her olayi konsola bas
 `);
@@ -440,7 +443,11 @@ async function startLive(username) {
   state.mode = 'live';
   const conn = new Ctor(username, {
     processInitialData: false,
-    enableExtendedGiftInfo: true,   // giftDetails: ad, elmas degeri, ikon URL'i
+    // enableExtendedGiftInfo, hediye KATALOGUNU ayri bir uctan cekiyor ve o uc
+    // EulerStream'de ucretli. Kapaliyken hediye adi/elmas degeri yine mesajin
+    // kendi icinden geliyor — sadece katalog ikonlari gelmiyor, overlay'ler
+    // zaten emoji'ye dusuyor. Varsayilan KAPALI; istersen --gifts ile ac.
+    enableExtendedGiftInfo: !!args.gifts,
   });
 
   // Olay adlari surumler arasi degisti (subscribe -> subNotify gibi). Enum
@@ -484,12 +491,39 @@ async function startLive(username) {
     state.connected = false;
     const msg = e?.message || String(e);
     log('!! Baglanilamadi:', msg);
+    log('');
+
     if (/offline/i.test(msg)) {
       log('   Kullanici su an CANLI yayinda degil.');
+    } else if (/Business plan|requires a .*plan|MissingTokens/i.test(msg)) {
+      // En sik ve en can sikici durum: zincirin geri kalani calisiyor,
+      // sadece imzalama paywall'a takiliyor.
+      log('   >>> IMZALAMA PAYWALL <<<');
+      log('   Oda bulundu, yayin canli, ama webcast adresini imzalayan servis');
+      log('   (EulerStream) bu istegi ucretli plana kilitlemis.');
+      log('');
+      log('   Siradaki adimlar, ucuzdan pahaliya:');
+      log('');
+      log('   1) UCRETSIZ ANAHTAR DENE — anonim istek reddediliyor olabilir,');
+      log('      anahtarli ucretsiz katman calisabilir:');
+      log('        https://www.eulerstream.com  -> kaydol, API key al');
+      log('        $env:EULER_API_KEY="<anahtar>"   (PowerShell)');
+      log('        node server/bridge.js --user ' + username);
+      log('');
+      log('   2) TIKFINITY — imzalamayi kendisi hallediyor, bizim overlay\'ler');
+      log('      onun yerel WebSocket\'ini zaten konusuyor. Kopruye gerek kalmaz:');
+      log('        tikfinity.zerody.one -> Desktop uygulamasini kur, hesabina bagla');
+      log('        sonra overlay\'i ac:  overlays/chat.html?src=tikfinity');
+      log('        (TikFinity ws://127.0.0.1:21213 uzerinden yayin yapiyor)');
+      log('');
+      log('   3) Ucretli EulerStream plani — aylik ucret.');
     } else if (/rate.?limit|429/i.test(msg)) {
-      log('   Imzalama limiti doldu. EulerStream ucretsiz anahtari al: https://www.eulerstream.com');
+      log('   Imzalama limiti doldu. Ucretsiz anahtar al: https://www.eulerstream.com');
+      log('   sonra:  $env:EULER_API_KEY="<anahtar>"');
     }
-    log('   Test icin sahte olaylarla devam:  node server/bridge.js --mock');
+
+    log('');
+    log('   Overlay\'leri sahte veriyle denemeye devam:  node server/bridge.js --mock');
   }
 }
 
