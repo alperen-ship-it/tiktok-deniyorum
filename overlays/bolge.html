@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Bölge Savaşı — haritayı boya</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  #kok {
+    position: fixed;
+    top: var(--dz-ust); bottom: var(--dz-alt);
+    left: var(--dz-sol); right: var(--dz-sag);
+    display: flex; flex-direction: column;
+  }
+
+  #ust { flex: none; padding: 2px 2px 8px; }
+
+  #oranBar {
+    position: relative; height: 30px; border-radius: 15px; overflow: hidden;
+    background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.18);
+  }
+  #oranA { position: absolute; inset: 0 auto 0 0; transition: width .4s cubic-bezier(.16,1,.3,1); }
+  #oranSeam {
+    position: absolute; top: -4px; bottom: -4px; width: 3px; background: #fff;
+    transition: left .4s cubic-bezier(.16,1,.3,1);
+  }
+  .oranYazi {
+    position: absolute; top: 0; bottom: 0; display: grid; place-content: center;
+    font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 4px rgba(0,0,0,.95);
+  }
+  #yaziA { left: 10px; }
+  #yaziB { right: 10px; }
+
+  #adlar { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 18px; font-weight: 900; }
+  #komboSar { margin-top: 8px; }
+
+  #alan { flex: 1; position: relative; min-height: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  #alt { flex: none; text-align: center; padding: 8px 2px 2px; font-size: 16px; line-height: 1.5; }
+  #alt .k { color: #7ee787; }
+  #alt .h { color: #ffd93d; }
+
+  #sonuc {
+    position: fixed; inset: 0; display: grid; place-content: center; text-align: center;
+    background: rgba(0,0,0,.6); opacity: 0; pointer-events: none; transition: opacity .35s;
+  }
+  #sonuc.on { opacity: 1; }
+  #sonuc .b { font-size: 60px; font-weight: 900; letter-spacing: -2px; animation: patla .55s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes patla { from { transform: scale(.3); opacity: 0; } }
+  #sonuc .k { font-size: 20px; opacity: .85; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="kok" class="tt-oyun">
+  <div id="ust">
+    <div id="adlar">
+      <span id="adA">MAVİ</span>
+      <span id="sure" style="opacity:.7;font-size:15px"></span>
+      <span id="adB">KIRMIZI</span>
+    </div>
+    <div id="oranBar">
+      <div id="oranA"></div>
+      <div id="oranSeam"></div>
+      <div class="oranYazi" id="yaziA">%50</div>
+      <div class="oranYazi" id="yaziB">%50</div>
+    </div>
+    <div id="komboSar"></div>
+  </div>
+
+  <div id="alan"><canvas id="cv"></canvas></div>
+
+  <div id="alt">
+    Takımının adını yaz → bölge kap ·
+    <span class="k">beğeni</span> = sohbet gücü · <span class="h">hediye</span> = ULTİ
+  </div>
+</div>
+
+<div id="sonuc"><div><div class="b" id="sonucB"></div><div class="k" id="sonucK"></div></div></div>
+
+<script src="_shared/tt.js"></script>
+<script src="_shared/ulti.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const AD_A  = q.get('a') || 'MAVİ';
+  const AD_B  = q.get('b') || 'KIRMIZI';
+  const KEL_A = (q.get('ka') || AD_A).toLowerCase();
+  const KEL_B = (q.get('kb') || AD_B).toLowerCase();
+  const RENK_A = q.get('ra') || '#25f4ee';
+  const RENK_B = q.get('rb') || '#fe2c55';
+  const SUTUN = Number(q.get('sutun')) || 26;
+  const SURE  = q.has('sure') ? Number(q.get('sure')) : 0;   // 0 = süresiz
+
+  document.getElementById('adA').textContent = AD_A;
+  document.getElementById('adB').textContent = AD_B;
+  document.getElementById('adA').style.color = RENK_A;
+  document.getElementById('adB').style.color = RENK_B;
+  document.getElementById('oranA').style.background = RENK_A;
+  document.getElementById('oranBar').style.background = RENK_B;
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+
+  let W = 0, H = 0, SATIR = 0, hucreG = 0, hucreY = 0;
+  let izgara = null;               // Int8Array: 0 = bos, 1 = A, 2 = B
+  let parlak = null;               // yeni kapilan hucrelerin parlama omru
+
+  function kur() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const r = document.getElementById('alan').getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    hucreG = W / SUTUN;
+    SATIR = Math.max(6, Math.round(H / hucreG));
+    hucreY = H / SATIR;
+
+    const eski = izgara, eskiSutun = SUTUN;
+    izgara = new Int8Array(SUTUN * SATIR);
+    parlak = new Float32Array(SUTUN * SATIR);
+    // Yeniden boyutlanmada oyunu sifirlamak yerine kabaca tasi
+    if (eski && eski.length) {
+      const eskiSatir = eski.length / eskiSutun;
+      for (let y = 0; y < SATIR; y++) {
+        for (let x = 0; x < SUTUN; x++) {
+          const ey = Math.min(eskiSatir - 1, Math.floor(y * eskiSatir / SATIR));
+          const ex = Math.min(eskiSutun - 1, Math.floor(x * eskiSutun / SUTUN));
+          izgara[y * SUTUN + x] = eski[ey * eskiSutun + ex];
+        }
+      }
+    }
+  }
+  addEventListener('resize', kur);
+  new ResizeObserver(kur).observe(document.getElementById('alan'));
+  kur();
+
+  // ---------------------------------------------------------------------------
+  const takimlar = new Map();      // uniqueId -> 1 | 2
+  const katki = new Map();         // uniqueId -> {ad, takim, hucre}
+  let bitti = false;
+
+  function takimSec(user, yazi) {
+    const id = user?.uniqueId || 'anon';
+    const t = String(yazi || '').toLowerCase();
+    if (t.includes(KEL_A)) { takimlar.set(id, 1); return 1; }
+    if (t.includes(KEL_B)) { takimlar.set(id, 2); return 2; }
+    const m = takimlar.get(id);
+    if (m) return m;
+    // Yeni kisiyi GERIDE olan takima yaz: mac tek tarafli kilitlenmesin
+    const [a, b] = say();
+    const yeni = a <= b ? 1 : 2;
+    takimlar.set(id, yeni);
+    return yeni;
+  }
+
+  function say() {
+    let a = 0, b = 0;
+    for (let i = 0; i < izgara.length; i++) {
+      if (izgara[i] === 1) a++; else if (izgara[i] === 2) b++;
+    }
+    return [a, b];
+  }
+
+  /**
+   * Bir hucre kap. Rastgele degil: takimin KENDI sinirina komsu bir hucre secer,
+   * boylece bolgeler organik lekeler halinde buyur. Sinir yoksa rastgele tohum atar.
+   */
+  function hucreKap(takim, adet) {
+    const sinir = [];
+    for (let y = 0; y < SATIR; y++) {
+      for (let x = 0; x < SUTUN; x++) {
+        const i = y * SUTUN + x;
+        if (izgara[i] === takim) continue;
+        // komsularindan biri bizimse burasi sinirdir
+        if ((x > 0 && izgara[i - 1] === takim) ||
+            (x < SUTUN - 1 && izgara[i + 1] === takim) ||
+            (y > 0 && izgara[i - SUTUN] === takim) ||
+            (y < SATIR - 1 && izgara[i + SUTUN] === takim)) {
+          sinir.push(i);
+        }
+      }
+    }
+
+    for (let n = 0; n < adet; n++) {
+      let i;
+      if (sinir.length) {
+        i = sinir[(Math.random() * sinir.length) | 0];
+      } else {
+        i = (Math.random() * izgara.length) | 0;   // ilk tohum
+      }
+      if (izgara[i] === takim) { n--; if (Math.random() < 0.05) break; continue; }
+      izgara[i] = takim;
+      parlak[i] = 1;
+      // yeni kapilan hucrenin komsulari da sinira eklensin
+      const x = i % SUTUN, y = (i / SUTUN) | 0;
+      if (x > 0) sinir.push(i - 1);
+      if (x < SUTUN - 1) sinir.push(i + 1);
+      if (y > 0) sinir.push(i - SUTUN);
+      if (y < SATIR - 1) sinir.push(i + SUTUN);
+    }
+  }
+
+  /** Belirli bir noktadan yaricapa gore patlama: ulti icin. */
+  function patlat(takim, cx, cy, yaricap) {
+    for (let y = 0; y < SATIR; y++) {
+      for (let x = 0; x < SUTUN; x++) {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d <= yaricap) {
+          const i = y * SUTUN + x;
+          izgara[i] = takim;
+          parlak[i] = 1;
+        }
+      }
+    }
+  }
+
+  function katkiEkle(user, takim, n) {
+    const id = user?.uniqueId || 'anon';
+    let k = katki.get(id);
+    if (!k) { k = { ad: user?.nickname || id, takim, hucre: 0 }; katki.set(id, k); }
+    k.hucre += n;
+  }
+
+  // ---- ULTI ---------------------------------------------------------------
+  function ulti(user, kademe) {
+    if (bitti) return;
+    const takim = takimSec(user, null);
+    ULTI.duyur(user?.nickname || user?.uniqueId || '?', kademe, 1400);
+
+    const cx = (Math.random() * SUTUN) | 0;
+    const cy = (Math.random() * SATIR) | 0;
+
+    if (kademe.guc === 1) {
+      hucreKap(takim, 14);
+      katkiEkle(user, takim, 14);
+
+    } else if (kademe.guc === 2) {
+      // YILDIRIM: haritayi bir uctan bir uca kesen serit
+      const yatay = Math.random() < 0.5;
+      for (let k = 0; k < (yatay ? SUTUN : SATIR); k++) {
+        const i = yatay ? cy * SUTUN + k : k * SUTUN + cx;
+        izgara[i] = takim; parlak[i] = 1;
+      }
+      katkiEkle(user, takim, yatay ? SUTUN : SATIR);
+
+    } else if (kademe.guc === 3) {
+      // METEOR: birkac ayri leke
+      for (let m = 0; m < 5; m++) {
+        patlat(takim, (Math.random() * SUTUN) | 0, (Math.random() * SATIR) | 0, 2.5);
+      }
+      katkiEkle(user, takim, 90);
+
+    } else if (kademe.guc === 4) {
+      patlat(takim, cx, cy, 6);
+      katkiEkle(user, takim, 110);
+
+    } else {
+      // INFAZ: haritanin ceyregini tek hamlede al
+      patlat(takim, cx, cy, Math.max(SUTUN, SATIR) * 0.32);
+      katkiEkle(user, takim, 400);
+    }
+  }
+
+  const kombo = ULTI.KomboBari({
+    hedef: Number(q.get('kombo')) || 120,
+    kap: document.getElementById('komboSar'),
+    dolunca: () => {
+      const [a, b] = say();
+      const zayif = a <= b ? 1 : 2;      // geride olana yardim
+      ULTI.duyur('SOHBET', ULTI.TAKIM, 1300);
+      patlat(zayif, (Math.random() * SUTUN) | 0, (Math.random() * SATIR) | 0, 4);
+    },
+  });
+
+  // ---- olaylar ------------------------------------------------------------
+  TT.on('chat', (ev) => {
+    if (bitti) return;
+    const t = takimSec(ev.user, ev.comment);
+    hucreKap(t, 3);
+    katkiEkle(ev.user, t, 3);
+    kombo.ekle(1);
+  });
+  TT.on('like', (ev) => {
+    if (bitti) return;
+    const t = takimSec(ev.user, null);
+    hucreKap(t, 1);
+    kombo.ekle(Math.min(20, ev.likes || 1) * 0.5);
+  });
+  TT.on('follow', (ev) => { if (!bitti) { const t = takimSec(ev.user, null); hucreKap(t, 12); katkiEkle(ev.user, t, 12); kombo.ekle(12); } });
+  TT.on('share',  (ev) => { if (!bitti) { const t = takimSec(ev.user, null); hucreKap(t, 8);  katkiEkle(ev.user, t, 8);  kombo.ekle(8); } });
+  TT.on('gift',   (ev) => {
+    if (ev.gift.streaking) return;
+    const d = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    ulti(ev.user, ULTI.kademe(d));
+  });
+
+  // ---- geri sayim ---------------------------------------------------------
+  const sureEl = document.getElementById('sure');
+  if (SURE > 0) {
+    let kalan = SURE;
+    const yaz = () => {
+      const m = Math.floor(kalan / 60), s = kalan % 60;
+      sureEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
+    };
+    yaz();
+    const iv = setInterval(() => {
+      kalan--; yaz();
+      if (kalan <= 0) { clearInterval(iv); bitir(); }
+    }, 1000);
+  }
+
+  function bitir() {
+    bitti = true;
+    const [a, b] = say();
+    const kazanan = a > b ? AD_A : b > a ? AD_B : null;
+    const s = document.getElementById('sonucB');
+    s.textContent = kazanan ? kazanan + ' KAZANDI' : 'BERABERE';
+    s.style.color = kazanan === AD_A ? RENK_A : kazanan === AD_B ? RENK_B : '#fff';
+    const en = [...katki.values()].sort((x, y) => y.hucre - x.hucre)[0];
+    document.getElementById('sonucK').textContent =
+      en ? `⭐ En çok bölge: ${en.ad} (${en.hucre})` : '';
+    document.getElementById('sonuc').classList.add('on');
+  }
+
+  // ---- cizim --------------------------------------------------------------
+  const oranA = document.getElementById('oranA');
+  const oranSeam = document.getElementById('oranSeam');
+  const yaziA = document.getElementById('yaziA');
+  const yaziB = document.getElementById('yaziB');
+
+  let oranZaman = 0;
+  function oranCiz() {
+    const t = performance.now();
+    if (t - oranZaman < 200) return;
+    oranZaman = t;
+    const [a, b] = say();
+    const top = a + b;
+    // Hic kapilmamis hucreler varken oran, KAPILANLAR uzerinden hesaplanir
+    const p = top === 0 ? 50 : (a / top) * 100;
+    const kirp = Math.max(4, Math.min(96, p));
+    oranA.style.width = kirp + '%';
+    oranSeam.style.left = kirp + '%';
+    yaziA.textContent = '%' + Math.round(p);
+    yaziB.textContent = '%' + Math.round(100 - p);
+  }
+
+  TT.loop((dt) => {
+    ctx.clearRect(0, 0, W, H);
+
+    for (let y = 0; y < SATIR; y++) {
+      for (let x = 0; x < SUTUN; x++) {
+        const i = y * SUTUN + x;
+        const v = izgara[i];
+        if (!v) continue;
+        ctx.fillStyle = v === 1 ? RENK_A : RENK_B;
+        ctx.globalAlpha = 0.78;
+        ctx.fillRect(x * hucreG, y * hucreY, hucreG - 1, hucreY - 1);
+
+        // yeni kapilan hucre bir an parlar: nerede ne oldugu gozle takip edilsin
+        if (parlak[i] > 0) {
+          ctx.globalAlpha = parlak[i];
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(x * hucreG, y * hucreY, hucreG - 1, hucreY - 1);
+          parlak[i] -= dt * 1.6;
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+    oranCiz();
+  });
+
+  oranCiz();
+})();
+</script>
+</body>
+</html>

@@ -250,6 +250,36 @@
       desc: 'Her yorum yazan bir yarışçı olur. Yorum ilerletir, hediye fırlatır. İlk bitiren kazanır.',
       opts: '<code>?lanes=10</code> · <code>?step=3&boost=40</code> · <code>?auto=1</code> otomatik yeniden başlat · <code>?decay=1</code> geri kayma',
     },
+
+    // ---- OYUNLAR: yorum = temel hamle, beğeni = kombo, hediye = ULTİ ----
+    {
+      oyun: true,
+      file: 'boss.html',
+      name: '🐉 Boss Dövüşü',
+      desc: 'Tüm sohbet tek canavara karşı birleşir. Yorum vurur, beğeni sohbet gücünü doldurur, hediye ULTİ tetikler. Boss düşünce bir sonrakine geçer.',
+      opts: '<code>?hp=4000</code> ilk can · <code>?buyume=1.6</code> her bossta katlanma · <code>?vurus=10</code> yorum hasarı · <code>?kombo=150</code>',
+    },
+    {
+      oyun: true,
+      file: 'plinko.html',
+      name: '🎯 Plinko',
+      desc: 'Yorum yazanın topu düşer, çivilere çarpa çarpa puan kovasına iner. Ulti kademesine göre 3 / 8 / 18 top, bonus çarpan, kenara nişanlı atış.',
+      opts: '<code>?satir=12</code> çivi satırı · <code>?maxtop=90</code> · <code>?kombo=120</code>',
+    },
+    {
+      oyun: true,
+      file: 'ordu.html',
+      name: '⚔️ Chat Ordusu',
+      desc: 'İki taraf. Her yorum bir asker doğurur, hediye kahraman çağırır. Ordular şeritlerde kendiliğinden çarpışır, üssü düşen kaybeder.',
+      opts: '<code>?a=Kediler&b=Köpekler&ka=kedi&kb=köpek</code> · <code>?us=1200</code> üs canı · <code>?serit=7</code> · <code>?max=160</code>',
+    },
+    {
+      oyun: true,
+      file: 'bolge.html',
+      name: '🗺️ Bölge Savaşı',
+      desc: 'Harita ızgarası. Takımını yazınca bölgen organik leke gibi büyür, hediye ulti kademesine göre şerit/patlama/çeyrek harita alır.',
+      opts: '<code>?a=MAVİ&b=KIRMIZI</code> · <code>?sutun=26</code> · <code>?sure=300</code> geri sayım · <code>?ra=#25f4ee&rb=#fe2c55</code> renkler',
+    },
   ];
 
   // Bu sayfa iki adresten birden servis ediliyor:

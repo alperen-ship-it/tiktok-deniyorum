@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Chat Ordusu — yorumlar asker, hediye kahraman</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  #kok {
+    position: fixed;
+    top: var(--dz-ust); bottom: var(--dz-alt);
+    left: var(--dz-sol); right: var(--dz-sag);
+    display: flex; flex-direction: column;
+  }
+
+  #ust { flex: none; padding: 4px 2px 8px; }
+
+  .uslerBar { display: flex; align-items: center; gap: 10px; }
+  .us { flex: 1; min-width: 0; }
+  .us.b { text-align: right; }
+  .us .ad { font-size: 19px; font-weight: 900; letter-spacing: -.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .us.a .ad { color: var(--tt-cyan); }
+  .us.b .ad { color: var(--tt-pink); }
+  .us .sayi { font-size: 12px; opacity: .7; letter-spacing: 1px; }
+
+  .canDis {
+    position: relative; height: 16px; border-radius: 8px; margin-top: 3px;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.18); overflow: hidden;
+  }
+  .canIc { position: absolute; inset: 0 auto 0 0; transition: width .25s ease; }
+  .us.a .canIc { background: linear-gradient(90deg, #25f4ee, #4fa8ff); }
+  .us.b .canIc { background: linear-gradient(270deg, #fe2c55, #ff7a3d); right: 0; left: auto; }
+
+  #vs { font-size: 22px; font-weight: 900; opacity: .55; flex: none; }
+
+  #komboSar { margin-top: 8px; }
+
+  #alan { flex: 1; position: relative; min-height: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  #alt { flex: none; text-align: center; padding: 8px 2px 2px; font-size: 16px; line-height: 1.5; }
+  #alt .a { color: var(--tt-cyan); font-weight: 800; }
+  #alt .b { color: var(--tt-pink); font-weight: 800; }
+  #alt .k { color: #7ee787; }
+  #alt .h { color: #ffd93d; }
+
+  #sonuc {
+    position: fixed; inset: 0; display: grid; place-content: center; text-align: center;
+    background: rgba(0,0,0,.6); opacity: 0; pointer-events: none; transition: opacity .35s;
+  }
+  #sonuc.on { opacity: 1; }
+  #sonuc .b { font-size: 62px; font-weight: 900; letter-spacing: -2px; animation: patla .55s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes patla { from { transform: scale(.3); opacity: 0; } }
+  #sonuc .k { font-size: 20px; opacity: .85; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="kok" class="tt-oyun">
+  <div id="ust">
+    <div class="uslerBar">
+      <div class="us a">
+        <div class="ad" id="adA">MAVİLER</div>
+        <div class="sayi" id="sayiA">0 asker</div>
+        <div class="canDis"><div class="canIc" id="canA"></div></div>
+      </div>
+      <div id="vs">VS</div>
+      <div class="us b">
+        <div class="ad" id="adB">KIRMIZILAR</div>
+        <div class="sayi" id="sayiB">0 asker</div>
+        <div class="canDis"><div class="canIc" id="canB"></div></div>
+      </div>
+    </div>
+    <div id="komboSar"></div>
+  </div>
+
+  <div id="alan"><canvas id="cv"></canvas></div>
+
+  <div id="alt">
+    <span class="a" id="kelA">MAVİ</span> / <span class="b" id="kelB">KIRMIZI</span> yaz → asker gönder ·
+    <span class="k">beğeni</span> = sohbet gücü · <span class="h">hediye</span> = KAHRAMAN
+  </div>
+</div>
+
+<div id="sonuc"><div><div class="b" id="sonucB"></div><div class="k" id="sonucK"></div></div></div>
+
+<script src="_shared/tt.js"></script>
+<script src="_shared/ulti.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const AD_A  = q.get('a') || 'MAVİLER';
+  const AD_B  = q.get('b') || 'KIRMIZILAR';
+  const KEL_A = (q.get('ka') || 'mavi').toLowerCase();
+  const KEL_B = (q.get('kb') || 'kırmızı').toLowerCase();
+  const US_CAN = Number(q.get('us')) || 1200;
+  const SERIT  = Number(q.get('serit')) || 7;
+  const MAXBIRIM = Number(q.get('max')) || 160;
+
+  document.getElementById('adA').textContent = AD_A;
+  document.getElementById('adB').textContent = AD_B;
+  document.getElementById('kelA').textContent = KEL_A.toUpperCase();
+  document.getElementById('kelB').textContent = KEL_B.toUpperCase();
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const el = {
+    canA: document.getElementById('canA'), canB: document.getElementById('canB'),
+    sayiA: document.getElementById('sayiA'), sayiB: document.getElementById('sayiB'),
+    sonuc: document.getElementById('sonuc'),
+    sonucB: document.getElementById('sonucB'), sonucK: document.getElementById('sonucK'),
+  };
+
+  let W = 0, H = 0, seritY = [], seritYuk = 0;
+
+  function boyut() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const r = document.getElementById('alan').getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    seritYuk = H / SERIT;
+    seritY = [];
+    for (let i = 0; i < SERIT; i++) seritY.push(seritYuk * (i + 0.5));
+  }
+  addEventListener('resize', boyut);
+  new ResizeObserver(boyut).observe(document.getElementById('alan'));
+  boyut();
+
+  // ---------------------------------------------------------------------------
+  // Durum
+  // ---------------------------------------------------------------------------
+  let canA = US_CAN, canB = US_CAN, bitti = false;
+  let birimler = [];               // {takim, serit, x, hp, maxHp, dps, hiz, r, emoji, ad}
+  const takimlar = new Map();      // uniqueId -> 'a' | 'b'
+  const katki = new Map();         // uniqueId -> {ad, takim, birim}
+
+  const ASKER = { hp: 24, dps: 9, hiz: 46, r: 9 };
+
+  function barCiz() {
+    el.canA.style.width = Math.max(0, canA / US_CAN) * 100 + '%';
+    el.canB.style.width = Math.max(0, canB / US_CAN) * 100 + '%';
+    let a = 0, b = 0;
+    for (const u of birimler) (u.takim === 'a' ? a++ : b++);
+    el.sayiA.textContent = a + ' asker';
+    el.sayiB.textContent = b + ' asker';
+  }
+
+  /** Oy vermemis birine takim ata: geride kalan tarafa yaz (kendini dengeler). */
+  function takimSec(user, yazi) {
+    const id = user?.uniqueId || 'anon';
+    const t = String(yazi || '').toLowerCase();
+
+    if (t.includes(KEL_A)) { takimlar.set(id, 'a'); return 'a'; }
+    if (t.includes(KEL_B)) { takimlar.set(id, 'b'); return 'b'; }
+
+    const mevcut = takimlar.get(id);
+    if (mevcut) return mevcut;
+
+    let a = 0, b = 0;
+    for (const v of takimlar.values()) (v === 'a' ? a++ : b++);
+    const yeni = a <= b ? 'a' : 'b';
+    takimlar.set(id, yeni);
+    return yeni;
+  }
+
+  function birimEkle(takim, user, tur) {
+    if (bitti) return;
+    if (birimler.length >= MAXBIRIM) {
+      // En zayif askeri feda et — kahramanlar korunur
+      const i = birimler.findIndex((u) => !u.kahraman);
+      if (i >= 0) birimler.splice(i, 1); else return;
+    }
+
+    const serit = (Math.random() * SERIT) | 0;
+    const kahraman = !!tur;
+    const kat = tur ? tur.kat : 1;
+
+    birimler.push({
+      takim, serit,
+      x: takim === 'a' ? 4 : W - 4,
+      hp: ASKER.hp * kat, maxHp: ASKER.hp * kat,
+      dps: ASKER.dps * kat,
+      hiz: ASKER.hiz * (kahraman ? 0.72 : 1),      // kahraman agir ama guclu
+      r: ASKER.r * (kahraman ? 1 + Math.min(1.4, kat * 0.22) : 1),
+      kahraman,
+      emoji: tur ? tur.emoji : null,
+      sahip: user?.uniqueId || 'anon',
+    });
+
+    const id = user?.uniqueId || 'anon';
+    let k = katki.get(id);
+    if (!k) { k = { ad: user?.nickname || id, takim, birim: 0 }; katki.set(id, k); }
+    k.birim += kat;
+  }
+
+  // ---- ULTI: kahraman cagirma ----------------------------------------------
+  const KAHRAMAN = {
+    1: { emoji: '🗡️', kat: 3 },
+    2: { emoji: '🛡️', kat: 7 },
+    3: { emoji: '🐺', kat: 16 },
+    4: { emoji: '🐲', kat: 40 },
+    5: { emoji: '☠️', kat: 110 },
+  };
+
+  function ulti(user, kademe, yazi) {
+    const takim = takimSec(user, yazi);
+    ULTI.duyur(user?.nickname || user?.uniqueId || '?', kademe, 1400);
+    const tur = KAHRAMAN[kademe.guc] || KAHRAMAN[1];
+    birimEkle(takim, user, tur);
+    // Kahramanla birlikte muhafiz birligi de gelsin: ekranda "ordu geldi" hissi
+    const muhafiz = Math.min(14, kademe.guc * 3);
+    for (let i = 0; i < muhafiz; i++) {
+      setTimeout(() => birimEkle(takim, user, null), i * 70);
+    }
+  }
+
+  const kombo = ULTI.KomboBari({
+    hedef: Number(q.get('kombo')) || 120,
+    kap: document.getElementById('komboSar'),
+    dolunca: () => {
+      // Bedava takviye: iki tarafa da degil, GERIDE olana. Maci canli tutar.
+      const zayif = canA <= canB ? 'a' : 'b';
+      ULTI.duyur('SOHBET', ULTI.TAKIM, 1300);
+      for (let i = 0; i < 22; i++) {
+        setTimeout(() => birimEkle(zayif, { uniqueId: '__sohbet__', nickname: 'SOHBET' }, null), i * 55);
+      }
+    },
+  });
+
+  // ---- olaylar --------------------------------------------------------------
+  TT.on('chat', (ev) => {
+    const takim = takimSec(ev.user, ev.comment);
+    birimEkle(takim, ev.user, null);
+    kombo.ekle(1);
+  });
+  TT.on('like', (ev) => kombo.ekle(Math.min(20, ev.likes || 1) * 0.5));
+  TT.on('follow', (ev) => { const t = takimSec(ev.user); for (let i = 0; i < 4; i++) birimEkle(t, ev.user, null); kombo.ekle(12); });
+  TT.on('share',  (ev) => { const t = takimSec(ev.user); for (let i = 0; i < 3; i++) birimEkle(t, ev.user, null); kombo.ekle(8); });
+  TT.on('gift', (ev) => {
+    if (ev.gift.streaking) return;
+    const deger = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    ulti(ev.user, ULTI.kademe(deger), null);
+  });
+
+  // ---- savas simulasyonu ----------------------------------------------------
+  // Serit tabanli: her serit bagimsiz. Ondeki iki dusman birim carpisir,
+  // arkadakiler siraya girer. Bu, yuzlerce birimi ucuza simule etmeyi saglar.
+  function simule(dt) {
+    if (bitti) return;
+
+    // Seritlere ayir
+    const s = Array.from({ length: SERIT }, () => ({ a: [], b: [] }));
+    for (const u of birimler) s[u.serit][u.takim].push(u);
+
+    for (let i = 0; i < SERIT; i++) {
+      const A = s[i].a.sort((p, r) => r.x - p.x);   // en ondeki = en buyuk x
+      const B = s[i].b.sort((p, r) => p.x - r.x);   // en ondeki = en kucuk x
+
+      const onA = A[0], onB = B[0];
+      const temas = onA && onB && (onB.x - onA.x) <= (onA.r + onB.r + 2);
+
+      if (temas) {
+        // Karsilikli hasar
+        onA.hp -= onB.dps * dt;
+        onB.hp -= onA.dps * dt;
+        onA.vurus = 0.12; onB.vurus = 0.12;
+      } else {
+        // Ilerle — ama onundeki dostu ezme
+        if (onA) {
+          onA.x += onA.hiz * dt;
+          if (!onB && onA.x >= W - 6) { canB -= onA.dps * dt * 6; onA.x = W - 6; onA.vurus = .12; }
+        }
+        if (onB) {
+          onB.x -= onB.hiz * dt;
+          if (!onA && onB.x <= 6) { canA -= onB.dps * dt * 6; onB.x = 6; onB.vurus = .12; }
+        }
+      }
+
+      // Arkadakiler onundekine yaslanarak ilerler
+      for (let k = 1; k < A.length; k++) {
+        const hedef = A[k - 1].x - (A[k].r + A[k - 1].r + 1);
+        A[k].x = Math.min(A[k].x + A[k].hiz * dt, hedef);
+      }
+      for (let k = 1; k < B.length; k++) {
+        const hedef = B[k - 1].x + (B[k].r + B[k - 1].r + 1);
+        B[k].x = Math.max(B[k].x - B[k].hiz * dt, hedef);
+      }
+    }
+
+    birimler = birimler.filter((u) => u.hp > 0);
+
+    if (canA <= 0 || canB <= 0) bitir();
+  }
+
+  function bitir() {
+    bitti = true;
+    canA = Math.max(0, canA); canB = Math.max(0, canB);
+    barCiz();
+    const kazanan = canA > canB ? AD_A : canB > canA ? AD_B : null;
+    el.sonucB.textContent = kazanan ? kazanan + ' KAZANDI' : 'BERABERE';
+    el.sonucB.style.color = kazanan === AD_A ? 'var(--tt-cyan)' : kazanan === AD_B ? 'var(--tt-pink)' : '#fff';
+
+    const enler = [...katki.values()].sort((x, y) => y.birim - x.birim)[0];
+    el.sonucK.textContent = enler ? `⭐ En çok asker: ${enler.ad} (${enler.birim})` : '';
+    el.sonuc.classList.add('on');
+
+    setTimeout(() => {
+      el.sonuc.classList.remove('on');
+      canA = canB = US_CAN;
+      birimler = []; katki.clear();
+      bitti = false;
+      barCiz();
+    }, 5500);
+  }
+
+  // ---- cizim ----------------------------------------------------------------
+  TT.loop((dt) => {
+    const h = Math.min(dt, 1 / 30);
+    simule(h);
+
+    ctx.clearRect(0, 0, W, H);
+
+    // serit cizgileri
+    ctx.strokeStyle = 'rgba(255,255,255,.05)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < SERIT; i++) {
+      ctx.beginPath(); ctx.moveTo(0, seritYuk * i); ctx.lineTo(W, seritYuk * i); ctx.stroke();
+    }
+
+    // us bolgeleri
+    ctx.fillStyle = 'rgba(37,244,238,.10)'; ctx.fillRect(0, 0, 10, H);
+    ctx.fillStyle = 'rgba(254,44,85,.10)';  ctx.fillRect(W - 10, 0, 10, H);
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    for (const u of birimler) {
+      const y = seritY[u.serit];
+      const renk = u.takim === 'a' ? '#25f4ee' : '#fe2c55';
+
+      if (u.emoji) {
+        ctx.font = `${u.r * 2.1}px "Segoe UI Emoji","Apple Color Emoji",sans-serif`;
+        ctx.fillText(u.emoji, u.x, y);
+      } else {
+        ctx.beginPath();
+        ctx.arc(u.x, y, u.r, 0, 6.283);
+        ctx.fillStyle = u.vurus > 0 ? '#fff' : renk;
+        ctx.fill();
+      }
+
+      // kahramanin can bari
+      if (u.kahraman && u.hp < u.maxHp) {
+        const g = u.r * 2.4;
+        ctx.fillStyle = 'rgba(0,0,0,.6)';
+        ctx.fillRect(u.x - g / 2, y - u.r - 8, g, 4);
+        ctx.fillStyle = renk;
+        ctx.fillRect(u.x - g / 2, y - u.r - 8, g * (u.hp / u.maxHp), 4);
+      }
+
+      if (u.vurus > 0) u.vurus -= dt;
+    }
+
+    barCiz();
+  });
+
+  barCiz();
+})();
+</script>
+</body>
+</html>
