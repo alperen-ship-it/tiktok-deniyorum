@@ -20,10 +20,23 @@
 
 [CmdletBinding()]
 param(
-    [string]$OutFile = (Join-Path $PSScriptRoot 'tls-recon-raporu.txt'),
+    # Bos birakilirsa asagida hesaplaniyor. Dikkat: $PSScriptRoot'u BURADA
+    # varsayilan deger olarak kullanma — param blogu degerlendirilirken bazi
+    # PowerShell surumlerinde henuz dolu olmuyor ve Join-Path bos string hatasi veriyor.
+    [string]$OutFile,
     # -Deep : app.asar iceriginin dosya listesini de cikarmaya calisir (npx gerekir)
     [switch]$Deep
 )
+
+# --- Cikti yolunu guvenli sekilde belirle ---
+if (-not $OutFile) {
+    $scriptDir = $PSScriptRoot
+    if (-not $scriptDir -and $MyInvocation.MyCommand.Definition) {
+        $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+    }
+    if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+    $OutFile = Join-Path $scriptDir 'tls-recon-raporu.txt'
+}
 
 $ErrorActionPreference = 'Continue'
 $script:Report = New-Object System.Text.StringBuilder

@@ -213,6 +213,97 @@ function cmdSetUrl(file, targetName, newUrl) {
   console.log('degisiklik uygulamanin kendi yazmasiyla ezilir.');
 }
 
+/**
+ * LIVE Studio'nun kendi widget'lari (Alert / Chatbox / Goal) aslinda uygulamanin
+ * icine gomulu tek bir HTML sayfasi:
+ *   file:///C:/Program%20Files/TikTok%20LIVE%20Studio/<SURUM>/resources/app/html/...
+ *
+ * Uygulama guncellenince eski surum klasoru siliniyor ama sahne yapilandirmasindaki
+ * yol GUNCELLENMIYOR -> widget sessizce olu bir dosyaya bakiyor ve hicbir sey
+ * gostermiyor. Bu komut o yollari kurulu surume tasiyor.
+ */
+function cmdFixWidgets(file, hedefSurum) {
+  const json = load(file);
+  const st = json?.SourceService?.state;
+  const bySceneId = st?.sceneSource || {};
+
+  // Kurulu surumu bul (verilmediyse)
+  if (!hedefSurum) {
+    const roots = [
+      'C:\\Program Files\\TikTok LIVE Studio',
+      process.env.ProgramFiles ? path.join(process.env.ProgramFiles, 'TikTok LIVE Studio') : null,
+    ].filter(Boolean);
+
+    for (const r of roots) {
+      if (!fs.existsSync(r)) continue;
+      const sürümler = fs
+        .readdirSync(r, { withFileTypes: true })
+        .filter((d) => d.isDirectory() && /^\d+\.\d+/.test(d.name))
+        .map((d) => d.name)
+        .sort((a, b) => {
+          const pa = a.split('.').map(Number);
+          const pb = b.split('.').map(Number);
+          for (let i = 0; i < 3; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
+          return 0;
+        });
+      if (sürümler.length) hedefSurum = sürümler[sürümler.length - 1];
+      if (hedefSurum) break;
+    }
+  }
+
+  if (!hedefSurum) {
+    console.error('Kurulu surum bulunamadi. Elle ver:  fix-widgets 1.32.2');
+    process.exit(1);
+  }
+  console.log(`Hedef surum: ${hedefSurum}\n`);
+
+  // file:/// yolundaki surum ve ?release= parametresi
+  const YOL_RE = /(TikTok(?:%20| )LIVE(?:%20| )Studio[\/\\])(\d+\.\d+\.\d+)([\/\\])/i;
+  const RELEASE_RE = /([?&]release=)(\d+\.\d+\.\d+)/i;
+
+  let degisen = 0;
+  let zatenIyi = 0;
+
+  for (const sceneId of Object.keys(bySceneId)) {
+    const bucket = bySceneId[sceneId]?.data || {};
+    for (const [id, s] of Object.entries(bucket)) {
+      const url = s?.payload?.url;
+      if (!url || !/^file:\/\//i.test(url)) continue;
+
+      const m = url.match(YOL_RE);
+      if (!m) continue;
+      const eskiSurum = m[2];
+
+      if (eskiSurum === hedefSurum) { zatenIyi++; continue; }
+
+      const yeni = url
+        .replace(YOL_RE, `$1${hedefSurum}$3`)
+        .replace(RELEASE_RE, `$1${hedefSurum}`);
+
+      s.payload.url = yeni;
+      degisen++;
+      console.log(`  ${String(s.type).padEnd(9)} ${s.name}  [${id}]`);
+      console.log(`     ${eskiSurum}  ->  ${hedefSurum}`);
+    }
+  }
+
+  console.log('');
+  if (degisen === 0) {
+    console.log(`Duzeltilecek bir sey yok (${zatenIyi} widget zaten guncel).`);
+    return;
+  }
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backup = `${file}.yedek-${stamp}`;
+  fs.copyFileSync(file, backup);
+  fs.writeFileSync(file, JSON.stringify(json), 'utf8');
+
+  console.log(`${degisen} widget duzeltildi (${zatenIyi} zaten guncelmis).`);
+  console.log(`Yedek: ${backup}`);
+  console.log('');
+  console.log('LIVE Studio ACIKSA kapatip yeniden ac.');
+}
+
 // ---------------------------------------------------------------------------
 (() => {
   const argv = process.argv.slice(2);
@@ -224,18 +315,28 @@ function cmdSetUrl(file, targetName, newUrl) {
   if (cmd === 'list') cmdList(file);
   else if (cmd === 'dump') cmdDump(file);
   else if (cmd === 'set-url') cmdSetUrl(file, args[1], args[2]);
+  else if (cmd === 'fix-widgets') cmdFixWidgets(file, args[1]);
   else {
     console.log(`
 TikTok LIVE Studio sahne/kaynak araci
 
   node tools/ttls-sahne.js list                       sahneleri ve kaynaklari listele
   node tools/ttls-sahne.js set-url "<ad>" "<adres>"   Link kaynaginin adresini degistir
+  node tools/ttls-sahne.js fix-widgets [surum]        guncelleme sonrasi kirilan
+                                                      Alert/Chatbox/Goal widget'larini onar
   node tools/ttls-sahne.js dump                       ham semayi incele
 
   --file "<yol>"   services.json yolunu elle ver
 
 Varsayilan dosya: %APPDATA%\\TikTok LIVE Studio\\TTStore\\services.json
 Yazmadan once LIVE Studio'yu KAPAT.
+
+fix-widgets ne ise yarar:
+  LIVE Studio'nun Alert/Chatbox/Goal widget'lari, uygulamanin icine gomulu bir
+  HTML dosyasina file:/// ile isaret ediyor ve yolda SURUM NUMARASI var.
+  Uygulama guncellenince eski surum klasoru siliniyor ama sahnedeki yol
+  guncellenmiyor -> widget sessizce olu bir dosyaya bakiyor, hicbir sey gostermiyor.
+  Bu komut o yollari kurulu surume tasiyor.
 `);
   }
 })();
