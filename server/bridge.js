@@ -170,10 +170,31 @@ function log(...a) {
   console.log('[kopru]', ...a);
 }
 
+let hediyeUyarisiVerildi = false;
+
 /** Normalize edilmis olayi tum overlay'lere yolla. */
 function emit(ev) {
   ev.ts = ev.ts || Date.now();
   state.eventCount++;
+
+  // Hediye katalogu kapaliyken hediye adi/elmas degerinin yine de mesajin
+  // icinden geldigini varsayiyoruz. Gelmiyorsa overlay'ler "Hediye 0 elmas"
+  // gosterir ve sebebi anlasilmaz — bir kez uyar.
+  if (ev.type === 'gift' && !hediyeUyarisiVerildi) {
+    const adYok = !ev.gift?.name || ev.gift.name === 'Hediye';
+    const elmasYok = !ev.gift?.diamonds;
+    if (adYok || elmasYok) {
+      hediyeUyarisiVerildi = true;
+      log('');
+      log('!! Hediye geldi ama bilgisi eksik (ad: ' + (ev.gift?.name ?? '-') +
+          ', elmas: ' + (ev.gift?.diamonds ?? '-') + ').');
+      log('   Hediye katalogu kapali oldugu icin olabilir. Denemek icin:');
+      log('     node server/bridge.js --user ' + (args.user || '<ad>') + ' --gifts');
+      log('   (--gifts ucretli bir uca gidiyor, plan yoksa baglanti hic kurulmaz)');
+      log('');
+    }
+  }
+
   wss.broadcast(ev);
   if (args.verbose) {
     const who = ev.user?.nickname || ev.user?.uniqueId || '-';

@@ -130,7 +130,12 @@ let bagliOldu = false;
 
 for (const kullanici of hedefler) {
   console.log(`--- @${kullanici} ---`);
-  const c = new TikTokLiveConnection(kullanici, { enableExtendedGiftInfo: true });
+  // enableExtendedGiftInfo hediye KATALOGUNU ayri bir uctan cekiyor ve o uc
+  // EulerStream'de ucretli ("This endpoint requires a Business plan").
+  // Acik birakirsak baglanti hic kurulmadan hata veriyor — oysa imzalamanin
+  // kendisi ucretsiz katmanda calisiyor. Kapali tutuyoruz: hediye adi ve
+  // elmas degeri zaten mesajin kendi icinde geliyor.
+  const c = new TikTokLiveConnection(kullanici, { enableExtendedGiftInfo: false });
 
   const sayac = { yorum: 0, hediye: 0, begeni: 0, takip: 0, paylasim: 0, katilan: 0 };
 
