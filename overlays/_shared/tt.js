@@ -82,11 +82,25 @@
     }
 
     // Olu bolge paylarini URL'den ezme
+    //   ?dzalt=32   -> uyarilarin alani  (--dz-*)
+    //   ?dz2alt=45  -> oyunlarin siki alani (--dz2-*)
+    const yuzde = (v) => (/^[\d.]+$/.test(v) ? v + '%' : v);
+
     for (const [k, v] of Object.entries(cfg.dz)) {
       if (v == null || v === '') continue;
-      // Ciplak sayi verildiyse yuzde say: ?dzalt=32  ->  32%
-      const deger = /^[\d.]+$/.test(v) ? v + '%' : v;
-      root.style.setProperty('--dz-' + k, deger);
+      root.style.setProperty('--dz-' + k, yuzde(v));
+    }
+    for (const k of ['ust', 'alt', 'sag', 'sol']) {
+      const v = q.get('dz2' + k);
+      if (v) root.style.setProperty('--dz2-' + k, yuzde(v));
+    }
+
+    // ?genis=1 — oyunlari da gevsek alana al. Ekranin buyuk kismini oyuna
+    // vermek isteyip yorumlarin altina girmesini goze aliyorsan.
+    if (flag('genis')) {
+      for (const k of ['ust', 'alt', 'sag', 'sol']) {
+        root.style.setProperty('--dz2-' + k, getComputedStyle(root).getPropertyValue('--dz-' + k));
+      }
     }
 
     if (cfg.guvenli) kilavuzCiz();
@@ -495,11 +509,23 @@
     alan.className = 'alan';
     k.appendChild(alan);
 
+    const siki = document.createElement('div');
+    siki.className = 'alan-siki';
+    k.appendChild(siki);
+
     const et = document.createElement('div');
     et.className = 'etiket';
     et.style.cssText = 'top:calc(var(--dz-ust) + 6px);left:calc(var(--dz-sol) + 6px)';
-    et.textContent = 'GÜVENLİ ALAN — oyun buraya sığmalı';
+    et.textContent = 'GEVŞEK — kısa ömürlü uyarılar';
     k.appendChild(et);
+
+    const et2 = document.createElement('div');
+    et2.className = 'etiket';
+    et2.style.cssText =
+      'top:calc(var(--dz2-ust) + 6px);left:calc(var(--dz2-sol) + 6px);' +
+      'background:rgba(10,70,20,.9)';
+    et2.textContent = 'SIKI — kalıcı widget buraya sığmalı (yanlardan kırpılma dahil)';
+    k.appendChild(et2);
 
     for (const b of bolgeler) {
       const e = document.createElement('div');

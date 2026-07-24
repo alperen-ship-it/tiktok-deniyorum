@@ -25,15 +25,43 @@
   --dz-alt: 32%;
   --dz-sag: 17%;
   --dz-sol: 4%;
+
+  /* -------------------------------------------------------------------------
+     SIKI ALAN — kalici seyler icin (skor tablosu, can bari, oyun tahtasi)
+     Yukaridaki degerler 4 saniye gorunup kaybolan uyarilar icin yeterli.
+     Ama KALICI bir sey koyacaksan yetmiyor, iki sebepten:
+
+     1) Alttaki %32, kimsenin yeri: TikTok'un sert blokladigi %26'nin ustunde
+        ama yorum akisi + hediye/katilim bandirlarinin gercekte ulastigi
+        %39-44'un altinda. Kalici bir skor tablosu oraya konursa yorumlar
+        yogunlasinca altina giriyor.
+
+     2) YANLARDAN KIRPILMA. 1080x1920 yayin, 19.5:9 veya 20:9 bir telefonda
+        ekrani doldururken YANLARDAN kirpiliyor — her kenardan %9-12.
+        Soldaki %4 sadece yorum kenar boslugunu karsiliyor, kirpilmayi degil.
+
+     Uyarilar --dz-*, oyunlar --dz2-* kullaniyor.
+  ------------------------------------------------------------------------- */
+  --dz2-ust: 22%;
+  --dz2-alt: 42%;
+  --dz2-sag: 19%;
+  --dz2-sol: 8%;
 }
 
-/* Icerigi guvenli alana hapseden yardimci: oyunlar bunu kullaniyor */
-.tt-guvenli {
+/* Icerigi guvenli alana hapseden yardimcilar */
+.tt-guvenli {          /* gecici seyler: uyarilar, kisa omurlu bildirimler */
   position: fixed;
   top: var(--dz-ust);
   bottom: var(--dz-alt);
   left: var(--dz-sol);
   right: var(--dz-sag);
+}
+.tt-guvenli-siki {     /* kalici seyler: skor tablosu, can bari, oyun tahtasi */
+  position: fixed;
+  top: var(--dz2-ust);
+  bottom: var(--dz2-alt);
+  left: var(--dz2-sol);
+  right: var(--dz2-sag);
 }
 
 /* ?guvenli=1 — olu bolgeleri kirmizi tarayarak goster (yayina alma!) */
@@ -48,6 +76,13 @@
   position: absolute;
   top: var(--dz-ust); bottom: var(--dz-alt); left: var(--dz-sol); right: var(--dz-sag);
   border: 2px dashed rgba(37,244,238,.9);
+}
+/* Siki alan: kalici widget'lar bunun ICINDE kalmali */
+#tt-guvenli-kilavuz .alan-siki {
+  position: absolute;
+  top: var(--dz2-ust); bottom: var(--dz2-alt); left: var(--dz2-sol); right: var(--dz2-sag);
+  border: 2px solid rgba(126,231,135,.95);
+  background: rgba(126,231,135,.06);
 }
 #tt-guvenli-kilavuz .etiket {
   position: absolute;
