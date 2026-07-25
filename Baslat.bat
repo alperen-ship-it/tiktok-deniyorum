@@ -62,10 +62,9 @@ echo   KAPATMAK ICIN: panel uzerindeki "Durdur" dugmesi,
 echo   ya da bu pencereyi kapat.
 echo.
 
-REM --- Paneli tarayicida ac (kopru ayaga kalksin diye kisa bekleme) ---
-start "" /b cmd /c "timeout /t 3 /nobreak >nul && start "" http://localhost:8787/"
-
-node server\bridge.js %TT_ARGS% --verbose
+REM Paneli koprünun kendisi aciyor (--tarayici): port dinlemeye basladigi anda,
+REM "3 saniye yeter herhalde" tahminine gerek kalmadan.
+node server\bridge.js %TT_ARGS% --tarayici --verbose
 
 echo.
 echo   Kopru kapandi.
