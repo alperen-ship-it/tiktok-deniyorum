@@ -88,16 +88,25 @@
     // boyutu degisiyor. O yuzden sayfa kendi oranina bakip uyum saglamali.
     // ?v=1 / ?y=1 ile zorlanabilir; verilmezse otomatik.
     function yonBelirle() {
+      // ARTIK SADECE YATAY. Oyunlar sabit 1920x1080 bir tasarim alanina
+      // ciziliyor ve tek bir scale ile ekrana sigdiriliyor. Boylece her sey
+      // piksel cinsinden tasarlanabiliyor; yuzde matematigi ve iki ayri
+      // yerlesim dali gerekmiyor.
+      //
+      // Eski dikey/yatay olcumu ?v=1 ile hala zorlanabiliyor cunku ESKI
+      // overlay'ler (alerts, chat, race...) o siniflara gore yazilmisti;
+      // yeni oyunlar tt-sabit kullaniyor.
       const zorlaDikey = cfg.vertical;
-      const zorlaYatay = flag('y') || flag('yatay');
       const oran = innerWidth / Math.max(1, innerHeight);
-
-      const yatay = zorlaYatay || (!zorlaDikey && oran > 1.15);
+      const yatay = !zorlaDikey;
       root.classList.toggle('tt-yatay', yatay);
       root.classList.toggle('tt-vertical', !yatay);
 
-      // Overlay'ler yeniden yerlesebilsin diye haber ver
-      global.dispatchEvent(new CustomEvent('tt-yon', { detail: { yatay, oran } }));
+      // 1920x1080 tasarim alanini ekrana sigdiran tek olcek
+      const olcek = Math.min(innerWidth / 1920, innerHeight / 1080);
+      root.style.setProperty('--tt-olcek', String(olcek));
+
+      global.dispatchEvent(new CustomEvent('tt-yon', { detail: { yatay, oran, olcek } }));
     }
     yonBelirle();
     addEventListener('resize', yonBelirle);

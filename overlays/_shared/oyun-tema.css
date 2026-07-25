@@ -36,11 +36,30 @@
   background-size: 54px 54px;
 }
 
+/* SABIT TASARIM ALANI — 1920x1080.
+   Yayin artik sadece yatay, o yuzden yuzdelerle esneyen bir yerlesim yerine
+   sabit bir tuval kullaniyoruz ve tek scale ile ekrana sigdiriyoruz.
+   Kazanci: her olcu piksel (tipografi, bosluk, panel genisligi hepsi kesin),
+   iki ayri yerlesim dali yok, tarayici penceresi ne olursa olsun ayni kadraj.
+   Olcegi tt.js hesapliyor: --tt-olcek = min(en/1920, boy/1080). */
 #kok {
-  position: fixed;
-  top: var(--dz2-ust); bottom: var(--dz2-alt);
-  left: var(--dz2-sol); right: var(--dz2-sag);
-  display: flex; flex-direction: column; gap: 12px;
+  position: fixed; left: 50%; top: 50%;
+  width: 1920px; height: 1080px;
+  margin: -540px 0 0 -960px;
+  transform: scale(var(--tt-olcek, 1));
+  transform-origin: center center;
+
+  /* TikTok'un kendi arayuzunun kapattigi kenarlar. Yatayda sagda yorum
+     sutunu, altta hediye/eylem cubugu var. ?dzsag= ile ayarlanabilir. */
+  padding: var(--yayin-ust) var(--yayin-sag) var(--yayin-alt) var(--yayin-sol);
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+:root {
+  --yayin-ust: 24px;
+  --yayin-sag: 360px;   /* sohbet sutunu */
+  --yayin-alt: 96px;    /* hediye / eylem cubugu */
+  --yayin-sol: 24px;
 }
 
 /* ---- ortak panel govdesi ---- */
@@ -138,30 +157,7 @@ html.tt-lite .satir { animation-duration: 2.6s; }
 }
 #kazanan .altYazi { font-size: 17px; font-weight: 800; color: #cbc0ff; margin-top: 4px; }
 
-/* ===========================================================================
-   YATAY — LIVE Studio'nun Landscape sahnesi.
-   Dikeydeki tek sutun burada ise yaramiyor (ekranin yarisi bosa gidiyor):
-   baslik ustte tam genislik, altinda solda oyun alani + sagda siralama.
-   =========================================================================== */
-html.tt-yatay #kok {
-  display: grid;
-  grid-template-columns: 1fr minmax(280px, 24%);
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "ust  ust"
-    "alan sag";
-  gap: 14px;
-}
-html.tt-yatay #ust { grid-area: ust; }
-html.tt-yatay #alan { grid-area: alan; min-height: 0; }
-html.tt-yatay #sagSutun {
-  grid-area: sag;
-  display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0;
-}
-html.tt-yatay #siralama { flex: 1; min-height: 0; overflow: hidden; justify-content: flex-start; }
-html.tt-yatay #baslik { font-size: 30px; }
-html.tt-yatay .sira .ad { font-size: 17px; }
-html.tt-yatay .sira .adet { font-size: 20px; }
+/* Sag sutun: sabit kabukta dogrudan ana sutunda akiyor.
+   (Eski dikey/yatay izgara dallari silindi — tek yonelim kaldi.) */
+#sagSutun { display: contents; }
 
-/* Dikeyde "sag sutun" diye bir sey yok — icindekiler ana sutuna aksin */
-html.tt-vertical #sagSutun { display: contents; }

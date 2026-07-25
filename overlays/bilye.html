@@ -9,7 +9,13 @@
   /* Bilye yarisinin butun olayi UZUN DIKEY PIST. Siralamayi tema gibi ayri
      bir blok yapinca pist 200 piksele dusuyor ve oyun kayboluyor; onun yerine
      pistin ustune HUD olarak biniyor. Gercek oyunlarda da boyle. */
-  #alan { overflow: hidden; flex: 1; }
+  /* 16:9'da pisti tum genislige yaymak yanlis: pist DIKEY, ekran GENIS.
+     Yayarsan dikey gorus alani daraliyor ve yaristan bir sey gorunmuyor.
+     Gercek yaris yayinlarindaki gibi: ortada dar-uzun sahne, yaninda
+     tam boy siralama rayi. Genis ekran HUD'a calisiyor, piste degil. */
+  #alan { overflow: hidden; flex: 1; display: flex; gap: 14px; padding: 12px; }
+  #pist { flex: none; width: 660px; position: relative; }
+  #pist canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   #ust { padding: 9px 14px; }
   #baslik { font-size: 28px; }
   #rozet { font-size: 27px; }
@@ -17,29 +23,29 @@
   /* Panel eskiden sag USTTEYDI ve tam bilyelerin yaristigi yeri kapatiyordu.
      Kamera lideri ust ucte tuttugu icin aksiyon hep ustte oluyor; panel
      alta indi. */
+  /* Ray: pistin yaninda, tam boy. Artik pistin uzerini kapatmiyor. */
   #siralama {
-    position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 3;
-    display: grid; grid-template-columns: 1fr 1fr;
-    padding: 7px; gap: 5px;
-    background: rgba(18,12,51,.72);
-    border: 3px solid var(--cizgi); border-radius: 16px;
-    box-shadow: 0 4px 0 var(--cizgi);
+    flex: 1; min-width: 0; align-self: stretch;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 12px; z-index: 3;
+    background: rgba(18,12,51,.66);
+    border: 3px solid var(--cizgi); border-radius: 18px;
   }
-  .sira { padding: 4px 8px; gap: 7px; background: rgba(0,0,0,.3); }
-  .sira .rozet { width: 24px; height: 24px; font-size: 13px; border-width: 2px; }
-  .sira .ad { font-size: 15px; }
-  .sira .adet { font-size: 16px; min-width: 30px; }
-  .sira.bos { font-size: 13px; padding: 8px; }
+  #siralama::before {
+    content: 'CANLI SIRALAMA';
+    font-size: 15px; font-weight: 900; letter-spacing: 1.6px;
+    color: #a89ce0; padding: 2px 4px 4px;
+  }
+  .sira { padding: 8px 12px; gap: 11px; background: rgba(0,0,0,.32); }
+  .sira .rozet { width: 30px; height: 30px; font-size: 15px; }
+  .sira .ad { font-size: 21px; }
+  .sira .adet { font-size: 21px; min-width: 56px; }
+  .sira.bos { font-size: 16px; padding: 12px; }
 
-  /* Tema yatayda izgaraya geciyor ve siralamayi sag sutuna koyuyor;
-     bu oyunda siralama pistin icinde, o yuzden izgarayi geri aliyoruz. */
-  html.tt-yatay #kok { display: flex; flex-direction: column; }
-  html.tt-yatay #alan { grid-area: auto; }
-  html.tt-yatay #siralama { grid-template-columns: repeat(3, 1fr); }
 
   /* Katilim ekrani — yarisa girenlerin baloncuklari */
   #kuyruk {
-    position: absolute; inset: 6px; display: flex; flex-wrap: wrap;
+    position: absolute; inset: 0; display: flex; flex-wrap: wrap;
     align-content: flex-start; gap: 6px; padding: 12px; overflow: hidden;
   }
   #kuyruk.gizli { display: none; }
@@ -68,8 +74,10 @@
   </div>
 
   <div id="alan" class="kutu">
-    <canvas id="tuval"></canvas>
-    <div id="kuyruk"></div>
+    <div id="pist">
+      <canvas id="tuval"></canvas>
+      <div id="kuyruk"></div>
+    </div>
     <div id="siralama"></div>
     <div id="kazanan">
       <div>
@@ -437,7 +445,9 @@
     ctx.restore();
 
     // --- lider etiketleri (ekran uzayi: olcekten bagimsiz okunakli) ---
-    const canli = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 3);
+    // Sadece lider etiketlenir: uc etiket birden, bilyeler kumelendiginde
+    // ust uste binip okunmaz hale geliyordu. Sira zaten rayda yaziyor.
+    const canli = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 1);
     ctx.font = '800 15px system-ui, sans-serif';
     ctx.textAlign = 'center';
     canli.forEach((b, i) => {
@@ -525,10 +535,10 @@
         (kuyruk.size ? `<div class="sira bos">${kuyruk.size} kişi sıradaki yarışta</div>` : '');
       return;
     }
-    const list = bitirenler.slice(0, 6);
+    const list = bitirenler.slice(0, 8);
     if (!list.length) {
       // Yaris suruyor: onde gidenleri goster
-      const onde = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 6);
+      const onde = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 8);
       sirEl.innerHTML = onde.length
         ? onde.map((b, i) => satirHtml(i, b, Math.round(b.y / bitis * 100) + '%')).join('')
         : '<div class="sira bos">yarış başlıyor…</div>';
