@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Tepe Savaşı — yaz, yaklaş, tacı kap</title>
+<link rel="stylesheet" href="_shared/base.css">
+<link rel="stylesheet" href="_shared/oyun-tema.css">
+<style>
+  /* EMEK = ILERLEME. Sans yok, eleme yok: her mesaj seni merkezdeki tahta
+     bir adim yaklastirir, like kucuk adim, hediye firlatir. Tahta ILK ulasan
+     taci takar, herkes kenara doner, yeni tur aninda baslar. Rekabet saf:
+     kim daha cok yazarsa o onde. Kalici tac/puan tablosu geri getirir. */
+  #orta { flex: 1; min-height: 0; display: flex; gap: 14px; }
+
+  /* ---- arena ---- */
+  #arenaKutu { flex: 1; position: relative; overflow: hidden; }
+
+  .halka {
+    position: absolute; left: 50%; top: 50%;
+    border-radius: 50%;
+    border: 2px solid rgba(179, 168, 230, .14);
+    pointer-events: none;
+  }
+
+  /* Merkezdeki taht */
+  #taht {
+    position: absolute; left: 50%; top: 50%;
+    width: 120px; height: 120px; margin: -60px 0 0 -60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #ffe9a8, var(--altin) 55%, #c99b2e);
+    border: 3px solid var(--cizgi);
+    display: grid; place-items: center;
+    font-size: 54px;
+    box-shadow: 0 6px 0 rgba(12, 8, 34, .55);
+  }
+
+  /* Oyuncu jetonu + ismi. Isimler HEP acik: yarisin butun anlami
+     "adimi ekranda one giderken gormek". */
+  .jeton {
+    position: absolute; left: 0; top: 0;
+    width: 52px; height: 52px; margin: -26px 0 0 -26px;
+    background-size: contain; background-repeat: no-repeat;
+    transform: translate(0, 0) scale(0);
+    transition: transform .5s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    z-index: 2;
+  }
+  .jeton.ustEtiket .jetonAd { top: auto; bottom: 100%; margin: 0 0 4px; }
+  .jeton .jetonAd {
+    position: absolute; left: 50%; top: 100%;
+    transform: translateX(-50%);
+    margin-top: 4px;
+    font-size: var(--tip-kucuk); font-weight: 700; color: var(--murekkep);
+    text-shadow: 0 2px 0 var(--cizgi);
+    white-space: nowrap; max-width: 190px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .jeton.onde { z-index: 3; }
+  .jeton.onde .jetonAd { color: var(--altin); font-weight: 900; }
+  html.tt-lite .jeton { transition: transform .3s ease-out; }
+
+  #geriSayim { display: none; }
+  #turRozet { position: absolute; top: 14px; left: 14px; z-index: 4; }
+
+  /* ---- sag ray ---- */
+  #ray { flex: none; width: 470px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+
+  #yakinKutu { flex: none; padding: 8px 6px; }
+  #yakinKutu::before {
+    content: 'TAHTA EN YAKIN'; display: block;
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    color: var(--soluk); padding: 4px 12px 6px;
+  }
+  #tacKutu { flex: 1; min-height: 0; padding: 8px 6px; overflow: hidden; }
+  #tacKutu::before {
+    content: '👑 TAÇ SIRALAMASI · KALICI'; display: block;
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    color: var(--soluk); padding: 4px 12px 6px;
+  }
+
+  .ilerleme {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(246, 201, 79, .12); border-radius: 12px;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div id="zemin"></div>
+
+<div id="kok" class="tt-oyun">
+
+  <div id="ust" class="kutu">
+    <div id="rozet">👑</div>
+    <div id="baslikSar">
+      <div id="baslik">Tepe Savaşı</div>
+      <div id="cagri">yaz = yaklaş · 🎁 = rakibi geri it · ilk ulaşan tacı alır</div>
+    </div>
+    <div id="sayac">
+      <div id="sayacBuyuk">0</div>
+      <div id="sayacKucuk">yarışan</div>
+    </div>
+  </div>
+
+  <div id="orta">
+    <div id="arenaKutu" class="kutu">
+      <div class="rozetBuyuk" id="turRozet">TUR <span id="turNo">1</span></div>
+      <div id="halkalar"></div>
+      <div id="taht">👑</div>
+      <div id="jetonlar"></div>
+      <div id="kazanan"></div>
+    </div>
+
+    <div id="ray">
+      <div id="yakinKutu" class="kutu"><div id="yakinIc"></div></div>
+      <div id="tacKutu" class="kutu"><div id="tacIc"></div></div>
+    </div>
+  </div>
+
+  <div id="akis"></div>
+
+</div>
+
+<script src="_shared/tt.js"></script>
+<script src="_shared/kimlik.js"></script>
+<script src="_shared/spiker.js"></script>
+<script src="_shared/finis.js"></script>
+<script src="_shared/juice.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
+
+  // ---- ayarlar -------------------------------------------------------------
+  const ADIM       = num('adim', 0.055);   // bir mesajin yaklastirdigi mesafe
+  const LIKE_ADIM  = num('ladim', 0.006);  // begeni basina (seri gelir, kucuk)
+  const ITME       = num('itme', 0.28);    // hediyenin rakibi GERI ittigi mesafe
+  const KUTLAMA_SN = num('kutlama', 6);
+  const TAC_ESIK   = 0.085;                // bu mesafede tac takilir
+
+  // ---- durum ---------------------------------------------------------------
+  // oyuncu: {ad, el, uzak (1=kenar 0=taht), aci, puanEl}
+  let oyuncular = new Map();
+  let turNo = Number(localStorage.getItem('tt-tepe-tur') || 1);
+  let kutlamada = false;
+  let sonTacKid = null, seri = 0;
+
+  // Kalici tablo: kid -> {ad, tac, puan}
+  let tablo = new Map();
+  try {
+    for (const [k, v] of JSON.parse(localStorage.getItem('tt-tepe-tablo') || '[]')) tablo.set(k, v);
+  } catch { /* sifirdan */ }
+
+  const arenaEl = document.getElementById('arenaKutu');
+  const jetonlarEl = document.getElementById('jetonlar');
+  const kazananEl = document.getElementById('kazanan');
+  const yakinEl = document.getElementById('yakinIc');
+  const tacEl = document.getElementById('tacIc');
+  const uidler = new Map();
+
+  Spiker.kur(document.getElementById('akis'));
+  Juice.sarsHedef(document.getElementById('kok'));
+
+  // ---- arena halkalari (bir kez) ------------------------------------------
+  const halkalarEl = document.getElementById('halkalar');
+  function halkalariKur() {
+    halkalarEl.innerHTML = '';
+    const R = yaricap();
+    for (const oran of [0.33, 0.62, 0.92]) {
+      const cap = R * 2 * oran;
+      const h = document.createElement('div');
+      h.className = 'halka';
+      h.style.cssText = `width:${cap}px;height:${cap}px;margin:${-cap / 2}px 0 0 ${-cap / 2}px`;
+      halkalarEl.appendChild(h);
+    }
+  }
+  function yaricap() {
+    return Math.min(arenaEl.clientWidth, arenaEl.clientHeight) / 2 - 44;
+  }
+
+  // ---- oyuncular -----------------------------------------------------------
+  function konumla(o) {
+    const cx = arenaEl.clientWidth / 2, cy = arenaEl.clientHeight / 2;
+    // sapma: iki oyuncu ayni uzaklikta olsa bile tam ust uste binmesin
+    const r = 74 + o.uzak * (yaricap() - 74) + (o.sapma || 0);
+    const x = cx + Math.cos(o.aci) * r;
+    const y = cy + Math.sin(o.aci) * r;
+    o.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(1)`;
+    // Ust yarida isim jetonun USTUNE, alt yarida ALTINA — komsu etiketler
+    // ve taht uzerine binme sansi yariya iner.
+    o.el.classList.toggle('ustEtiket', y < cy);
+  }
+
+  function oyuncuEkle(kid, ad) {
+    if (oyuncular.has(kid)) return oyuncular.get(kid);
+    const kim = Kimlik.al(kid);
+    const el = document.createElement('div');
+    el.className = 'jeton';
+    el.style.backgroundImage = `url(${kim.url})`;
+    el.innerHTML = `<span class="jetonAd">${ad}</span>`;
+    jetonlarEl.appendChild(el);
+    // Aci: katilim sirasina gore ALTIN ACI ile dagit. Hash'ten uretmek
+    // yakin acilar verip jetonlari ust uste yigiyordu (isimler okunmuyordu);
+    // altin aci her yeni oyuncuyu mevcutlarin arasindaki en genis boslugu
+    // bolerek yerlestirir — kac kisi olursa olsun dagilim duzgun kalir.
+    const o = { ad, el, uzak: 1, aci: oyuncular.size * 2.39996323,
+                sapma: (oyuncular.size % 3 - 1) * 15 };
+    oyuncular.set(kid, o);
+    requestAnimationFrame(() => konumla(o));
+    sayacCiz();
+    return o;
+  }
+
+  // ---- ilerleme ------------------------------------------------------------
+  function yaklas(kid, ad, miktar) {
+    if (kutlamada) return;
+    const o = oyuncular.get(kid) || oyuncuEkle(kid, ad);
+    const onceki = o.uzak;
+    o.uzak = Math.max(0, o.uzak - miktar);
+    konumla(o);
+
+    // Son duzluk anonslari — yarisi yarisa ceviren sey anlatim
+    if (onceki > 0.3 && o.uzak <= 0.3) {
+      Spiker.soyle('🔥 ' + Spiker.sec(
+        ['<b>%s</b> tahta yaklaşıyor!', '<b>%s</b> son halkada!', '<b>%s</b> kokusunu aldı!'],
+        o.ad), { oncelik: 2, anahtar: 'yakin' + kid });
+    }
+    if (o.uzak <= TAC_ESIK) tacTak(kid, o);
+    oncuIsaretle();
+  }
+
+  function oncuIsaretle() {
+    let onde = null;
+    for (const o of oyuncular.values()) if (!onde || o.uzak < onde.uzak) onde = o;
+    for (const o of oyuncular.values()) o.el.classList.toggle('onde', o === onde && o.uzak < 0.85);
+  }
+
+  // ---- tac -----------------------------------------------------------------
+  function tacTak(kid, o) {
+    kutlamada = true;
+    const botMu = Kimlik.botMu(kid);
+
+    // Seri: ayni kisi ust uste tac alirsa carpan buyur — "tahtimi korurum"
+    seri = (kid === sonTacKid) ? seri + 1 : 1;
+    sonTacKid = kid;
+    const kazanc = 10 * seri;
+
+    if (!botMu) {
+      const t = tablo.get(kid) || { ad: o.ad, tac: 0, puan: 0 };
+      t.ad = o.ad; t.tac += 1; t.puan += kazanc;
+      tablo.set(kid, t);
+      localStorage.setItem('tt-tepe-tablo', JSON.stringify([...tablo.entries()].slice(0, 200)));
+      TT.soyle(`👑 @${uidler.get(kid) || o.ad} tahtı aldı!` +
+        (seri > 1 ? ` ${seri}. taç üst üste — x${seri} puan!` : ' Tebrikler!'));
+    }
+
+    Juice.sars(0.5);
+    Finis.kart(kazananEl, {
+      url: Kimlik.al(kid).url,
+      isim: o.ad,
+      alt: botMu
+        ? 'demo tur — yaz, tahtı SEN al'
+        : (seri > 1 ? `${seri}. taç üst üste · +${kazanc} puan` : `tahtı aldı · +${kazanc} puan`),
+    });
+    Spiker.soyle(`👑 <span class="kim">${o.ad}</span> TAHTI ALDI!` +
+      (seri > 1 ? ` <b>x${seri} SERİ</b>` : ''), { oncelik: 3, sure: 4200 });
+    document.getElementById('cagri').textContent = o.ad + ' tahtta — yeni tur birazdan';
+
+    setTimeout(yeniTur, KUTLAMA_SN * 1000);
+  }
+
+  function yeniTur() {
+    kutlamada = false;
+    turNo++;
+    localStorage.setItem('tt-tepe-tur', String(turNo));
+    Finis.kapat(kazananEl);
+    document.getElementById('cagri').textContent = 'yaz = yaklaş · 🎁 = rakibi geri it · ilk ulaşan tacı alır';
+    // Herkes kenara: taci koruyacaksan yeniden kazanacaksin
+    for (const o of oyuncular.values()) { o.uzak = 1; konumla(o); }
+    // Uzun suredir yazmayanlari sil (ekran kalabaligi + "aktif kal" tesviki)
+    if (oyuncular.size > 40) {
+      const fazla = [...oyuncular.entries()].slice(0, oyuncular.size - 40);
+      for (const [kid, o] of fazla) { o.el.remove(); oyuncular.delete(kid); }
+    }
+    sayacCiz(); tabloCiz();
+    Spiker.soyle(`🏁 <b>${turNo}. TUR</b> — herkes kenardan, yaz ve yaklaş`, { oncelik: 2 });
+    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
+  }
+
+  // ---- ray -----------------------------------------------------------------
+  function satir(rozetHtml, gorselHtml, ad, sag, doluluk) {
+    return `<div class="sira" style="position:relative;overflow:hidden">
+      ${doluluk != null ? `<div class="ilerleme" style="width:${doluluk}%"></div>` : ''}
+      <div class="rozet" style="position:relative;${rozetHtml}</div>
+      ${gorselHtml}
+      <div class="ad" style="position:relative">${ad}</div>
+      <div class="adet" style="position:relative">${sag}</div>
+    </div>`;
+  }
+
+  function yakinCiz() {
+    const list = [...oyuncular.entries()]
+      .map(([kid, o]) => ({ kid, o }))
+      .sort((a, b) => a.o.uzak - b.o.uzak).slice(0, 5);
+    if (!list.length) {
+      yakinEl.innerHTML = '<div class="sira bos">sohbete yaz, yarışa gir</div>';
+      return;
+    }
+    yakinEl.innerHTML = list.map((x, i) => {
+      const yuzde = Math.round((1 - x.o.uzak) * 100);
+      return satir(
+        `background:${i === 0 ? 'var(--altin)' : '#6b5fb8'};color:${i === 0 ? '#191434' : '#fff'}">${i + 1}`,
+        Kimlik.cip(x.kid, 30), x.o.ad, yuzde + '%', yuzde);
+    }).join('');
+  }
+
+  function tabloCiz() {
+    const list = [...tablo.entries()]
+      .map(([kid, t]) => ({ kid, ...t }))
+      .sort((a, b) => b.puan - a.puan).slice(0, 6);
+    tacEl.innerHTML = list.length
+      ? list.map((t, i) => satir(
+          `background:${['var(--altin)', '#d8dbe6', '#e29a5a'][i] || '#6b5fb8'};color:${i > 2 ? '#fff' : '#191434'}">${i + 1}`,
+          Kimlik.cip(t.kid, 30), t.ad, `👑${t.tac} · ${t.puan}`, null)).join('')
+      : '<div class="sira bos">ilk tacı sen al — kalıcı tablo</div>';
+  }
+
+  function sayacCiz() {
+    document.getElementById('sayacBuyuk').textContent = oyuncular.size;
+    document.getElementById('turNo').textContent = turNo;
+  }
+
+  setInterval(yakinCiz, 400);
+
+  // ---- olaylar -------------------------------------------------------------
+  const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
+  const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
+
+  TT.on('chat', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid) return;
+    if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
+    yaklas(kid, isim(ev.user), ADIM);
+  });
+
+  TT.on('like', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid || !oyuncular.has(kid)) return;   // once bir sey yazsin
+    yaklas(kid, isim(ev.user), Math.min(0.05, LIKE_ADIM * (ev.likes || 1)));
+  });
+
+  // Hediye = SALDIRI: kendini itmez, ONDEKI RAKIBI GERI ITER. Oyunun
+  // dengesi burada — lider onde giderken hediye yer ve geri duser, kimse
+  // rahatca kacamaz. Atan kisi de kucuk bir "hamle odulu" ile ilerler
+  // (bir mesaj kadar), ama asil etki rakibi geriletmek.
+  //   Kimi iter? Atandan ONDE olan EN YAKIN rakip (hemen onundeki).
+  //   Yoksa (lidersen) en yakin ARKANDAKINI iter — yine cekisme surer.
+  TT.on('gift', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid || kutlamada) return;
+    const ben = oyuncular.get(kid) || oyuncuEkle(kid, isim(ev.user));
+    if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
+
+    const elmas = (ev.gift && ev.gift.value) || 0;
+    const guc = ITME + Math.min(0.25, elmas * 0.004);   // elmas = daha sert itis
+
+    // Hedef: benden ONDE (daha kucuk uzak) en yakin rakip
+    let hedef = null;
+    for (const [hk, ho] of oyuncular) {
+      if (hk === kid || Kimlik.botMu(hk)) continue;
+      if (ho.uzak < ben.uzak && (!hedef || ho.uzak > hedef.uzak)) hedef = ho;
+    }
+    // Lidersen: arkandaki en yakini geri it (yine de rekabeti korur)
+    if (!hedef) {
+      for (const [hk, ho] of oyuncular) {
+        if (hk === kid || Kimlik.botMu(hk) || ho === ben) continue;
+        if (!hedef || ho.uzak < hedef.uzak) hedef = ho;
+      }
+    }
+
+    if (hedef) {
+      hedef.uzak = Math.min(1, hedef.uzak + guc);   // GERI it
+      konumla(hedef);
+      // sarsinti + geri itilenin uzerinde kisa bir "carpma" hissi
+      hedef.el.animate(
+        [{ filter: 'brightness(2.2)' }, { filter: 'brightness(1)' }],
+        { duration: 360, easing: 'ease-out' });
+      Spiker.soyle(`💥 <span class="kim">${ben.ad}</span> ▸ <b>${hedef.ad}</b> geri itti!`,
+        { oncelik: 2 });
+      Juice.sars(0.35);
+    }
+    // Atan kisiye kucuk hamle odulu (bir mesaj kadar) — hediye bosa gitmesin
+    yaklas(kid, isim(ev.user), ADIM);
+    oncuIsaretle();
+  });
+
+  // ---- demo (cazibe modu) --------------------------------------------------
+  // Oda bosken botlar yavas yavas tahta yurur; GERCEK OYUNCU VARSA BOTLAR
+  // DURUR — kimse botla yarismak zorunda kalmaz, sahne yine de canli kalir.
+  setInterval(() => {
+    const gercekVar = [...oyuncular.keys()].some((k) => !Kimlik.botMu(k));
+    if (kutlamada) return;
+    if (gercekVar) return;
+    if (![...oyuncular.keys()].length) {
+      for (let i = 0; i < 5; i++) { const b = Kimlik.bot(i); oyuncuEkle(b.kid, b.ad); }
+      document.getElementById('cagri').textContent = '🤖 demo — bir şey yaz, botları sil, tahtı kap';
+    }
+    for (const [kid] of oyuncular) {
+      if (Math.random() < 0.4) yaklas(kid, '', 0.03 + Math.random() * 0.03);
+    }
+  }, 1600);
+
+  // Gercek oyuncu gelince botlar sahneden cekilir
+  TT.on('chat', (ev) => {
+    if (!kimlik(ev.user) || Kimlik.botMu(kimlik(ev.user))) return;
+    for (const [kid, o] of [...oyuncular.entries()]) {
+      if (Kimlik.botMu(kid)) { o.el.remove(); oyuncular.delete(kid); }
+    }
+  });
+
+  // ---- basla ---------------------------------------------------------------
+  halkalariKur();
+  addEventListener('resize', () => { halkalariKur(); for (const o of oyuncular.values()) konumla(o); });
+  sayacCiz(); tabloCiz(); yakinCiz();
+
+  TT.uyanis({
+    baslik: 'TEPE SAVAŞI',
+    komutlar: ['yaz', 'yaz', 'yaz'],
+    aciklama: 'Her mesaj seni tahta yaklaştırır · beğeni küçük adım · 🎁 hediye ÖNDEKİ RAKİBİ geri iter · ilk ulaşan tacı alır, puanlar KALICI',
+    cagri: 'yaz ve tahta yürü',
+  });
+})();
+</script>
+</body>
+</html>

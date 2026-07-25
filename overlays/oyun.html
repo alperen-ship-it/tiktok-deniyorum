@@ -52,12 +52,15 @@
   // Geri kalan TUM parametreler oyunlara AYNEN aktarilir (?lite=1&sag=24...)
   const OYUNLAR = {
     bilye: { dosya: 'bilye.html', ad: 'Bilye Yarışı', ikon: '🏁' },
+    tepe:  { dosya: 'tepe.html',  ad: 'Tepe Savaşı',  ikon: '👑' },
+    at:    { dosya: 'at.html',    ad: 'At Yarışı',    ikon: '🏇' },
+    // kalan (battle royale) rotasyondan cikti — kullanici emek=ilerleme
+    // rekabeti istedi; dosya duruyor, ?oyunlar=kalan ile geri gelir.
     kalan: { dosya: 'kalan.html', ad: 'Son Ayakta Kalan', ikon: '💀' },
-    at:    { dosya: 'at.html',    ad: 'At Yarışı',       ikon: '🏇' },
   };
-  const SIRA = (q.get('oyunlar') || 'bilye,kalan,at')
+  const SIRA = (q.get('oyunlar') || 'bilye,tepe,at')
     .split(',').map((s) => s.trim()).filter((s) => OYUNLAR[s]);
-  if (!SIRA.length) SIRA.push('bilye', 'kalan', 'at');
+  if (!SIRA.length) SIRA.push('bilye', 'tepe', 'at');
 
   const SURE_MS = q.has('sn')
     ? (Number(q.get('sn')) || 90) * 1000

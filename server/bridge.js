@@ -844,7 +844,7 @@ server.listen(args.port, '0.0.0.0', async () => {
 
    >> Oyunlar — sohbet oynuyor, sen hicbir sey yapmiyorsun <<
      bilye.html   yazana OZEL bilye (kalici renk+desen), pist asagi yaris
-     kalan.html   battle royale: bolge daralir, "N KALDI" geriye sayar
+     tepe.html    her mesaj tahta bir adim: ilk ulasan taci alir, puan KALICI
      at.html      8 sabit at, 1-8 yaz bahis oyna, oranlar havuzdan
 
       Ucu de kendi kendine donuyor: katilim penceresi acilir, oyun
