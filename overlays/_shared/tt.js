@@ -127,6 +127,18 @@
       if (v == null || v === '') continue;
       root.style.setProperty('--dz-' + k, yuzde(v));
     }
+
+    // Sabit 1920x1080 kabugun kenar paylari (TikTok arayuzunun kapattigi
+    // alan) URL'den ayarlanabilir — piksel cinsinden:
+    //   ?sag=300   sagdaki yorum sutunu payi (varsayilan 360)
+    //   ?alt=60    alttaki hediye cubugu payi (varsayilan 96)
+    //   ?ust=0&sol=0  kenarlari tamamen kullan
+    // LIVE Studio'da tuvalin tamami seninse ?sag=24&alt=24 ile oyunu buyut.
+    for (const k of ['ust', 'alt', 'sag', 'sol']) {
+      const v = q.get(k);
+      if (v == null || v === '') continue;
+      root.style.setProperty('--yayin-' + k, /^\d+$/.test(v) ? v + 'px' : v);
+    }
     for (const k of ['ust', 'alt', 'sag', 'sol']) {
       const v = q.get('dz2' + k);
       if (v) root.style.setProperty('--dz2-' + k, yuzde(v));
