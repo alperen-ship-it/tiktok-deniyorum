@@ -37,6 +37,8 @@
       <div class="altYazi">${o.alt || ''}</div>
     </div>`;
     el.classList.add('acik');
+    // Kutlama: kazanan karti tek "yuksek etkili an" — konfeti tam burada.
+    if (global.Juice) global.Juice.konfeti({ y: 0.3 });
   };
 
   F.kapat = function (el) { el.classList.remove('acik'); };

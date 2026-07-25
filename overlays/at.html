@@ -159,6 +159,7 @@
 <script src="_shared/kimlik.js"></script>
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
+<script src="_shared/juice.js"></script>
 <script>
 (function () {
   'use strict';
@@ -445,6 +446,7 @@
         const sirali = [...ilerleme].sort((a, b) => b - a);
         if (sirali[0] - sirali[1] < 0.025) {
           fotoFinisDendi = true;
+          Juice.sars(0.35);
           Finis.agirCekim(2, 0.3);
           Spiker.soyle('🎬 <b>FOTO FİNİŞ!</b>', { oncelik: 3 });
         }

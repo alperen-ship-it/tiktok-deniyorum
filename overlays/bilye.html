@@ -96,6 +96,7 @@
 <script src="_shared/kimlik.js"></script>
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
+<script src="_shared/juice.js"></script>
 <script>
 (function () {
   'use strict';
@@ -626,7 +627,7 @@
                    : '<span style="color:#ff6b6b;font-size:12px">▼</span>';
     }
     const yuzde = Math.max(0, Math.min(100, Math.round(b.y / bitis * 100)));
-    return `<div class="sira" style="position:relative;overflow:hidden">
+    return `<div class="sira${i === 0 ? ' lider' : ''}" style="position:relative;overflow:hidden">
       <div style="position:absolute;left:0;top:0;bottom:0;width:${yuzde}%;
                   background:${b.renk};opacity:.16;pointer-events:none"></div>
       <div class="rozet" style="${stil};position:relative">${rz}</div>
@@ -654,6 +655,7 @@
   const kazananEl = document.getElementById('kazanan');
 
   function yarisBitti(b) {
+    Juice.sars(0.45);
     kazananAdi = b.ad;
     durum = 'bitti';
     sayacSn = KUTLAMA_SN;

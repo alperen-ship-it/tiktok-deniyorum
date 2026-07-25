@@ -187,6 +187,7 @@
 <script src="_shared/kimlik.js"></script>
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
+<script src="_shared/juice.js"></script>
 <script>
 (function () {
   'use strict';
@@ -482,6 +483,7 @@
       }
     } else {
       bosVurus = 0;
+      Juice.sars(0.3 + Math.min(0.4, gidenler.length * 0.08));
       let cumle = f.cumle.replace('%s', `<b>${gidenler[0].ad}</b>`);
       if (gidenler.length > 1) cumle += ` <span style="opacity:.7">+${gidenler.length - 1} kişi</span>`;
       Spiker.soyle(cumle);
