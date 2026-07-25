@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Son Ayakta Kalan — sohbet battle royale</title>
+<link rel="stylesheet" href="_shared/base.css">
+<link rel="stylesheet" href="_shared/oyun-tema.css">
+<style>
+  #alan { overflow: hidden; flex: 1; display: flex; flex-direction: column; }
+  #ust { padding: 9px 14px; }
+  #baslik { font-size: 28px; }
+  #rozet { font-size: 27px; }
+
+  /* Oyuncu izgarasi — herkes kendi adini ARIYOR, oyunun butun cazibesi bu.
+     Ad okunmuyorsa oyun calismiyor demektir, o yuzden fis kucuk ama net. */
+  #izgara {
+    flex: 1; min-height: 0; overflow: hidden;
+    display: flex; flex-wrap: wrap;
+    /* Ortala: az oyuncuyla ustte tek sira kalip altta kocaman bosluk
+       birakmasin. Kalabalikta zaten alani dolduruyor. */
+    align-content: center; justify-content: center;
+    gap: 7px; padding: 10px;
+  }
+  .oyuncu {
+    font-size: 17px; font-weight: 800; padding: 6px 13px; border-radius: 999px;
+    border: 3px solid var(--cizgi); color: #17123a;
+    max-width: 31%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .oyuncu.elendi {
+    opacity: 0; transform: scale(.55) rotate(-8deg);
+    pointer-events: none;
+  }
+  html.tt-lite .oyuncu { transition: none; }
+  html.tt-lite .oyuncu.elendi { display: none; }
+
+  /* Eleme duyurusu — turun ortasinda buyuk yazi */
+  /* display:grid + place-items:center burada YANLIS calisiyordu: metin ile
+     <b> etiketleri ayri ayri izgara ogesi olup ALT ALTA diziliyordu
+     ("ahmet / ile / ayse / carpisti"). Flex + tek sarmalayici span ile
+     tek satirda akiyor. */
+  #duyuru {
+    flex: none; min-height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 4px 12px; text-align: center;
+    font-size: 19px; font-weight: 900; color: #ffb4d4;
+    text-shadow: 0 2px 0 var(--cizgi);
+  }
+  #duyuru b { color: var(--altin); }
+
+  #geriSayim {
+    position: absolute; top: 10px; right: 12px; z-index: 3;
+  }
+</style>
+</head>
+<body>
+<div id="zemin"></div>
+
+<div id="kok" class="tt-oyun">
+
+  <div id="ust" class="kutu">
+    <div id="rozet">💀</div>
+    <div id="baslikSar">
+      <div id="baslik">Son Ayakta Kalan</div>
+      <div id="cagri">sohbete yaz · oyuna gir</div>
+    </div>
+    <div id="sayac">
+      <div id="sayacBuyuk">0</div>
+      <div id="sayacKucuk">hayatta</div>
+    </div>
+  </div>
+
+  <div id="alan" class="kutu">
+    <div class="rozetBuyuk" id="geriSayim">⏳ <span id="geriSn">0</span></div>
+    <div id="izgara"></div>
+    <div id="duyuru">oyuncular bekleniyor…</div>
+    <div id="kazanan">
+      <div>
+        <div class="kupa">👑</div>
+        <div class="kimAd" id="kazananAd">—</div>
+        <div class="altYazi" id="kazananAlt">son ayakta kalan</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="akis"></div>
+
+</div>
+
+<script src="_shared/tt.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
+
+  const KATILIM_SN = num('katilim', 30);   // katilim penceresi
+  const TUR_SN     = num('tur', 4);        // kac saniyede bir eleme turu
+  const KUTLAMA_SN = num('kutlama', 8);
+  const MIN_OYUNCU = num('min', 3);        // bu sayinin altinda oyun baslamaz
+  const ANAHTAR    = (q.get('kelime') || '').toLowerCase();
+
+  // Eleme metinleri — oyunun mizahi burada. "{a}" oyuncu adiyla degisiyor.
+  const OLUMLER = [
+    '{a} çayı döktü, diskalifiye',
+    '{a} şarjı bitti',
+    '{a} annesi çağırdı, gitti',
+    "{a}'yı ayı yedi",
+    '{a} yanlış tuşa bastı',
+    '{a} kahve almaya gitti, dönmedi',
+    '{a} bağlantısı koptu',
+    '{a} tökezledi ve düştü',
+    '{a} uyuyakaldı',
+    '{a} kapı zilini duydu, açmaya gitti',
+    '{a} kediye takıldı',
+    '{a} yanlış yola saptı',
+    '{a} pilini şarj etmeyi unuttu',
+    '{a} sandviçini düşürdü, moral bozuldu',
+    '{a} ayakkabısının bağı çözüldü',
+    '{a} rüzgâra kapıldı',
+    '{a} kuyuya düştü',
+    '{a} yanlışlıkla kendini eledi',
+    '{a} otobüsü kaçırdı',
+    '{a} dizisinin yeni bölümü çıktı, ayrıldı',
+  ];
+  const CIFT_OLUM = [
+    '{a} ile {b} çarpıştı, ikisi de gitti',
+    '{a} ve {b} aynı sandalyeye oturdu',
+    '{a} ile {b} tartıştı, ikisi de elendi',
+  ];
+
+  const RENKLER = [
+    '#ff4d4d', '#3fb9ff', '#ffd23f', '#7ed957', '#ff5fc8', '#ffa62b',
+    '#a86bff', '#21d1a1', '#5b7fff', '#b6e02b', '#e05cff', '#00c2c7',
+  ];
+
+  // ---- durum ---------------------------------------------------------------
+  let oyuncular = new Map();     // kid -> {ad, renk, el (DOM), canli, kalkan}
+  let kuyruk = new Map();
+  let durum = 'katilim';         // katilim | oyun | bitti
+  let sayacSn = KATILIM_SN;
+
+  const izgaraEl = document.getElementById('izgara');
+  const duyuruEl = document.getElementById('duyuru');
+  const kazananEl = document.getElementById('kazanan');
+  const akisEl = document.getElementById('akis');
+
+  function akis(html) {
+    const d = document.createElement('div');
+    d.className = 'satir'; d.innerHTML = html;
+    akisEl.innerHTML = ''; akisEl.appendChild(d);
+    setTimeout(() => d.remove(), 3600);
+  }
+
+  const canlilar = () => [...oyuncular.values()].filter((o) => o.canli);
+
+  /** Duyuru yaz. Icerigi TEK bir <span>'a sariyoruz: cipe flex kutusunda
+   *  serbest metin + <b> ayri ayri oge sayilip alt alta diziliyordu. */
+  function duyur(html) { duyuruEl.innerHTML = '<span>' + html + '</span>'; }
+
+  function sayacCiz() {
+    document.getElementById('sayacBuyuk').textContent =
+      durum === 'katilim' ? oyuncular.size : canlilar().length;
+    document.getElementById('sayacKucuk').textContent =
+      durum === 'katilim' ? 'katıldı' : 'hayatta';
+    document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
+  }
+
+  function oyuncuEkle(kid, ad) {
+    if (oyuncular.has(kid)) return;
+    const renk = RENKLER[oyuncular.size % RENKLER.length];
+    const el = document.createElement('div');
+    el.className = 'oyuncu';
+    el.style.background = renk;
+    el.textContent = ad;
+    izgaraEl.appendChild(el);
+    oyuncular.set(kid, { ad, renk, el, canli: true, kalkan: false });
+  }
+
+  /** Bir oyuncuyu ele: once gorsel olarak sondur, sonra DOM'dan cikar. */
+  function ele(o) {
+    o.canli = false;
+    o.el.classList.add('elendi');
+    setTimeout(() => { if (o.el.parentNode) o.el.remove(); }, 500);
+  }
+
+  // ---- eleme turu ----------------------------------------------------------
+  function tur() {
+    const c = canlilar();
+    if (c.length <= 1) { bitir(c[0]); return; }
+
+    // Kac kisi elenecek: kalabalikken cok, aza dusunce tek tek —
+    // final heyecani sonda olsun diye.
+    let elenecek;
+    if (c.length > 40) elenecek = Math.ceil(c.length * 0.28);
+    else if (c.length > 12) elenecek = Math.ceil(c.length * 0.22);
+    else if (c.length > 4) elenecek = 2;
+    else elenecek = 1;
+    elenecek = Math.min(elenecek, c.length - 1);   // en az 1 kisi kalsin
+
+    // Karistir, bastan elenecek kadarini al
+    const karisik = c.slice();
+    for (let i = karisik.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [karisik[i], karisik[j]] = [karisik[j], karisik[i]];
+    }
+
+    const gidenler = [];
+    for (const o of karisik) {
+      if (gidenler.length >= elenecek) break;
+      if (o.kalkan) {                        // hediye kalkani bir turluk
+        o.kalkan = false;
+        o.el.style.boxShadow = '';
+        akis(`🛡️ <span class="kim">${o.ad}</span> <span class="ok">▸</span> kalkanla kurtuldu`);
+        continue;
+      }
+      gidenler.push(o);
+      ele(o);
+    }
+
+    // Duyuru metni
+    if (gidenler.length === 2 && Math.random() < 0.5) {
+      const s = CIFT_OLUM[Math.floor(Math.random() * CIFT_OLUM.length)];
+      duyur(s.replace('{a}', `<b>${gidenler[0].ad}</b>`)
+             .replace('{b}', `<b>${gidenler[1].ad}</b>`));
+    } else if (gidenler.length === 1) {
+      const s = OLUMLER[Math.floor(Math.random() * OLUMLER.length)];
+      duyur(s.replace('{a}', `<b>${gidenler[0].ad}</b>`));
+    } else if (gidenler.length) {
+      const s = OLUMLER[Math.floor(Math.random() * OLUMLER.length)];
+      duyur(s.replace('{a}', `<b>${gidenler[0].ad}</b>`) +
+            ` <span style="opacity:.75">ve ${gidenler.length - 1} kişi daha</span>`);
+    }
+
+    const kalan = canlilar();
+    if (kalan.length <= 1) bitir(kalan[0]);
+    else if (kalan.length <= 3) akis(`🔥 <b>FİNAL</b> — ${kalan.length} kişi kaldı`);
+    sayacCiz();
+  }
+
+  function bitir(o) {
+    durum = 'bitti';
+    sayacSn = KUTLAMA_SN;
+    const ad = o ? o.ad : '—';
+    document.getElementById('kazananAd').textContent = ad;
+    kazananEl.classList.add('acik');
+    document.getElementById('cagri').textContent = ad + ' kazandı';
+    duyur(`<b>${ad}</b> son ayakta kalan!`);
+    akis(`👑 <span class="kim">${ad}</span> <span class="ok">▸</span> KAZANDI`);
+  }
+
+  function katilimaDon() {
+    durum = 'katilim';
+    sayacSn = KATILIM_SN;
+    kazananEl.classList.remove('acik');
+    document.getElementById('cagri').textContent = 'sohbete yaz · oyuna gir';
+    duyur('oyuncular bekleniyor…');
+    izgaraEl.innerHTML = '';
+    oyuncular = new Map();
+    for (const [kid, ad] of kuyruk) oyuncuEkle(kid, ad);
+    kuyruk = new Map();
+    sayacCiz();
+    akis('💀 <b>YENİ OYUN</b> — sohbete yaz, katıl');
+  }
+
+  function oyunBasla() {
+    if (oyuncular.size < MIN_OYUNCU) { sayacSn = KATILIM_SN; return; }
+    durum = 'oyun';
+    sayacSn = TUR_SN;
+    duyur('oyun başladı!');
+    akis(`🚦 <b>BAŞLADI</b> — ${oyuncular.size} kişi`);
+    sayacCiz();
+  }
+
+  setInterval(() => {
+    sayacSn -= 0.25;
+    if (sayacSn <= 0) {
+      if (durum === 'katilim') oyunBasla();
+      else if (durum === 'oyun') { tur(); sayacSn = TUR_SN; }
+      else katilimaDon();
+    }
+    sayacCiz();
+  }, 250);
+
+  // ---- olaylar -------------------------------------------------------------
+  const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
+  const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
+
+  TT.on('chat', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid) return;
+    if (ANAHTAR && !String(ev.comment || '').toLowerCase().includes(ANAHTAR)) return;
+    if (durum === 'katilim') { oyuncuEkle(kid, isim(ev.user)); sayacCiz(); }
+    else if (!oyuncular.has(kid)) kuyruk.set(kid, isim(ev.user));
+  });
+
+  // Hediye: bir turluk kalkan. Elenmis oyuncuyu geri getirmiyoruz —
+  // "para verince olmez" hissi oyunu bozar; sadece bir tur dayanikliligi.
+  TT.on('gift', (ev) => {
+    const o = oyuncular.get(kimlik(ev.user));
+    if (!o || !o.canli || o.kalkan) return;
+    o.kalkan = true;
+    o.el.style.boxShadow = '0 0 0 4px #ffd23f';
+    akis(`🎁 <span class="kim">${o.ad}</span> <span class="ok">▸</span> kalkan aldı`);
+  });
+
+  sayacCiz();
+
+  TT.uyanis({
+    baslik: 'SON AYAKTA KALAN',
+    komutlar: ['bir şey yaz'],
+    aciklama: 'Sohbete yazan oyuna girer · her turda birileri elenir · 🎁 hediye kalkan verir',
+    cagri: 'yaz ve adını listede gör',
+  });
+})();
+</script>
+</body>
+</html>

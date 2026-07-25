@@ -1,0 +1,167 @@
+/* ===========================================================================
+   oyun-tema.css — sohbet oyunlarinin ortak gorunumu.
+   "Stream Chat Games" havasi: doygun gradyan zemin, kalin yuvarlak paneller,
+   koyu dis cizgi, iri okunakli rakam.
+
+   Neden ayri dosya: uc oyun ayni temayi kullaniyor. Her birinin icine
+   kopyalasaydik bir rengi degistirmek uc dosya duzenlemek olurdu.
+
+   Kullanim:
+     <link rel="stylesheet" href="_shared/base.css">
+     <link rel="stylesheet" href="_shared/oyun-tema.css">
+   =========================================================================== */
+
+:root {
+  --cizgi: #17123a;          /* her panelin koyu dis cizgisi */
+  --panel: #2b2170;
+  --panel2: #3a2a95;
+  --altin: #ffd23f;
+  --pembe: #ff4d9d;
+  --mor: #8b5cf6;
+}
+
+/* Arka plan: TikTok'ta seffaflik yok, zaten dolu bir zemin istiyoruz */
+#zemin {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(1200px 800px at 50% 12%, #5b3fd6 0%, transparent 60%),
+    radial-gradient(900px 700px at 15% 85%, #d6317f 0%, transparent 55%),
+    linear-gradient(170deg, #2a1b6b 0%, #1a1145 55%, #120c33 100%);
+}
+/* Hafif izgara — bos zemin "ucuz" durmasin */
+#zemin::after {
+  content: ''; position: absolute; inset: 0; opacity: .07;
+  background-image: linear-gradient(#fff 1px, transparent 1px),
+                    linear-gradient(90deg, #fff 1px, transparent 1px);
+  background-size: 54px 54px;
+}
+
+#kok {
+  position: fixed;
+  top: var(--dz2-ust); bottom: var(--dz2-alt);
+  left: var(--dz2-sol); right: var(--dz2-sag);
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+/* ---- ortak panel govdesi ---- */
+.kutu {
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 4px solid var(--cizgi);
+  border-radius: 22px;
+  box-shadow: 0 6px 0 var(--cizgi), 0 12px 22px rgba(0,0,0,.45);
+}
+
+/* ---- ust baslik ---- */
+#ust { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+#rozet { flex: none; font-size: 34px; line-height: 1; filter: drop-shadow(0 3px 0 var(--cizgi)); }
+#baslikSar { flex: 1; min-width: 0; }
+#baslik {
+  font-size: 34px; font-weight: 900; letter-spacing: -.5px; line-height: 1;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #fff 40%, var(--altin));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+#cagri {
+  margin-top: 4px; font-size: 16px; font-weight: 800; color: #cbc0ff;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+#sayac { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+#sayacBuyuk { font-size: 30px; font-weight: 900; color: var(--altin); line-height: 1; }
+#sayacKucuk { font-size: 12px; font-weight: 700; color: #a89ce0; text-transform: uppercase; }
+
+/* ---- siralama listesi ---- */
+#siralama { flex: none; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; }
+.sira {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(0,0,0,.26); border-radius: 13px; padding: 7px 11px;
+}
+.sira .rozet {
+  flex: none; width: 30px; height: 30px; border-radius: 9px;
+  display: grid; place-items: center;
+  font-size: 15px; font-weight: 900; color: #1a1145;
+  border: 3px solid var(--cizgi);
+}
+.sira .bayrak { flex: none; width: 17px; height: 17px; border-radius: 5px; border: 2px solid var(--cizgi); }
+.sira .ad {
+  flex: 1; min-width: 0; font-size: 19px; font-weight: 900; text-transform: uppercase;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -.3px;
+}
+.sira .plaka { flex: none; font-size: 13px; font-weight: 900; color: #a89ce0; font-variant-numeric: tabular-nums; }
+.sira .adet {
+  flex: none; font-size: 22px; font-weight: 900; color: var(--altin);
+  font-variant-numeric: tabular-nums; min-width: 34px; text-align: right;
+}
+.sira.bos { justify-content: center; color: #8a7fc4; font-weight: 800; font-size: 15px; padding: 13px; }
+
+/* ---- son olaylar seridi ---- */
+#akis { flex: none; height: 30px; overflow: hidden; position: relative; }
+.satir {
+  position: absolute; inset: 0; display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 800;
+  animation: kay 3.4s ease-out forwards;
+}
+@keyframes kay {
+  0%   { transform: translateY(30px); opacity: 0; }
+  12%  { transform: translateY(0);    opacity: 1; }
+  82%  { transform: translateY(0);    opacity: 1; }
+  100% { transform: translateY(-30px); opacity: 0; }
+}
+html.tt-lite .satir { animation-duration: 2.6s; }
+.satir .kim { color: var(--altin); }
+.satir .ok { color: var(--pembe); }
+
+/* ---- geri sayim / durum rozeti ---- */
+.rozetBuyuk {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(0,0,0,.3); border: 3px solid var(--cizgi);
+  border-radius: 14px; padding: 5px 12px;
+  font-size: 19px; font-weight: 900; font-variant-numeric: tabular-nums;
+}
+
+/* ---- oyun alani (tuval) ---- */
+#alan { flex: 1; min-height: 0; position: relative; padding: 6px; }
+#alan canvas { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); }
+
+/* ---- kazanan perdesi ---- */
+#kazanan {
+  position: absolute; inset: 0; display: none;
+  place-items: center; text-align: center;
+  background: rgba(12,8,40,.82); border-radius: 18px;
+  z-index: 5;
+}
+#kazanan.acik { display: grid; }
+#kazanan .kupa { font-size: 62px; line-height: 1; }
+#kazanan .kimAd {
+  font-size: 40px; font-weight: 900; color: var(--altin);
+  text-transform: uppercase; letter-spacing: -1px;
+  max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#kazanan .altYazi { font-size: 17px; font-weight: 800; color: #cbc0ff; margin-top: 4px; }
+
+/* ===========================================================================
+   YATAY — LIVE Studio'nun Landscape sahnesi.
+   Dikeydeki tek sutun burada ise yaramiyor (ekranin yarisi bosa gidiyor):
+   baslik ustte tam genislik, altinda solda oyun alani + sagda siralama.
+   =========================================================================== */
+html.tt-yatay #kok {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 24%);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "ust  ust"
+    "alan sag";
+  gap: 14px;
+}
+html.tt-yatay #ust { grid-area: ust; }
+html.tt-yatay #alan { grid-area: alan; min-height: 0; }
+html.tt-yatay #sagSutun {
+  grid-area: sag;
+  display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0;
+}
+html.tt-yatay #siralama { flex: 1; min-height: 0; overflow: hidden; justify-content: flex-start; }
+html.tt-yatay #baslik { font-size: 30px; }
+html.tt-yatay .sira .ad { font-size: 17px; }
+html.tt-yatay .sira .adet { font-size: 20px; }
+
+/* Dikeyde "sag sutun" diye bir sey yok — icindekiler ana sutuna aksin */
+html.tt-vertical #sagSutun { display: contents; }

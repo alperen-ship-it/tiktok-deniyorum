@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Bilye Yarışı — sohbet katılır, bilyeler yarışır</title>
+<link rel="stylesheet" href="_shared/base.css">
+<link rel="stylesheet" href="_shared/oyun-tema.css">
+<style>
+  /* Bilye yarisinin butun olayi UZUN DIKEY PIST. Siralamayi tema gibi ayri
+     bir blok yapinca pist 200 piksele dusuyor ve oyun kayboluyor; onun yerine
+     pistin ustune HUD olarak biniyor. Gercek oyunlarda da boyle. */
+  #alan { overflow: hidden; flex: 1; }
+  #ust { padding: 9px 14px; }
+  #baslik { font-size: 28px; }
+  #rozet { font-size: 27px; }
+
+  #siralama {
+    position: absolute; top: 12px; right: 12px; z-index: 3;
+    width: min(300px, 46%);
+    padding: 8px; gap: 5px;
+    background: rgba(18,12,51,.72);
+    border: 3px solid var(--cizgi); border-radius: 16px;
+    box-shadow: 0 4px 0 var(--cizgi);
+  }
+  .sira { padding: 4px 8px; gap: 7px; background: rgba(0,0,0,.3); }
+  .sira .rozet { width: 24px; height: 24px; font-size: 13px; border-width: 2px; }
+  .sira .ad { font-size: 15px; }
+  .sira .adet { font-size: 16px; min-width: 30px; }
+  .sira.bos { font-size: 13px; padding: 8px; }
+
+  /* Tema yatayda izgaraya geciyor ve siralamayi sag sutuna koyuyor;
+     bu oyunda siralama pistin icinde, o yuzden izgarayi geri aliyoruz. */
+  html.tt-yatay #kok { display: flex; flex-direction: column; }
+  html.tt-yatay #alan { grid-area: auto; }
+  html.tt-yatay #siralama { width: min(320px, 30%); }
+
+  /* Katilim ekrani — yarisa girenlerin baloncuklari */
+  #kuyruk {
+    position: absolute; inset: 6px; display: flex; flex-wrap: wrap;
+    align-content: flex-start; gap: 6px; padding: 12px; overflow: hidden;
+  }
+  #kuyruk.gizli { display: none; }
+  .fis {
+    font-size: 15px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
+    border: 3px solid var(--cizgi); color: #1a1145;
+    max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div id="zemin"></div>
+
+<div id="kok" class="tt-oyun">
+
+  <div id="ust" class="kutu">
+    <div id="rozet">🏁</div>
+    <div id="baslikSar">
+      <div id="baslik">Bilye Yarışı</div>
+      <div id="cagri">sohbete yaz · yarışa katıl</div>
+    </div>
+    <div id="sayac">
+      <div id="sayacBuyuk">0</div>
+      <div id="sayacKucuk">yarışçı</div>
+    </div>
+  </div>
+
+  <div id="alan" class="kutu">
+    <canvas id="tuval"></canvas>
+    <div id="kuyruk"></div>
+    <div id="siralama"></div>
+    <div id="kazanan">
+      <div>
+        <div class="kupa">🏆</div>
+        <div class="kimAd" id="kazananAd">—</div>
+        <div class="altYazi" id="kazananAlt">birazdan yeni yarış</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="akis"></div>
+
+</div>
+
+<script src="_shared/tt.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
+
+  // ---- ayarlar -------------------------------------------------------------
+  const KATILIM_SN = num('katilim', 25);   // katilim penceresi
+  const MAX        = num('max', 50);       // ayni anda kac bilye (perf siniri)
+  const KUTLAMA_SN = num('kutlama', 7);    // kazanan ekrani
+  const ANAHTAR    = (q.get('kelime') || '').toLowerCase();  // bos = her yorum katar
+
+  // ---- dunya ---------------------------------------------------------------
+  // Pist 1000 birim genis; yukseklik asagida uretiliyor. Tuval bu dunyayi
+  // olcekleyerek ciziyor, boylece ekran boyutundan bagimsiz ayni yaris.
+  const EN = 1000;
+  const R  = 15;            // bilye yaricapi
+  const YERCEKIMI = 1100;
+  const ESNEKLIK = 0.42;    // carpismada korunan hiz
+  const SURTUNME = 0.995;
+
+  let pistBoy = 0;
+  let pegler = [];          // {x,y,r}
+  let duvarlar = [];        // {x1,y1,x2,y2}
+  let bitis = 0;
+
+  /** Rastgele ama oynanabilir bir pist uret. */
+  function pistUret() {
+    pegler = []; duvarlar = [];
+    let y = 420;
+
+    // Baslangic hunisi — bilyeler ortaya toplansin
+    duvarlar.push({ x1: -40, y1: 250, x2: 330, y2: 400 });
+    duvarlar.push({ x1: EN + 40, y1: 250, x2: EN - 330, y2: 400 });
+
+    const bolumSayisi = 7;
+    for (let b = 0; b < bolumSayisi; b++) {
+      const tip = b % 3;
+
+      if (tip === 0) {
+        // --- civi tarlasi: klasik pinball dagilimi ---
+        for (let s = 0; s < 5; s++) {
+          const kaydir = (s % 2) * 60;
+          for (let x = 70 + kaydir; x < EN - 50; x += 120) {
+            pegler.push({ x, y: y + s * 105, r: 13 });
+          }
+        }
+        y += 5 * 105 + 90;
+
+      } else if (tip === 1) {
+        // --- zikzak rampalar: kalabaligi bir yana surer, oradan dokulur ---
+        const sol = b % 2 === 0;
+        duvarlar.push(sol
+          ? { x1: 0, y1: y, x2: EN - 180, y2: y + 210 }
+          : { x1: EN, y1: y, x2: 180, y2: y + 210 });
+        y += 260;
+        duvarlar.push(sol
+          ? { x1: EN, y1: y, x2: 180, y2: y + 210 }
+          : { x1: 0, y1: y, x2: EN - 180, y2: y + 210 });
+        y += 300;
+
+      } else {
+        // --- engel sutunlari + orta ada ---
+        for (let s = 0; s < 3; s++) {
+          pegler.push({ x: EN * 0.5, y: y + s * 150, r: 34 });
+          pegler.push({ x: EN * 0.16, y: y + 75 + s * 150, r: 20 });
+          pegler.push({ x: EN * 0.84, y: y + 75 + s * 150, r: 20 });
+        }
+        y += 3 * 150 + 90;
+      }
+    }
+
+    // Bitis hunisi
+    duvarlar.push({ x1: 0, y1: y, x2: EN * 0.34, y2: y + 220 });
+    duvarlar.push({ x1: EN, y1: y, x2: EN * 0.66, y2: y + 220 });
+    y += 300;
+
+    bitis = y;
+    pistBoy = y + 200;
+
+    // Yan duvarlar
+    duvarlar.push({ x1: 0, y1: 0, x2: 0, y2: pistBoy });
+    duvarlar.push({ x1: EN, y1: 0, x2: EN, y2: pistBoy });
+  }
+
+  // ---- bilyeler ------------------------------------------------------------
+  const RENKLER = [
+    '#ff4d4d', '#3fb9ff', '#ffd23f', '#7ed957', '#ff5fc8', '#ffa62b',
+    '#a86bff', '#21d1a1', '#5b7fff', '#b6e02b', '#e05cff', '#00c2c7',
+  ];
+
+  let bilyeler = [];        // {ad, kid, renk, x, y, vx, vy, bitti, sira}
+  let bitirenler = [];
+  let katilanlar = new Map();   // kid -> ad  (bu yarisa girenler)
+  let kuyruk = new Map();       // sonraki yarisi bekleyenler
+
+  let durum = 'katilim';        // katilim | yaris | bitti
+  let sayacSn = KATILIM_SN;
+  let kazananAdi = '';
+
+  function bilyeKur() {
+    bilyeler = [];
+    bitirenler = [];
+    let i = 0;
+    for (const [kid, ad] of katilanlar) {
+      // Ust bantta rastgele dagit, hafif yatay hiz ver — her yaris farkli olsun
+      bilyeler.push({
+        ad, kid,
+        renk: RENKLER[i % RENKLER.length],
+        x: 90 + Math.random() * (EN - 180),
+        y: 60 + Math.random() * 160,
+        vx: (Math.random() - 0.5) * 120,
+        vy: 0,
+        bitti: false, sira: 0,
+      });
+      i++;
+    }
+  }
+
+  // ---- fizik ---------------------------------------------------------------
+  /** Bir noktanin dogru parcasina en yakin noktasi. */
+  function enYakin(px, py, d) {
+    const dx = d.x2 - d.x1, dy = d.y2 - d.y1;
+    const uzun = dx * dx + dy * dy;
+    let t = uzun ? ((px - d.x1) * dx + (py - d.y1) * dy) / uzun : 0;
+    t = Math.max(0, Math.min(1, t));
+    return { x: d.x1 + t * dx, y: d.y1 + t * dy };
+  }
+
+  function adim(dt) {
+    for (const b of bilyeler) {
+      if (b.bitti) continue;
+
+      b.vy += YERCEKIMI * dt;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.vx *= SURTUNME; b.vy *= SURTUNME;
+
+      // --- civiler ---
+      for (const p of pegler) {
+        const dx = b.x - p.x, dy = b.y - p.y;
+        const mesafe2 = dx * dx + dy * dy;
+        const engel = R + p.r;
+        if (mesafe2 >= engel * engel || mesafe2 === 0) continue;
+        const mesafe = Math.sqrt(mesafe2);
+        const nx = dx / mesafe, ny = dy / mesafe;
+        b.x = p.x + nx * engel;
+        b.y = p.y + ny * engel;
+        const hiz = b.vx * nx + b.vy * ny;
+        if (hiz < 0) { b.vx -= (1 + ESNEKLIK) * hiz * nx; b.vy -= (1 + ESNEKLIK) * hiz * ny; }
+      }
+
+      // --- duvarlar ---
+      for (const d of duvarlar) {
+        const y = enYakin(b.x, b.y, d);
+        const dx = b.x - y.x, dy = b.y - y.y;
+        const mesafe2 = dx * dx + dy * dy;
+        if (mesafe2 >= R * R || mesafe2 === 0) continue;
+        const mesafe = Math.sqrt(mesafe2);
+        const nx = dx / mesafe, ny = dy / mesafe;
+        b.x = y.x + nx * R;
+        b.y = y.y + ny * R;
+        const hiz = b.vx * nx + b.vy * ny;
+        if (hiz < 0) { b.vx -= (1 + ESNEKLIK) * hiz * nx; b.vy -= (1 + ESNEKLIK) * hiz * ny; }
+      }
+
+      // --- bitis ---
+      if (b.y > bitis) {
+        b.bitti = true;
+        b.sira = bitirenler.length + 1;
+        bitirenler.push(b);
+        if (bitirenler.length === 1) yarisBitti(b);
+      }
+    }
+
+    // --- bilye-bilye ---
+    for (let i = 0; i < bilyeler.length; i++) {
+      const a = bilyeler[i];
+      if (a.bitti) continue;
+      for (let j = i + 1; j < bilyeler.length; j++) {
+        const c = bilyeler[j];
+        if (c.bitti) continue;
+        const dx = c.x - a.x, dy = c.y - a.y;
+        const mesafe2 = dx * dx + dy * dy;
+        const engel = R * 2;
+        if (mesafe2 >= engel * engel || mesafe2 === 0) continue;
+        const mesafe = Math.sqrt(mesafe2);
+        const nx = dx / mesafe, ny = dy / mesafe;
+        const ort = (engel - mesafe) / 2;
+        a.x -= nx * ort; a.y -= ny * ort;
+        c.x += nx * ort; c.y += ny * ort;
+        const goreli = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
+        if (goreli < 0) {
+          const p = goreli * ESNEKLIK;
+          a.vx += p * nx; a.vy += p * ny;
+          c.vx -= p * nx; c.vy -= p * ny;
+        }
+      }
+    }
+  }
+
+  // ---- cizim ---------------------------------------------------------------
+  const tuval = document.getElementById('tuval');
+  const ctx = tuval.getContext('2d');
+  let W = 0, H = 0, olcek = 1, kamera = 0;
+
+  function boyutla() {
+    const r = tuval.getBoundingClientRect();
+    if (!r.width || !r.height) return;              // henuz yerlesmedi
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = Math.max(1, Math.round(r.width));
+    H = Math.max(1, Math.round(r.height));
+    tuval.width = Math.round(W * dpr);
+    tuval.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    olcek = W / EN;
+  }
+  // Tek seferlik olcum yetmiyor: sayfa ilk acildiginda yerlesim daha
+  // oturmamis oluyor, tuvalin arka tamponu yanlis oranda kaliyor ve
+  // daireler ELIPS goruntuleniyordu. ResizeObserver her gercek boyut
+  // degisiminde yeniden olcuyor.
+  if (window.ResizeObserver) new ResizeObserver(boyutla).observe(tuval);
+  addEventListener('resize', boyutla);
+  addEventListener('tt-yon', boyutla);
+
+  function ciz() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Kamera: en ondeki bilyeyi ekranin ust ucte birinde tut
+    let onde = 0;
+    for (const b of bilyeler) if (!b.bitti && b.y > onde) onde = b.y;
+    if (durum === 'katilim') onde = 200;
+    const hedef = onde * olcek - H * 0.34;
+    kamera += (hedef - kamera) * 0.12;
+    kamera = Math.max(0, Math.min(kamera, pistBoy * olcek - H));
+
+    ctx.save();
+    ctx.translate(0, -kamera);
+    ctx.scale(olcek, olcek);
+
+    const ustSinir = kamera / olcek - 60;
+    const altSinir = (kamera + H) / olcek + 60;
+
+    // --- duvarlar ---
+    ctx.strokeStyle = '#6f5fd0';
+    ctx.lineWidth = 9;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (const d of duvarlar) {
+      if (Math.max(d.y1, d.y2) < ustSinir || Math.min(d.y1, d.y2) > altSinir) continue;
+      ctx.moveTo(d.x1, d.y1); ctx.lineTo(d.x2, d.y2);
+    }
+    ctx.stroke();
+
+    // --- civiler ---
+    ctx.fillStyle = '#8b7ae0';
+    for (const p of pegler) {
+      if (p.y < ustSinir || p.y > altSinir) continue;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
+    }
+
+    // --- bitis cizgisi ---
+    if (bitis > ustSinir && bitis < altSinir) {
+      ctx.fillStyle = '#ffd23f';
+      ctx.fillRect(0, bitis, EN, 12);
+      ctx.fillStyle = '#17123a';
+      for (let x = 0; x < EN; x += 60) ctx.fillRect(x, bitis, 30, 12);
+    }
+
+    // --- bilyeler ---
+    for (const b of bilyeler) {
+      if (b.bitti) continue;
+      if (b.y < ustSinir || b.y > altSinir) continue;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, R, 0, 6.2832);
+      ctx.fillStyle = b.renk;
+      ctx.fill();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#17123a'; ctx.stroke();
+    }
+    ctx.restore();
+
+    // --- onde gidenlerin adi (dunya degil ekran uzayinda, okunakli kalsin) ---
+    const canli = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 3);
+    ctx.font = '700 15px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (const b of canli) {
+      const ey = b.y * olcek - kamera;
+      if (ey < 0 || ey > H) continue;
+      const ex = b.x * olcek;
+      ctx.lineWidth = 4; ctx.strokeStyle = '#17123a';
+      ctx.strokeText(b.ad, ex, ey - R * olcek - 7);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(b.ad, ex, ey - R * olcek - 7);
+    }
+  }
+
+  // ---- dongu ---------------------------------------------------------------
+  let sonZaman = 0;
+  function dongu(t) {
+    requestAnimationFrame(dongu);
+    if (!sonZaman) sonZaman = t;
+    let dt = (t - sonZaman) / 1000;
+    sonZaman = t;
+    if (dt > 0.05) dt = 0.05;          // sekme olursa fizigi patlatma
+
+    if (durum === 'yaris') {
+      // Uc alt adim: hizli bilye civiyi delip gecmesin
+      for (let i = 0; i < 3; i++) adim(dt / 3);
+    }
+    ciz();
+  }
+
+  // ---- akis / siralama -----------------------------------------------------
+  const akisEl = document.getElementById('akis');
+  function akis(html) {
+    const d = document.createElement('div');
+    d.className = 'satir'; d.innerHTML = html;
+    akisEl.innerHTML = ''; akisEl.appendChild(d);
+    setTimeout(() => d.remove(), 3600);
+  }
+
+  const sirEl = document.getElementById('siralama');
+  const MADALYA = ['🥇', '🥈', '🥉'];
+  function siralamaCiz() {
+    if (durum === 'katilim') {
+      const kalan = Math.max(0, Math.ceil(sayacSn));
+      sirEl.innerHTML =
+        `<div class="sira bos">katılım açık · ${kalan} sn</div>` +
+        (kuyruk.size ? `<div class="sira bos">${kuyruk.size} kişi sıradaki yarışta</div>` : '');
+      return;
+    }
+    const list = bitirenler.slice(0, 6);
+    if (!list.length) {
+      // Yaris suruyor: onde gidenleri goster
+      const onde = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 6);
+      sirEl.innerHTML = onde.length
+        ? onde.map((b, i) => satirHtml(i, b, Math.round(b.y / bitis * 100) + '%')).join('')
+        : '<div class="sira bos">yarış başlıyor…</div>';
+      return;
+    }
+    sirEl.innerHTML = list.map((b, i) => satirHtml(i, b, b.sira + '.')).join('');
+  }
+  function satirHtml(i, b, sag) {
+    const rz = MADALYA[i] || (i + 1);
+    const stil = i < 3 ? `background:${['#ffd23f', '#d8dbe6', '#e29a5a'][i]}` : 'background:#6b5fb8;color:#fff';
+    return `<div class="sira">
+      <div class="rozet" style="${stil}">${rz}</div>
+      <div class="bayrak" style="background:${b.renk}"></div>
+      <div class="ad">${b.ad}</div>
+      <div class="adet">${sag}</div>
+    </div>`;
+  }
+
+  const kuyrukEl = document.getElementById('kuyruk');
+  function kuyrukCiz() {
+    if (durum !== 'katilim') { kuyrukEl.classList.add('gizli'); return; }
+    kuyrukEl.classList.remove('gizli');
+    const g = [...katilanlar.values()].slice(-24);
+    kuyrukEl.innerHTML = g.map((ad, i) =>
+      `<div class="fis" style="background:${RENKLER[i % RENKLER.length]}">${ad}</div>`).join('');
+  }
+
+  function sayacCiz() {
+    document.getElementById('sayacBuyuk').textContent = katilanlar.size;
+  }
+
+  // ---- durum makinesi ------------------------------------------------------
+  const kazananEl = document.getElementById('kazanan');
+
+  function yarisBitti(b) {
+    kazananAdi = b.ad;
+    durum = 'bitti';
+    sayacSn = KUTLAMA_SN;
+    document.getElementById('kazananAd').textContent = b.ad;
+    document.getElementById('kazananAlt').textContent = 'kazandı · yeni yarış birazdan';
+    kazananEl.classList.add('acik');
+    document.getElementById('cagri').textContent = b.ad + ' kazandı';
+    akis(`🏆 <span class="kim">${b.ad}</span> <span class="ok">▸</span> BİRİNCİ`);
+  }
+
+  function katilimaDon() {
+    durum = 'katilim';
+    sayacSn = KATILIM_SN;
+    kazananEl.classList.remove('acik');
+    document.getElementById('cagri').textContent = 'sohbete yaz · yarışa katıl';
+    katilanlar = new Map();
+    // Bekleyenleri yeni yarisa al
+    for (const [kid, ad] of kuyruk) {
+      if (katilanlar.size >= MAX) break;
+      katilanlar.set(kid, ad);
+    }
+    kuyruk = new Map();
+    bilyeler = []; bitirenler = [];
+    pistUret();
+    kamera = 0;
+    sayacCiz(); kuyrukCiz(); siralamaCiz();
+    akis('🏁 <b>YENİ YARIŞ</b> — sohbete yaz, katıl');
+  }
+
+  function yarisBasla() {
+    if (!katilanlar.size) { sayacSn = KATILIM_SN; return; }   // kimse yoksa bekle
+    durum = 'yaris';
+    bilyeKur();
+    kuyrukCiz();
+    akis(`🚦 <b>START</b> — ${katilanlar.size} bilye yarışıyor`);
+  }
+
+  setInterval(() => {
+    sayacSn -= 0.25;
+    if (durum === 'katilim' && sayacSn <= 0) yarisBasla();
+    else if (durum === 'bitti' && sayacSn <= 0) katilimaDon();
+    if (durum !== 'bitti') siralamaCiz();
+  }, 250);
+
+  // ---- olaylar -------------------------------------------------------------
+  const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
+  const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
+
+  TT.on('chat', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid) return;
+    if (ANAHTAR && !String(ev.comment || '').toLowerCase().includes(ANAHTAR)) return;
+
+    if (durum === 'katilim') {
+      if (katilanlar.has(kid)) return;
+      if (katilanlar.size >= MAX) { kuyruk.set(kid, isim(ev.user)); return; }
+      katilanlar.set(kid, isim(ev.user));
+      sayacCiz(); kuyrukCiz();
+    } else if (!katilanlar.has(kid)) {
+      kuyruk.set(kid, isim(ev.user));      // yaris suruyor, sonrakine yaz
+    }
+  });
+
+  // Hediye: sahibinin bilyesine ileri itki — yaris sirasinda ise yariyor
+  TT.on('gift', (ev) => {
+    const kid = kimlik(ev.user);
+    const b = bilyeler.find((x) => x.kid === kid && !x.bitti);
+    if (!b) return;
+    b.vy += 420;
+    b.vx += (Math.random() - 0.5) * 160;
+    akis(`🎁 <span class="kim">${isim(ev.user)}</span> <span class="ok">▸</span> bilyesine itki`);
+  });
+
+  // ---- basla ---------------------------------------------------------------
+  boyutla();
+  pistUret();
+  sayacCiz(); kuyrukCiz(); siralamaCiz();
+  requestAnimationFrame(dongu);
+
+  TT.uyanis({
+    baslik: 'BİLYE YARIŞI',
+    komutlar: ['bir şey yaz'],
+    aciklama: 'Sohbete yazan herkes yarışa girer · 🎁 hediye bilyeni ileri iter',
+    cagri: 'yaz ve bilyeni pistte gör',
+  });
+})();
+</script>
+</body>
+</html>

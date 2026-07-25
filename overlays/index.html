@@ -224,13 +224,27 @@
   'use strict';
 
   const OVERLAYS = [
-    // ---- OYUN ----------------------------------------------------------
+    // ---- OYUNLAR: sohbet oynuyor, yayinci hicbir sey yapmiyor ----------
     {
       oyun: true,
-      file: 'plaka.html',
-      name: '🗺️ Plaka Savaşı',
-      desc: 'Türkiye haritası, Risk gibi. İzleyici plakasını yazar (34, 06, 35...) ya da ilinin adını, ili savaşa girer ve komşularını fethetmeye başlar. Hediye ilin gücünü artırır. Haritanın yarısını alan kazanır, yeni tur başlar.',
-      opts: '<code>?tur=1800</code> savaş turu (ms) · <code>?guc=1</code> yorum gücü · <code>?hguc=12</code> hediye gücü · <code>?zafer=0.55</code> zafer için gereken harita oranı',
+      file: 'bilye.html',
+      name: '🏁 Bilye Yarışı',
+      desc: 'Twitch&rsquo;in en çok oynanan sohbet oyununun (Marbles on Stream) TikTok uyarlaması. Sohbete yazan herkes bir bilye alır, bilyeler engelli pistten aşağı yuvarlanır, ilk biten kazanır. Fizik motoru kendi çalışır. Hediye bilyeyi ileri iter.',
+      opts: '<code>?katilim=25</code> katılım süresi (sn) · <code>?max=50</code> aynı anda kaç bilye · <code>?kelime=katıl</code> sadece bu kelimeyi yazan katılsın',
+    },
+    {
+      oyun: true,
+      file: 'kalan.html',
+      name: '💀 Son Ayakta Kalan',
+      desc: 'Battle royale. Sohbete yazan oyuna girer, her turda birileri komik sebeplerle elenir ("ayşe çayı döktü, diskalifiye"), son kalan kazanır. Herkes listede kendi adını arar. Hediye bir turluk kalkan verir — elenen geri gelmez, para verince ölmezlik olmaz.',
+      opts: '<code>?katilim=30</code> katılım süresi · <code>?tur=4</code> kaç saniyede bir eleme · <code>?min=3</code> en az oyuncu · <code>?kelime=katıl</code>',
+    },
+    {
+      oyun: true,
+      file: 'at.html',
+      name: '🏇 At Yarışı + Bahis',
+      desc: 'İzleyici atının numarasını yazar (1-6), bahis penceresi kapanınca yarış başlar. Doğru bilen puan alır, en çok kazananlar sıralamada. Hediye bahsi katlar ama yarışı HIZLANDIRMAZ — para verenin atı önde bitseydi oyun sahte olurdu.',
+      opts: '<code>?at=6</code> kaç at · <code>?bahis=22</code> bahis süresi (sn) · <code>?sure=22</code> yarış uzunluğu',
     },
 
     // ---- WIDGET --------------------------------------------------------
@@ -265,7 +279,7 @@
 
   // Ust bilgideki ornegi de gercek porta gore yaz
   const ltm = document.getElementById('ltm');
-  if (ltm) ltm.innerHTML = '<br>Örnek: <code>' + ttlsUrl('plaka.html') + '</code>';
+  if (ltm) ltm.innerHTML = '<br>Örnek: <code>' + ttlsUrl('bilye.html') + '</code>';
 
   const grid = document.getElementById('grid');
 
