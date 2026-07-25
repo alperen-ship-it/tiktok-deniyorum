@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Sohbet Tırmanışı — sohbet karakteri birlikte sürer</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  #kok {
+    position: fixed;
+    top: var(--dz2-ust); bottom: var(--dz2-alt);
+    left: var(--dz2-sol); right: var(--dz2-sag);
+    display: flex; flex-direction: column;
+  }
+
+  /* ---- ust: yukseklik + rekor ---- */
+  #ust { flex: none; display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px 6px; }
+  #yuk { font-size: 34px; font-weight: 900; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  #yuk small { font-size: 15px; font-weight: 700; opacity: .7; margin-left: 3px; letter-spacing: 0; }
+  #rekor { font-size: 14px; opacity: .75; font-variant-numeric: tabular-nums; }
+
+  #gucSar { flex: none; margin-bottom: 6px; }
+
+  /* ---- orta: tirmanis alani ---- */
+  #alan { flex: 1; position: relative; min-height: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Son oy verenler ucusarak gecsin — kolektif oyunda kimlik hissi buradan geliyor */
+  .oyAdi {
+    position: absolute;
+    font-size: 15px; font-weight: 800;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: oyUc 1.6s ease-out forwards;
+  }
+  @keyframes oyUc {
+    0%   { opacity: 0; transform: translateY(6px) scale(.85); }
+    15%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-46px) scale(.95); }
+  }
+
+  /* ---- alt: oylama ---- */
+  #oylama { flex: none; padding-top: 8px; }
+
+  #turBilgi {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; opacity: .8; margin-bottom: 5px; letter-spacing: .5px;
+  }
+  #sonuc { font-weight: 800; }
+
+  #secenekler { display: flex; gap: 7px; }
+  .sec {
+    flex: 1;
+    position: relative;
+    border-radius: 12px;
+    background: rgba(8, 10, 18, .78);
+    border: 2px solid rgba(255,255,255,.14);
+    padding: 8px 6px 7px;
+    text-align: center;
+    overflow: hidden;
+    transition: border-color .15s, transform .15s;
+  }
+  .sec .dolgu {
+    position: absolute; inset: auto 0 0 0; height: 0;
+    background: linear-gradient(0deg, rgba(37,244,238,.42), rgba(37,244,238,.10));
+    transition: height .25s ease;
+  }
+  .sec .ic { position: relative; }
+  .sec .tus { font-size: 19px; font-weight: 900; letter-spacing: .5px; }
+  .sec .oy { font-size: 13px; opacity: .8; font-variant-numeric: tabular-nums; margin-top: 1px; }
+  .sec.kazandi { border-color: var(--tt-cyan); transform: translateY(-3px); }
+  .sec.yok { opacity: .45; }
+  .sec.yok .tus::after { content: ' ✕'; color: var(--tt-pink); }
+
+  #sayac {
+    height: 3px; border-radius: 2px; margin-top: 7px;
+    background: rgba(255,255,255,.14); overflow: hidden;
+  }
+  #sayacIc { height: 100%; width: 100%; background: var(--tt-cyan); transition: width .1s linear; }
+</style>
+</head>
+<body>
+
+<div id="kok" class="tt-oyun">
+  <div id="ust">
+    <div id="yuk">0<small>m</small></div>
+    <div id="rekor">rekor 0m</div>
+  </div>
+
+  <div id="gucSar"></div>
+
+  <div id="alan"><canvas id="cv"></canvas></div>
+
+  <div id="oylama">
+    <div id="turBilgi">
+      <span>SOHBET KARARI</span>
+      <span id="sonuc"></span>
+    </div>
+    <div id="secenekler">
+      <div class="sec" data-y="sol"><div class="dolgu"></div><div class="ic"><div class="tus">SOL</div><div class="oy">0</div></div></div>
+      <div class="sec" data-y="zipla"><div class="dolgu"></div><div class="ic"><div class="tus">ZIPLA</div><div class="oy">0</div></div></div>
+      <div class="sec" data-y="sag"><div class="dolgu"></div><div class="ic"><div class="tus">SAĞ</div><div class="oy">0</div></div></div>
+    </div>
+    <div id="sayac"><div id="sayacIc"></div></div>
+  </div>
+</div>
+
+<script src="_shared/tt.js"></script>
+<script src="_shared/ulti.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const TUR   = Number(q.get('tur')) || 4;      // oylama penceresi (saniye)
+  const GUC   = Number(q.get('guc')) || 90;     // begeni ile dolan mega ziplama bari
+  const KARAKTER = q.get('karakter') || '🧗';
+
+  // Yorumdan oy cikaran kaliplar. Kisa ve dogal yazimlarin hepsi tutsun:
+  // "sol", "sola", "<", "1", ok isareti...
+  const KALIPLAR = [
+    { yon: 'sol',   re: /^\s*(sol[ae]?|l|←|<+|1)\s*$/i },
+    { yon: 'zipla', re: /^\s*(z[ıi]pla|yukar[ıi]|up|orta|↑|\^+|2)\s*$/i },
+    { yon: 'sag',   re: /^\s*(sa[ğg][ae]?|r|→|>+|3)\s*$/i },
+  ];
+
+  const el = {
+    yuk: document.getElementById('yuk'),
+    rekor: document.getElementById('rekor'),
+    alan: document.getElementById('alan'),
+    sonuc: document.getElementById('sonuc'),
+    sayacIc: document.getElementById('sayacIc'),
+    secler: {
+      sol:   document.querySelector('.sec[data-y="sol"]'),
+      zipla: document.querySelector('.sec[data-y="zipla"]'),
+      sag:   document.querySelector('.sec[data-y="sag"]'),
+    },
+  };
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  let W = 0, H = 0;
+
+  function boyut() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const r = el.alan.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  addEventListener('resize', boyut);
+  new ResizeObserver(boyut).observe(el.alan);
+  boyut();
+
+  // ---------------------------------------------------------------------------
+  // Dunya: satir satir uretilen platformlar. y ARTTIKCA YUKARI cikiyoruz.
+  // ---------------------------------------------------------------------------
+  // Yogunluk ayari: satirlar sik ve sutun az olunca ekran dolu gorunuyor ve
+  // ziplamalar kisa/okunakli kaliyor. Genis izgara yayinda bombos duruyordu.
+  const SATIR_YUK = 58;            // iki satir arasi piksel
+  const SUTUN = 4;                 // yatay izgara
+  const platformlar = new Map();   // "satir:sutun" -> true
+  let enUstSatir = -1;
+
+  function sutunX(s) { return (W / SUTUN) * (s + 0.5); }
+
+  /**
+   * Bir satiri uret. Her satirda 2-3 platform var; bilerek BOSLUK birakiyoruz
+   * ki oy vermek gercek bir karar olsun — yanlis yon secilirse dusuluyor.
+   */
+  function satirUret(satir) {
+    if (platformlar.has(satir + ':var')) return;
+    platformlar.set(satir + ':var', true);
+
+    const adet = 2 + ((Math.random() * 2) | 0);      // 4 sutunun 2-3'u dolu
+    const secilen = new Set();
+    while (secilen.size < adet) secilen.add((Math.random() * SUTUN) | 0);
+    for (const s of secilen) platformlar.set(satir + ':' + s, true);
+  }
+
+  function platformVar(satir, sutun) {
+    if (sutun < 0 || sutun >= SUTUN) return false;
+    return platformlar.has(satir + ':' + sutun);
+  }
+
+  function ustunuDoldur(satir) {
+    for (let s = enUstSatir + 1; s <= satir + 14; s++) satirUret(s);
+    enUstSatir = Math.max(enUstSatir, satir + 14);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Karakter
+  // ---------------------------------------------------------------------------
+  const k = { satir: 0, sutun: 2, gorselY: 0, gorselX: 0, ziplama: null, dusuyor: false };
+  let rekor = 0;
+  let kamera = 0;
+
+  // Baslangic platformu garanti
+  platformlar.set('0:var', true);
+  platformlar.set('0:2', true);
+  ustunuDoldur(0);
+  k.gorselX = 0.5;
+
+  function yukseklik() { return k.satir; }
+
+  function ekranYaz() {
+    el.yuk.innerHTML = yukseklik() + '<small>m</small>';
+    if (yukseklik() > rekor) rekor = yukseklik();
+    el.rekor.textContent = 'rekor ' + rekor + 'm';
+  }
+
+  /** Hedef sutunu yona gore hesapla. */
+  function hedefSutun(yon) {
+    if (yon === 'sol') return k.sutun - 1;
+    if (yon === 'sag') return k.sutun + 1;
+    return k.sutun;
+  }
+
+  /** Aday platformlarin var olup olmadigini secenek kutularina yansit. */
+  function adaylariGoster() {
+    for (const yon of ['sol', 'zipla', 'sag']) {
+      const varMi = platformVar(k.satir + 1, hedefSutun(yon));
+      el.secler[yon].classList.toggle('yok', !varMi);
+    }
+  }
+
+  function zipla(yon, mega) {
+    const hedefS = hedefSutun(yon);
+    const atlanan = mega ? 3 : 1;
+    const hedefSatir = k.satir + atlanan;
+
+    ustunuDoldur(hedefSatir);
+
+    // Mega ziplama her zaman tutar: en yakin platforma yapisir
+    let basarili = platformVar(hedefSatir, hedefS);
+    let inisS = hedefS;
+    if (mega && !basarili) {
+      for (let d = 0; d <= SUTUN; d++) {
+        if (platformVar(hedefSatir, hedefS - d)) { inisS = hedefS - d; basarili = true; break; }
+        if (platformVar(hedefSatir, hedefS + d)) { inisS = hedefS + d; basarili = true; break; }
+      }
+    }
+
+    if (basarili) {
+      k.ziplama = { bas: { satir: k.satir, sutun: k.sutun }, son: { satir: hedefSatir, sutun: inisS }, t: 0, dusus: false };
+      k.satir = hedefSatir; k.sutun = inisS;
+      el.sonuc.textContent = mega ? '💥 MEGA!' : '✓ tuttu';
+      el.sonuc.style.color = '#7ee787';
+    } else {
+      // Dus: altta platform olan ilk satira in
+      let inis = k.satir - 1;
+      while (inis > 0 && !platformVar(inis, hedefS)) inis--;
+      let inisSut = hedefS;
+      if (inis <= 0) { inis = 0; inisSut = 2; }
+      k.ziplama = { bas: { satir: k.satir, sutun: k.sutun }, son: { satir: inis, sutun: inisSut }, t: 0, dusus: true };
+      const kayip = k.satir - inis;
+      k.satir = inis; k.sutun = inisSut;
+      el.sonuc.textContent = `✕ düştü −${kayip}m`;
+      el.sonuc.style.color = '#ff6b6b';
+    }
+    ekranYaz();
+  }
+
+  /** Ulti / mega ile yukselme: hep basarili, birden fazla satir. */
+  function firlat(satirSayisi, etiket) {
+    const hedefSatir = k.satir + satirSayisi;
+    ustunuDoldur(hedefSatir);
+    let inisS = k.sutun;
+    if (!platformVar(hedefSatir, inisS)) {
+      for (let d = 1; d <= SUTUN; d++) {
+        if (platformVar(hedefSatir, inisS - d)) { inisS -= d; break; }
+        if (platformVar(hedefSatir, inisS + d)) { inisS += d; break; }
+      }
+    }
+    k.ziplama = { bas: { satir: k.satir, sutun: k.sutun }, son: { satir: hedefSatir, sutun: inisS }, t: 0, dusus: false, roket: true };
+    k.satir = hedefSatir; k.sutun = inisS;
+    el.sonuc.textContent = etiket;
+    el.sonuc.style.color = '#ffd93d';
+    ekranYaz();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Oylama
+  // ---------------------------------------------------------------------------
+  let oylar = new Map();           // uniqueId -> yon  (son oy gecerli)
+  let turBaslangic = performance.now();
+  let megaHazir = false;
+
+  function oyVer(user, yon) {
+    const id = user?.uniqueId || 'anon';
+    oylar.set(id, yon);
+    oyCiz();
+    oyAdiUcur(user?.nickname || id, yon);
+  }
+
+  function sayim() {
+    const s = { sol: 0, zipla: 0, sag: 0 };
+    for (const y of oylar.values()) if (s[y] !== undefined) s[y]++;
+    return s;
+  }
+
+  function oyCiz() {
+    const s = sayim();
+    const top = Math.max(1, s.sol + s.zipla + s.sag);
+    for (const yon of ['sol', 'zipla', 'sag']) {
+      const kutu = el.secler[yon];
+      kutu.querySelector('.oy').textContent = s[yon];
+      kutu.querySelector('.dolgu').style.height = (s[yon] / top) * 100 + '%';
+    }
+  }
+
+  function oyAdiUcur(ad, yon) {
+    const d = document.createElement('div');
+    d.className = 'oyAdi';
+    d.textContent = ad;
+    d.style.color = yon === 'sol' ? '#4fa8ff' : yon === 'sag' ? '#ff8c3b' : '#25f4ee';
+    // ilgili secenegin ustunde belirsin
+    const oran = yon === 'sol' ? 0.17 : yon === 'sag' ? 0.83 : 0.5;
+    d.style.left = (oran * W) + 'px';
+    d.style.top = (H - 30) + 'px';
+    d.style.transform = 'translateX(-50%)';
+    el.alan.appendChild(d);
+    setTimeout(() => d.remove(), 1700);
+  }
+
+  function turBitir() {
+    const s = sayim();
+    const top = s.sol + s.zipla + s.sag;
+
+    for (const kutu of Object.values(el.secler)) kutu.classList.remove('kazandi');
+
+    if (top === 0) {
+      el.sonuc.textContent = 'oy yok — bekleniyor';
+      el.sonuc.style.color = 'rgba(255,255,255,.6)';
+    } else {
+      const enCok = Math.max(s.sol, s.zipla, s.sag);
+      const kazananlar = ['sol', 'zipla', 'sag'].filter((y) => s[y] === enCok);
+      const kazanan = kazananlar[(Math.random() * kazananlar.length) | 0];   // beraberlikte kura
+      el.secler[kazanan].classList.add('kazandi');
+
+      const mega = megaHazir;
+      megaHazir = false;
+      zipla(kazanan, mega);
+      adaylariGoster();
+    }
+
+    oylar = new Map();
+    oyCiz();
+    turBaslangic = performance.now();
+  }
+
+  // ---- guc bari: begeniler dolduruyor, dolunca sonraki ziplama MEGA ----------
+  const guc = ULTI.KomboBari({
+    hedef: GUC,
+    kap: document.getElementById('gucSar'),
+    dolunca: () => {
+      megaHazir = true;
+      el.sonuc.textContent = '⚡ SONRAKİ ZIPLAMA MEGA';
+      el.sonuc.style.color = '#ffd93d';
+    },
+  });
+
+  // ---------------------------------------------------------------------------
+  // Olaylar
+  // ---------------------------------------------------------------------------
+  TT.on('chat', (ev) => {
+    const t = (ev.comment || '').trim();
+    for (const k2 of KALIPLAR) {
+      if (k2.re.test(t)) { oyVer(ev.user, k2.yon); return; }
+    }
+    // Komut degilse yine de gucu biraz doldursun — yazan herkes katkida bulunsun
+    guc.ekle(0.5);
+  });
+
+  TT.on('like', (ev) => guc.ekle(Math.min(20, ev.likes || 1) * 0.6));
+  TT.on('follow', () => guc.ekle(15));
+  TT.on('share', () => guc.ekle(10));
+
+  TT.on('gift', (ev) => {
+    if (ev.gift.streaking) return;
+    const d = ev.gift.value || ev.gift.diamonds * (ev.gift.count || 1);
+    const kad = ULTI.kademe(d);
+    ULTI.duyur(ev.user?.nickname || ev.user?.uniqueId || '?', kad, 1400);
+    // Kademe yukseldikce daha cok satir: 2 / 4 / 7 / 12 / 20
+    const satir = [0, 2, 4, 7, 12, 20][kad.guc] || 2;
+    firlat(satir, `🚀 ${kad.ad} +${satir}m`);
+    adaylariGoster();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Cizim
+  // ---------------------------------------------------------------------------
+  const yaziTipi = () => getComputedStyle(document.body).fontFamily;
+
+  TT.loop((dt) => {
+    // --- tur sayaci ---
+    const gecen = (performance.now() - turBaslangic) / 1000;
+    el.sayacIc.style.width = Math.max(0, 1 - gecen / TUR) * 100 + '%';
+    if (gecen >= TUR) turBitir();
+
+    // --- ziplama animasyonu ---
+    let ax = k.sutun, ay = k.satir;
+    if (k.ziplama) {
+      k.ziplama.t += dt / (k.ziplama.roket ? 0.75 : k.ziplama.dusus ? 0.45 : 0.42);
+      const o = Math.min(1, k.ziplama.t);
+      ax = k.ziplama.bas.sutun + (k.ziplama.son.sutun - k.ziplama.bas.sutun) * o;
+      ay = k.ziplama.bas.satir + (k.ziplama.son.satir - k.ziplama.bas.satir) * o;
+      // ziplarken yay: ortada biraz daha yukari
+      if (!k.ziplama.dusus) ay += Math.sin(o * Math.PI) * 0.45;
+      if (o >= 1) k.ziplama = null;
+    }
+
+    // --- kamera: karakteri ekranin %62'sinde tut ---
+    const hedefKamera = ay * SATIR_YUK - H * 0.38;
+    kamera += (hedefKamera - kamera) * Math.min(1, dt * 6);
+
+    ctx.clearRect(0, 0, W, H);
+
+    // --- platformlar ---
+    const ilkSatir = Math.max(0, Math.floor(kamera / SATIR_YUK) - 1);
+    const sonSatir = ilkSatir + Math.ceil(H / SATIR_YUK) + 2;
+    ustunuDoldur(sonSatir);
+
+    for (let satir = ilkSatir; satir <= sonSatir; satir++) {
+      for (let s = 0; s < SUTUN; s++) {
+        if (!platformVar(satir, s)) continue;
+        const px = sutunX(s);
+        const py = H - (satir * SATIR_YUK - kamera);
+        if (py < -40 || py > H + 40) continue;
+
+        const g = (W / SUTUN) * 0.72;
+        // her 10 satirda bir kontrol noktasi: goz ilerlemeyi olcsun
+        const kontrol = satir > 0 && satir % 10 === 0;
+        ctx.fillStyle = kontrol ? 'rgba(255,217,61,.85)' : 'rgba(255,255,255,.55)';
+        ctx.fillRect(px - g / 2, py, g, 9);
+
+        if (kontrol) {
+          // Etiket platformun YANINA gidiyor (ustune koyunca karakterin altinda
+          // kaliyordu). Ama en soldaki sutunda sola yazarsak canvas disina
+          // tasip kirpiliyor — o yuzden hangi tarafta yer varsa oraya koy.
+          const yazi = satir + 'm';
+          ctx.fillStyle = 'rgba(255,217,61,.9)';
+          ctx.font = `800 12px ${yaziTipi()}`;
+          const solKenar = px - g / 2 - 6;
+          if (solKenar > 34) {
+            ctx.textAlign = 'right';
+            ctx.fillText(yazi, solKenar, py + 9);
+          } else {
+            ctx.textAlign = 'left';
+            ctx.fillText(yazi, px + g / 2 + 6, py + 9);
+          }
+          ctx.textAlign = 'center';
+        }
+      }
+    }
+
+    // --- aday hedefler: sohbetin neyi sectigini gorebilmesi icin ---
+    if (!k.ziplama) {
+      const adaySatir = k.satir + 1;
+      const py = H - (adaySatir * SATIR_YUK - kamera);
+      for (const [yon, renk] of [['sol', '#4fa8ff'], ['zipla', '#25f4ee'], ['sag', '#ff8c3b']]) {
+        const s = hedefSutun(yon);
+        if (s < 0 || s >= SUTUN) continue;
+        const px = sutunX(s);
+        const g = (W / SUTUN) * 0.72;
+        const varMi = platformVar(adaySatir, s);
+        ctx.save();
+        ctx.globalAlpha = varMi ? 0.95 : 0.30;
+        ctx.strokeStyle = renk;
+        ctx.lineWidth = 3;
+        ctx.setLineDash(varMi ? [] : [5, 5]);
+        ctx.strokeRect(px - g / 2 - 3, py - 3, g + 6, 15);
+        ctx.setLineDash([]);
+        ctx.fillStyle = renk;
+        ctx.font = `900 13px ${yaziTipi()}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(yon === 'sol' ? 'SOL' : yon === 'sag' ? 'SAĞ' : 'ZIPLA', px, py - 10);
+        ctx.restore();
+      }
+    }
+
+    // --- karakter ---
+    const kx = sutunX(ax);
+    const ky = H - (ay * SATIR_YUK - kamera);
+    ctx.font = `${Math.round(SATIR_YUK * 0.62)}px "Segoe UI Emoji","Apple Color Emoji",sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(KARAKTER, kx, ky);
+  });
+
+  ekranYaz();
+  adaylariGoster();
+  oyCiz();
+})();
+</script>
+</body>
+</html>
