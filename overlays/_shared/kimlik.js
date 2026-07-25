@@ -151,5 +151,16 @@
       `background:url(${k.url});background-size:contain;vertical-align:middle"></span>`;
   }
 
-  global.Kimlik = { al, ciz, cip, formaPisir, desenCiz, PALET };
+  // Demo (cazibe modu) bot kadrosu. Oda bosken oyunlar tur atmaya devam
+  // etsin diye kullanilir; 🤖 isareti "bu gercek izleyici degil" der.
+  // kid'ler sabit ('bot:0'...) — botlarin skinleri de yayindan yayina ayni.
+  const BOTLAR = ['🤖 Boncuk', '🤖 Fındık', '🤖 Zıpzıp', '🤖 Karpuz',
+                  '🤖 Limon', '🤖 Pofuduk', '🤖 Mısır', '🤖 Turbo'];
+  function bot(i) {
+    i = i % BOTLAR.length;
+    return { kid: 'bot:' + i, ad: BOTLAR[i] };
+  }
+  function botMu(kid) { return String(kid).startsWith('bot:'); }
+
+  global.Kimlik = { al, ciz, cip, formaPisir, desenCiz, PALET, bot, botMu, BOTLAR };
 })(window);

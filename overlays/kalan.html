@@ -387,16 +387,18 @@
     sayacSn = KUTLAMA_SN;
     arenaEl.classList.remove('final', 'duello');
     const ad = o ? o.ad : '—';
+    const kazananKid = o ? [...oyuncular.entries()].find(([, v]) => v === o)[0] : null;
     Finis.kart(kazananEl, {
-      url: o ? Kimlik.al([...oyuncular.entries()].find(([, v]) => v === o)[0]).url : null,
+      url: kazananKid ? Kimlik.al(kazananKid).url : null,
       isim: ad,
-      alt: `${baslangicSayisi} kişi arasından son ayakta kalan`,
+      alt: kazananKid && Kimlik.botMu(kazananKid)
+        ? 'demo oyun — sohbete yaz, sıradakinde SEN varsın'
+        : `${baslangicSayisi} kişi arasından son ayakta kalan`,
     });
     document.getElementById('cagri').textContent = ad + ' kazandı';
     Spiker.soyle(`👑 <span class="kim">${ad}</span> SON AYAKTA KALAN`, { oncelik: 3, sure: 4500 });
-    if (o) {
-      const kid = [...oyuncular.entries()].find(([, v]) => v === o)[0];
-      TT.soyle(`💀 @${uidler.get(kid) || ad} son ayakta kalan! ${baslangicSayisi} kişiyi devirdi 👑`);
+    if (o && kazananKid && !Kimlik.botMu(kazananKid)) {
+      TT.soyle(`💀 @${uidler.get(kazananKid) || ad} son ayakta kalan! ${baslangicSayisi} kişiyi devirdi 👑`);
     }
   }
 
@@ -418,8 +420,24 @@
     Spiker.soyle('💀 <b>YENİ OYUN</b> — sohbete yaz, katıl', { oncelik: 2 });
   }
 
+  let demoTur = false;
+
   function oyunBasla() {
-    if (oyuncular.size < MIN_OYUNCU) { sayacSn = KATILIM_SN; return; }
+    // CAZIBE MODU: yeterli oyuncu yoksa botlarla doldur — oda bos diye
+    // ekran olu kalmasin; gelen izleyici elemeleri izleyip oyunu anlasin.
+    const gercek = oyuncular.size;
+    demoTur = gercek === 0;
+    if (gercek < MIN_OYUNCU + 2) {
+      const hedef = gercek === 0 ? 8 : MIN_OYUNCU + 3;
+      for (let i = 0; oyuncular.size < hedef && i < 8; i++) {
+        const b = Kimlik.bot(i);
+        oyuncuEkle(b.kid, b.ad);
+      }
+    }
+    if (demoTur) {
+      document.getElementById('cagri').textContent = '🤖 demo — sohbete yaz, sıradaki oyunda sen de varsın';
+      Spiker.soyle('🤖 <b>DEMO OYUN</b> — sohbete bir şey yaz, katıl', { oncelik: 2, sure: 4200 });
+    }
     durum = 'oyun';
     sayacSn = TUR_SN;
     baslangicSayisi = oyuncular.size;

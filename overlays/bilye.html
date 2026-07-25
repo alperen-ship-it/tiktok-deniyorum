@@ -660,12 +660,16 @@
     Finis.kart(kazananEl, {
       url: Kimlik.al(b.kid).url,
       isim: b.ad,
-      alt: `${bilyeler.length} bilye arasından birinci`,
+      alt: Kimlik.botMu(b.kid)
+        ? 'demo yarış — sohbete yaz, sıradakinde SEN varsın'
+        : `${bilyeler.length} bilye arasından birinci`,
     });
     document.getElementById('cagri').textContent = b.ad + ' kazandı';
     akis(`🏆 <span class="kim">${b.ad}</span> BİRİNCİ`, { oncelik: 3, sure: 4500 });
-    // Sohbet botu: kazanani etiketle (kopru gonderebiliyorsa gercek sohbete)
-    TT.soyle(`🏁 @${uidler.get(b.kid) || b.ad} bilye yarışını kazandı! Tebrikler 🎉`);
+    // Sohbet botu: kazanani etiketle — ama demo botunu kutlama :)
+    if (!Kimlik.botMu(b.kid)) {
+      TT.soyle(`🏁 @${uidler.get(b.kid) || b.ad} bilye yarışını kazandı! Tebrikler 🎉`);
+    }
   }
 
   function katilimaDon() {
@@ -689,12 +693,30 @@
     akis('🏁 <b>YENİ YARIŞ</b> — sohbete yaz, katıl');
   }
 
+  let demoTur = false;
+
   function yarisBasla() {
-    if (!katilanlar.size) { sayacSn = KATILIM_SN; return; }   // kimse yoksa bekle
+    // CAZIBE MODU: kimse yoksa bekleme — botlarla demo turu don. Gelen
+    // izleyici oyunu IZLEYEREK anlar; yazdigi an siradaki tur gercek olur.
+    const gercek = katilanlar.size;
+    demoTur = gercek === 0;
+    if (gercek < 5) {
+      const eksik = (gercek === 0 ? 6 : 5) - gercek;
+      for (let i = 0; i < eksik; i++) {
+        const b = Kimlik.bot(i);
+        if (!katilanlar.has(b.kid)) katilanlar.set(b.kid, b.ad);
+      }
+    }
     durum = 'yaris';
     bilyeKur();
     kuyrukCiz();
-    akis(`🚦 <b>START</b> — ${katilanlar.size} bilye yarışıyor`);
+    sayacCiz();
+    if (demoTur) {
+      document.getElementById('cagri').textContent = '🤖 demo — sohbete yaz, sıradaki yarış senin';
+      akis('🤖 <b>DEMO YARIŞ</b> — sohbete bir şey yaz, sen de katıl', { oncelik: 2, sure: 4200 });
+    } else {
+      akis(`🚦 <b>START</b> — ${katilanlar.size} bilye yarışıyor`);
+    }
   }
 
   setInterval(() => {

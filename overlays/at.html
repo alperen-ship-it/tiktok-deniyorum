@@ -354,8 +354,26 @@
   }
 
   // ---- yaris ---------------------------------------------------------------
+  let demoTur = false;
+
   function yarisBasla() {
-    if (!bahisler.size) { sayacSn = BAHIS_SN; return; }
+    // CAZIBE MODU: bahis yoksa botlar oynasin — kosu her turda kalksin,
+    // oran tahtasi dolu gorunsun, gelen izleyici mekanigi izleyerek anlasin.
+    const gercek = bahisler.size;
+    demoTur = gercek === 0;
+    if (gercek < 3) {
+      for (let i = 0; i < (gercek === 0 ? 6 : 4 - gercek); i++) {
+        const b = Kimlik.bot(i);
+        if (!bahisler.has(b.kid)) {
+          bahisler.set(b.kid, { ad: b.ad, at: Math.floor(Math.random() * ATLAR.length), kat: 1 });
+        }
+      }
+      rayOran(); sayacCiz();
+    }
+    if (demoTur) {
+      document.getElementById('cagri').textContent = '🤖 demo koşu — 1-8 yaz, sıradakinde bahsin geçer';
+      Spiker.soyle('🤖 <b>DEMO KOŞU</b> — atının numarasını yaz, katıl', { oncelik: 2, sure: 4200 });
+    }
     durum = 'yaris';
     ilerleme = ATLAR.map(() => 0);
     // Temel hiz x gizli guc: formdaki at hafif avantajli — form gorunur
@@ -475,9 +493,13 @@
     for (const [kid, b] of bahisler) {
       if (b.at !== i) continue;
       const kazanc = Math.round(10 * o * (b.kat || 1));
-      const m = puanlar.get(kid) || { ad: b.ad, puan: 0 };
-      m.ad = b.ad; m.puan += kazanc;
-      puanlar.set(kid, m);
+      // Botlar odeme listesinde gorunur (demo canli dursun) ama KALICI
+      // puan tablosuna girmez — EN IYI BAHISCILER gercek izleyicilerin.
+      if (!Kimlik.botMu(kid)) {
+        const m = puanlar.get(kid) || { ad: b.ad, puan: 0 };
+        m.ad = b.ad; m.puan += kazanc;
+        puanlar.set(kid, m);
+      }
       dagitilan.push({ kid, ad: b.ad, kazanc });
     }
     dagitilan.sort((a, b) => b.kazanc - a.kazanc);
@@ -485,14 +507,16 @@
     localStorage.setItem('tt-at-puan', JSON.stringify([...puanlar.entries()].slice(0, 100)));
 
     // Kazanan bahiscileri SOHBETTE etiketle (kopru botu; yoksa sessiz).
-    if (dagitilan.length) {
-      const etiketler = dagitilan.slice(0, 3)
+    const gercekKazanan = dagitilan.filter((d) => !Kimlik.botMu(d.kid));
+    if (gercekKazanan.length) {
+      const etiketler = gercekKazanan.slice(0, 3)
         .map((d) => '@' + (uidler.get(d.kid) || d.ad)).join(' ');
-      const fazla = dagitilan.length > 3 ? ` +${dagitilan.length - 3} kişi` : '';
+      const fazla = gercekKazanan.length > 3 ? ` +${gercekKazanan.length - 3} kişi` : '';
       TT.soyle(`🏇 ${at.ad} kazandı! Tebrikler ${etiketler}${fazla} 🎉`);
-    } else {
+    } else if (!demoTur) {
       TT.soyle(`🏇 ${at.ad} kazandı — kimse görmedi! Sıradaki koşuda şansını dene 🎯`);
     }
+    // demo kosuda sohbete hic yazma — bos odaya bot mesaji spam olur
 
     Finis.kart(kazananEl, {
       url: at.formaBuyukURL,

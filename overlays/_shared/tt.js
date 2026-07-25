@@ -766,6 +766,10 @@
 
     // Ilk gercek olayda uyan
     on(tetikler, uyan);
+    // BOS ODA: hic olay gelmezse perde sonsuza kadar kalirdi ve arkadaki
+    // demo turlari gorunmezdi. 15 saniye sonra kendiliginden kalk — gelen
+    // izleyici "nasil oynanir" yazisini degil OYUNU izleyerek ogrensin.
+    setTimeout(uyan, 15000);
     // Sessizlik olcumu her olayda tazelensin
     on('*', () => { sonOlay = Date.now(); });
 
