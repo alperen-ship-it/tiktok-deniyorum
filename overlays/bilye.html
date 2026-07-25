@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>Bilye Yarışı — sohbet katılır, bilyeler yarışır</title>
+<title>Misket Yarışı — sohbet katılır, misketler yarışır</title>
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
@@ -43,6 +43,20 @@
   .sira.bos { font-size: 16px; padding: 12px; }
 
 
+  /* Etap gostergesi: pistin ust kosesinde, yarisin neresinde oldugumuz.
+     Uzun pistte izleyicinin "daha ne kadar var" sorusunun cevabi. */
+  #etapHud {
+    position: absolute; top: 10px; left: 10px; z-index: 3;
+    display: none; align-items: center; gap: 10px;
+    background: rgba(12, 8, 40, .86);
+    border: 2px solid var(--cizgi); border-radius: 12px;
+    padding: 6px 14px;
+  }
+  #etapHud.acik { display: inline-flex; }
+  #etapNo { font-size: 22px; font-weight: 900; color: var(--altin);
+            font-variant-numeric: tabular-nums; }
+  #etapAd { font-size: 20px; font-weight: 800; color: #d9d2ff; letter-spacing: 1px; }
+
   /* Katilim ekrani — yarisa girenlerin baloncuklari */
   #kuyruk {
     position: absolute; inset: 0; display: flex; flex-wrap: wrap;
@@ -64,7 +78,7 @@
   <div id="ust" class="kutu">
     <div id="rozet">🏁</div>
     <div id="baslikSar">
-      <div id="baslik">Bilye Yarışı</div>
+      <div id="baslik">Misket Yarışı</div>
       <div id="cagri">sohbete yaz · yarışa katıl</div>
     </div>
     <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">HERHANGİ BİR ŞEY</span></div>
@@ -77,6 +91,7 @@
   <div id="alan" class="kutu">
     <div id="pist">
       <canvas id="tuval"></canvas>
+      <div id="etapHud"><span id="etapNo">1/10</span><span id="etapAd">ÇİVİ TARLASI</span></div>
       <div id="kuyruk"></div>
     </div>
     <div id="siralama"></div>
@@ -107,8 +122,9 @@
 
   // ---- ayarlar -------------------------------------------------------------
   const KATILIM_SN = num('katilim', 25);   // katilim penceresi
-  const MAX        = num('max', 50);       // ayni anda kac bilye (perf siniri)
+  const MAX        = num('max', 50);       // ayni anda kac misket (perf siniri)
   const KUTLAMA_SN = num('kutlama', 7);    // kazanan ekrani
+  const ETAP_SAYISI = Math.max(3, Math.min(16, num('etap', 10)));  // pist kac etap
   const ANAHTAR    = (q.get('kelime') || '').toLowerCase();  // bos = her yorum katar
 
   // ---- dunya ---------------------------------------------------------------
@@ -124,63 +140,119 @@
   let pegler = [];          // {x,y,r}
   let duvarlar = [];        // {x1,y1,x2,y2}
   let bitis = 0;
+  let etaplar = [];         // {ad, ikon, y0, y1}  — pistin bolumleri
+
+  /* ---- ETAPLAR ------------------------------------------------------------
+     Pist eskiden tek parca uzun bir dususten ibaretti: 7 bolum vardi ama
+     hicbiri ADLANDIRILMAMISTI, yani izleyici icin hepsi ayni goruntuydu ve
+     yaris "misketler dusuyor" hissinden oteye gecmiyordu.
+
+     Artik pist ADI OLAN etaplara bolundu. Her etabin kendi mekanigi var,
+     girisine isaretli bir bant ciziliyor, lider yeni etaba girince spiker
+     bunu soyluyor ve HUD "ETAP 4/10 — DAR BOĞAZ" yaziyor. Ayni fizik,
+     ama izleyici artik yarisin NEREsinde oldugunu biliyor — uzun yaris
+     ancak boyle izlenebilir oluyor. */
+  function eCiviTarlasi(y) {
+    for (let s = 0; s < 7; s++) {
+      const kaydir = (s % 2) * 55;
+      for (let x = 60 + kaydir; x < EN - 40; x += 110) pegler.push({ x, y: y + s * 78, r: 14 });
+    }
+    return y + 7 * 78 + 40;
+  }
+
+  function eZikzak(y, i) {
+    const sol = i % 2 === 0;
+    duvarlar.push(sol ? { x1: 0, y1: y, x2: EN - 150, y2: y + 175 }
+                      : { x1: EN, y1: y, x2: 150, y2: y + 175 });
+    for (let k = 1; k <= 4; k++) {
+      pegler.push({ x: sol ? k * 165 : EN - k * 165, y: y + 42 * k + 26, r: 9 });
+    }
+    y += 200;
+    duvarlar.push(sol ? { x1: EN, y1: y, x2: 150, y2: y + 175 }
+                      : { x1: 0, y1: y, x2: EN - 150, y2: y + 175 });
+    return y + 215;
+  }
+
+  function eDegirmen(y) {
+    for (let s = 0; s < 3; s++) {
+      pegler.push({ x: EN * 0.5,  y: y + s * 118, r: 30 });
+      pegler.push({ x: EN * 0.16, y: y + 59 + s * 118, r: 19 });
+      pegler.push({ x: EN * 0.84, y: y + 59 + s * 118, r: 19 });
+      pegler.push({ x: EN * 0.33, y: y + s * 118, r: 12 });
+      pegler.push({ x: EN * 0.67, y: y + s * 118, r: 12 });
+    }
+    return y + 3 * 118 + 45;
+  }
+
+  /* Dar bogaz: iki duvar ortada dar bir agiz birakir. Kalabalik burada
+     tikanir, sonra teker teker firlar — yarisin en gergin ani. */
+  function eDarBogaz(y) {
+    const agiz = 130;
+    duvarlar.push({ x1: 0,  y1: y,       x2: EN / 2 - agiz, y2: y + 230 });
+    duvarlar.push({ x1: EN, y1: y,       x2: EN / 2 + agiz, y2: y + 230 });
+    duvarlar.push({ x1: EN / 2 - agiz, y1: y + 230, x2: EN / 2 - agiz - 40, y2: y + 330 });
+    duvarlar.push({ x1: EN / 2 + agiz, y1: y + 230, x2: EN / 2 + agiz + 40, y2: y + 330 });
+    pegler.push({ x: EN / 2, y: y + 120, r: 22 });
+    return y + 380;
+  }
+
+  /* Hiz tuneli: civi yok, sadece dikey ayiricilar. Misketler serbest
+     dususe gecip birbirinden AYRILIYOR — surekli civi carpismasindan sonra
+     araliklarin acildigi nefes alma bolumu. */
+  function eHizTuneli(y) {
+    const serit = 5, boy = 420;
+    for (let k = 1; k < serit; k++) {
+      const x = (EN / serit) * k;
+      duvarlar.push({ x1: x, y1: y + 40, x2: x, y2: y + boy - 40 });
+    }
+    duvarlar.push({ x1: 0, y1: y, x2: EN * 0.12, y2: y + 40 });
+    duvarlar.push({ x1: EN, y1: y, x2: EN * 0.88, y2: y + 40 });
+    return y + boy + 30;
+  }
+
+  /* Sarkac dizisi: buyuk toplar sasirtmali, misketleri yana savuruyor. */
+  function eSarkac(y) {
+    for (let s = 0; s < 4; s++) {
+      const kaydir = (s % 2) ? EN * 0.25 : 0;
+      for (let k = 0; k < 3; k++) {
+        pegler.push({ x: EN * 0.17 + kaydir + k * EN * 0.33, y: y + s * 105, r: 26 });
+      }
+    }
+    return y + 4 * 105 + 50;
+  }
+
+  const ETAP_TIPLERI = [
+    { ad: 'ÇİVİ TARLASI', ikon: '🔩', kur: eCiviTarlasi },
+    { ad: 'ZİKZAK RAMPA', ikon: '⚡', kur: eZikzak },
+    { ad: 'DAR BOĞAZ',    ikon: '⌛', kur: eDarBogaz },
+    { ad: 'DEĞİRMEN',     ikon: '🎡', kur: eDegirmen },
+    { ad: 'HIZ TÜNELİ',   ikon: '🚀', kur: eHizTuneli },
+    { ad: 'SARKAÇLAR',    ikon: '🪀', kur: eSarkac },
+  ];
 
   /** Rastgele ama oynanabilir bir pist uret. */
   function pistUret() {
-    pegler = []; duvarlar = [];
+    pegler = []; duvarlar = []; etaplar = [];
     let y = 420;
 
-    // Baslangic hunisi — bilyeler ortaya toplansin
+    // Baslangic hunisi — misketler ortaya toplansin
     duvarlar.push({ x1: -40, y1: 250, x2: 330, y2: 400 });
     duvarlar.push({ x1: EN + 40, y1: 250, x2: EN - 330, y2: 400 });
 
-    const bolumSayisi = 7;
-    for (let b = 0; b < bolumSayisi; b++) {
-      const tip = b % 3;
-
-      if (tip === 0) {
-        // --- civi tarlasi: klasik pinball dagilimi ---
-        for (let s = 0; s < 7; s++) {
-          const kaydir = (s % 2) * 55;
-          for (let x = 60 + kaydir; x < EN - 40; x += 110) {
-            pegler.push({ x, y: y + s * 78, r: 14 });
-          }
-        }
-        y += 7 * 78 + 40;
-
-      } else if (tip === 1) {
-        // --- zikzak rampalar: kalabaligi bir yana surer, oradan dokulur ---
-        const sol = b % 2 === 0;
-        duvarlar.push(sol
-          ? { x1: 0, y1: y, x2: EN - 150, y2: y + 175 }
-          : { x1: EN, y1: y, x2: 150, y2: y + 175 });
-        // Rampa boyunca kucuk civiler: bilyeler tek sira halinde
-        // kaymasin, dagilsin — bos rampa cok sakin duruyordu.
-        for (let k = 1; k <= 4; k++) {
-          pegler.push({ x: sol ? k * 165 : EN - k * 165, y: y + 42 * k + 26, r: 9 });
-        }
-        y += 200;
-        duvarlar.push(sol
-          ? { x1: EN, y1: y, x2: 150, y2: y + 175 }
-          : { x1: 0, y1: y, x2: EN - 150, y2: y + 175 });
-        y += 215;
-
-      } else {
-        // --- engel sutunlari + orta ada ---
-        for (let s = 0; s < 3; s++) {
-          pegler.push({ x: EN * 0.5,  y: y + s * 118, r: 30 });
-          pegler.push({ x: EN * 0.16, y: y + 59 + s * 118, r: 19 });
-          pegler.push({ x: EN * 0.84, y: y + 59 + s * 118, r: 19 });
-          pegler.push({ x: EN * 0.33, y: y + s * 118, r: 12 });
-          pegler.push({ x: EN * 0.67, y: y + s * 118, r: 12 });
-        }
-        y += 3 * 118 + 45;
-      }
+    // Etap sirasi: her tur listeyi bir kaydirarak geciyoruz, boylece ayni
+    // sira arka arkaya cikmiyor ama "once civi sonra rampa" ritmi bozulmuyor.
+    const bas = Math.floor(Math.random() * ETAP_TIPLERI.length);
+    for (let b = 0; b < ETAP_SAYISI; b++) {
+      const tip = ETAP_TIPLERI[(bas + b) % ETAP_TIPLERI.length];
+      const y0 = y;
+      y = tip.kur(y, b);
+      etaplar.push({ ad: tip.ad, ikon: tip.ikon, y0, y1: y });
     }
 
     // Bitis hunisi
     duvarlar.push({ x1: 0, y1: y, x2: EN * 0.34, y2: y + 220 });
     duvarlar.push({ x1: EN, y1: y, x2: EN * 0.66, y2: y + 220 });
+    etaplar.push({ ad: 'SON DÜZLÜK', ikon: '🏁', y0: y, y1: y + 300 });
     y += 300;
 
     bitis = y;
@@ -189,6 +261,22 @@
     // Yan duvarlar
     duvarlar.push({ x1: 0, y1: 0, x2: 0, y2: pistBoy });
     duvarlar.push({ x1: EN, y1: 0, x2: EN, y2: pistBoy });
+  }
+
+  /** Verilen y hangi etapta? (lider takibi icin) */
+  function etapBul(y) {
+    for (let i = 0; i < etaplar.length; i++) if (y < etaplar[i].y1) return i;
+    return etaplar.length - 1;
+  }
+
+  /** HUD'daki etap gostergesini guncelle. */
+  function etapYaz(i) {
+    const hud = document.getElementById('etapHud');
+    const e = etaplar[i];
+    if (!hud || !e) return;
+    document.getElementById('etapNo').textContent = (i + 1) + '/' + etaplar.length;
+    document.getElementById('etapAd').textContent = e.ikon + ' ' + e.ad;
+    hud.classList.add('acik');
   }
 
   // ---- bilyeler ------------------------------------------------------------
@@ -360,6 +448,25 @@
       x.drawImage(civiSprite, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
     }
 
+    // Etap bantlari: her etabin girisine adi yazili bir serit. Yarisin
+    // "bolumleri var" hissi buradan geliyor — statik katmanda pisiyor,
+    // yani kare basina maliyeti sifir.
+    x.textBaseline = 'middle';
+    for (let i = 0; i < etaplar.length; i++) {
+      const e = etaplar[i];
+      if (i === 0) continue;                 // ilk etap girisinde bant olmasin
+      x.fillStyle = 'rgba(255,210,63,.13)';
+      x.fillRect(0, e.y0 - 26, EN, 52);
+      x.fillStyle = 'rgba(255,210,63,.6)';
+      x.fillRect(0, e.y0 - 26, EN, 3);
+      x.fillRect(0, e.y0 + 23, EN, 3);
+      x.fillStyle = '#ffe9a8';
+      x.font = '900 34px Outfit, system-ui, sans-serif';
+      x.textAlign = 'center';
+      x.fillText(`${e.ikon}  ${i + 1}. ETAP · ${e.ad}`, EN / 2, e.y0);
+    }
+    x.textAlign = 'left';
+
     // bitis cizgisi
     for (let bx = 0; bx < EN; bx += 40) {
       for (let k = 0; k < 2; k++) {
@@ -511,13 +618,28 @@
   // canli siralama, pozisyon degisimi, "son duzluk". Sessiz bir fizik
   // simulasyonu ucuz duruyor; olaylari soyleyince yaris haline geliyor.
   let sonLider = null, sonDuzlukDendi = false, spikerBekle = 0;
+  let sonEtap = -1;
 
   function spikerKontrol() {
-    if (spikerBekle > 0) { spikerBekle--; return; }
     const canli = bilyeler.filter((b) => !b.bitti);
     if (!canli.length) return;
     let lider = canli[0];
     for (const b of canli) if (b.y > lider.y) lider = b;
+
+    // Etap gecisi: bekleme sayacindan BAGIMSIZ, cunku yarisin iskeleti bu.
+    // Lider yeni bir etaba girdiginde hem HUD hem spiker haber veriyor.
+    const ei = etapBul(lider.y);
+    if (ei !== sonEtap) {
+      sonEtap = ei;
+      etapYaz(ei);
+      if (ei > 0 && etaplar[ei]) {
+        akis(`${etaplar[ei].ikon} <b>${ei + 1}. ETAP</b> · ${etaplar[ei].ad}`,
+             { oncelik: 3, anahtar: 'etap' });
+        spikerBekle = 60;
+      }
+    }
+
+    if (spikerBekle > 0) { spikerBekle--; return; }
 
     if (sonLider && lider.kid !== sonLider) {
       akis('⚡ ' + Spiker.sec(
@@ -761,7 +883,7 @@
     if (!b) return;
     b.vy += 420;
     b.vx += (Math.random() - 0.5) * 160;
-    akis(`🎁 <span class="kim">${isim(ev.user)}</span> <span class="ok">▸</span> bilyesine itki`);
+    akis(`🎁 <span class="kim">${isim(ev.user)}</span> <span class="ok">▸</span> misketine itki`);
   });
 
   // ---- basla ---------------------------------------------------------------
@@ -772,10 +894,10 @@
   requestAnimationFrame(dongu);
 
   TT.uyanis({
-    baslik: 'BİLYE YARIŞI',
+    baslik: 'MİSKET YARIŞI',
     komutlar: ['bir şey yaz'],
-    aciklama: 'Sohbete yazan herkes yarışa girer · 🎁 hediye bilyeni ileri iter',
-    cagri: 'yaz ve bilyeni pistte gör',
+    aciklama: 'Sohbete yazan herkes yarışa girer · 🎁 hediye misketini ileri iter',
+    cagri: 'yaz ve misketini pistte gör',
   });
 })();
 </script>

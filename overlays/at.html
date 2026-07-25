@@ -68,8 +68,10 @@
     transition: width .25s linear;
   }
 
-  /* Dortnal sallantisi: transform-only, GPU'suz renderda da ucuz */
-  #sahaKutu.kosuyor .kAt .govde { animation: dortnal .36s ease-in-out infinite alternate; }
+  /* Dortnal sallantisi: transform-only, GPU'suz renderda da ucuz.
+     will-change ile kendi katmanina alinir — yoksa donen emoji her karede
+     yeniden rasterlenip titriyor (OBS/CEF'te belirgin). */
+  #sahaKutu.kosuyor .kAt .govde { animation: dortnal .36s ease-in-out infinite alternate; will-change: transform; }
   @keyframes dortnal {
     from { transform: translateY(-50%) scaleX(-1) translateY(-3px) rotate(-2deg); }
     to   { transform: translateY(-50%) scaleX(-1) translateY(3px) rotate(2deg); }

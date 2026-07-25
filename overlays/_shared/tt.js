@@ -790,11 +790,74 @@
   }
 
   // -------------------------------------------------------------------------
+  // Katilim sutunu — sagdaki bos seride "ne yapacagini" yazar
+  // -------------------------------------------------------------------------
+  /*
+   * Oyunlarin hepsinde ayni sorun vardi: yeni gelen izleyici ekranda guzel
+   * bir sey goruyor ama KATILABILECEGINI anlamiyor. Basliktaki komut cipi
+   * bunu tasiyor ama kucuk ve ust kosede.
+   *
+   * Bu sutun tek is yapiyor: "OYUNA KATILMAK ICIN MESAJ AT" + o oyunun
+   * gercek komutu. Oyun basina kod yazmamak icin buraya kondu — dort oyun
+   * da tt.js yukledigi icin hepsinde otomatik cikiyor. Komut metnini
+   * oyunun kendi #komutMetin'inden aynaliyor, yani oyun komutu
+   * degistirdiginde burasi da degisiyor.
+   */
+  function katilimSutunu() {
+    if (q.get('katil') === '0') { document.documentElement.classList.add('tt-kcyok'); return; }
+    const kok = document.getElementById('kok');
+    if (!kok || !kok.classList.contains('tt-oyun')) return;
+    if (document.getElementById('katilCagri')) return;
+
+    const el = document.createElement('div');
+    el.id = 'katilCagri';
+    el.innerHTML =
+      '<div class="kcUst">Oyuna katılmak için</div>' +
+      '<div class="kcDev">MESAJ<br>AT</div>' +
+      '<div class="kcOk">💬 ⬇</div>' +
+      '<div class="kcAyrac"></div>' +
+      '<div class="kcNe">ne yazacaksın</div>' +
+      '<div class="kcKomut" id="kcKomut">—</div>' +
+      '<div class="kcAlt">yazınca oyuna girersin<br>ücretsiz · üyelik yok</div>';
+    kok.appendChild(el);
+    kcTazele();
+  }
+
+  /** Oyunun komut metnini katilim sutununa aynala. */
+  function kcTazele() {
+    const kaynak = document.getElementById('komutMetin');
+    const hedef = document.getElementById('kcKomut');
+    if (!kaynak || !hedef) return;
+    const metin = kaynak.textContent.trim();
+    if (metin && hedef.textContent !== metin) hedef.textContent = metin;
+  }
+
+  /*
+   * Komut degisince: (1) cipe tek seferlik dikkat hareketi ver,
+   * (2) katilim sutununu tazele. Oyunlara tek satir kod eklemeden
+   * calissin diye MutationObserver ile dinliyoruz.
+   */
+  function komutIzle() {
+    const hedef = document.getElementById('komutMetin');
+    const cip = document.getElementById('komut');
+    if (!hedef) return;
+    new MutationObserver(() => {
+      kcTazele();
+      if (!cip) return;
+      cip.classList.remove('degisti');
+      void cip.offsetWidth;              // animasyonu yeniden tetikle
+      cip.classList.add('degisti');
+    }).observe(hedef, { childList: true, characterData: true, subtree: true });
+  }
+
+  // -------------------------------------------------------------------------
   // Baslat
   // -------------------------------------------------------------------------
   function boot() {
     applyChrome();
     if (cfg.debug) makeDot();
+    katilimSutunu();
+    komutIzle();
 
     // Baska sayfalardan olay enjeksiyonu (kontrol paneli onizlemesi bunu kullanir)
     global.addEventListener('message', (e) => {

@@ -75,7 +75,7 @@
 
   #tabloKutu { flex: 1; min-height: 0; padding: 8px 6px; overflow: hidden; }
   #tabloKutu::before {
-    content: '🏆 PUAN TABLOSU · KALICI'; display: block;
+    content: '🏆 TUR PUAN TABLOSU'; display: block;
     font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
     color: var(--soluk); padding: 4px 12px 6px;
   }
@@ -151,9 +151,14 @@
   const q = new URLSearchParams(location.search);
   const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
 
-  const SORU_SN  = num('sure', 18);     // cevap penceresi
-  const ACIK_SN  = num('acik', 7);      // cevap gosterim suresi
+  const SORU_SN  = num('sure', 25);     // cevap penceresi
+  const ACIK_SN  = num('acik', 9);      // cevap gosterim suresi
   const IPUCU    = num('ipucu', 60);    // kac begeni bir sikki eler
+  /* Bir TUR kac soru. Yarismanin basi ve sonu olmasi icin: "SORU 12/40"
+     gormek, izleyiciye devam eden ve biten bir sey oldugunu anlatiyor;
+     sonsuz soru akisi turnuva hissi vermiyordu. Tur bitince sampiyon
+     acilaniyor ve tur tablosu sifirlaniyor. */
+  const TUR_SORU = Math.max(5, Math.min(200, num('soru', 40)));
 
   const HARFLER = ['A', 'B', 'C', 'D'];
 
@@ -172,8 +177,27 @@
     for (const [k, v] of JSON.parse(localStorage.getItem('tt-bilgi-tablo') || '[]')) tablo.set(k, v);
   } catch { /* sifirdan */ }
 
-  // Ust uste ayni soru cikmasin: son gorulenleri hatirla
-  let sonGorulen = [];
+  /* ---- TUR (40 soruluk yarisma) ----
+     Deste: turun basinda 40 FARKLI soru karilip siraya diziliyor. Eskiden
+     her soru bagimsiz rastgele seciliyordu ve 40 soruluk bir turda ayni
+     soru rahatlikla iki kez cikabiliyordu. */
+  let deste = [], destePos = 0;
+  let turNo = Number(localStorage.getItem('tt-bilgi-tur') || 1);
+  let turTablo = new Map();     // bu turun puanlari: kid -> {ad, puan, dogru, seri, enIyiSeri}
+
+  function desteKar() {
+    const idx = SORULAR.map((_, i) => i);
+    for (let i = idx.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [idx[i], idx[j]] = [idx[j], idx[i]];
+    }
+    // Soru bankasi turdan kisaysa bastan devam et (79 soru / 40'lik tur -> sorun yok)
+    deste = [];
+    while (deste.length < TUR_SORU) deste = deste.concat(idx);
+    deste = deste.slice(0, TUR_SORU);
+    destePos = 0;
+  }
+  desteKar();
 
   const soruEl = document.getElementById('soru');
   const katEl = document.getElementById('kategori');
@@ -198,18 +222,15 @@
     ipucuDurumEl.textContent = 'beğeni gönder';
     hizliEl.innerHTML = '';
 
-    // Tekrar etmeyen rastgele secim
-    let i;
-    do { i = Math.floor(Math.random() * SORULAR.length); }
-    while (SORULAR.length > 12 && sonGorulen.includes(i));
-    sonGorulen.push(i);
-    if (sonGorulen.length > 10) sonGorulen.shift();
+    // Turun destesinden sirayla — tur icinde ayni soru iki kez cikmaz
+    if (destePos >= deste.length) desteKar();
+    const i = deste[destePos];
 
     soruIdx = i;
     soru = SORULAR[i];
     katEl.textContent = soru.k;
     soruEl.textContent = soru.s;
-    document.getElementById('soruSayi').textContent = soruSayisi;
+    document.getElementById('soruSayi').textContent = (destePos + 1) + '/' + TUR_SORU;
 
     siklarEl.innerHTML = soru.c.map((metin, k) =>
       `<div class="sik" data-k="${k}">
@@ -251,9 +272,16 @@
       t.enIyiSeri = Math.max(t.enIyiSeri || 0, t.seri);
       // Seri carpani: ust uste dogru bilmek katlanarak odullendirilir
       const carpan = Math.min(3, 1 + (t.seri - 1) * 0.25) * (c.kat || 1);
-      t.puan += Math.round(taban * carpan);
+      const kazanc = Math.round(taban * carpan);
+      t.puan += kazanc;
       t.dogru += 1;
-      if (!Kimlik.botMu(kid)) tablo.set(kid, t);
+      if (!Kimlik.botMu(kid)) {
+        tablo.set(kid, t);
+        // Tur tablosu: ekranda gosterilen, tur sonunda sifirlanan puan
+        const tt = turTablo.get(kid) || { ad: c.ad, puan: 0, dogru: 0 };
+        tt.ad = c.ad; tt.puan += kazanc; tt.dogru += 1;
+        turTablo.set(kid, tt);
+      }
     });
     // Yanlis bilenin serisi kirilir
     for (const [kid, c] of cevaplar) {
@@ -284,16 +312,46 @@
     }
 
     soruSayisi++;
+    destePos++;
     localStorage.setItem('tt-bilgi-no', String(soruSayisi));
     tabloCiz();
     document.getElementById('cagri').textContent = 'doğru cevap: ' + soru.c[soru.d];
-    // Merkeze haber: oyun gecisi tur ARASINDA yapilsin
+
+    if (destePos >= TUR_SORU) turBitir();
+
+    // Merkeze haber: oyun gecisi soru ARASINDA yapilsin (soru ortasinda degil)
     try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
   }
 
+  /* 40 soru doldu: turun sampiyonu aciklanir, tur tablosu sifirlanir,
+     yeni deste karilir. Kalici (tum zamanlar) tablo silinmez. */
+  function turBitir() {
+    const sira = [...turTablo.entries()].sort((a, b) => b[1].puan - a[1].puan);
+    const kazanan = sira[0];
+    if (kazanan) {
+      const [kid, t] = kazanan;
+      Juice.konfeti({ y: 0.4, adet: 90 });
+      Spiker.soyle(`🏆 <b>${turNo}. TUR BİTTİ</b> — şampiyon <span class="kim">${t.ad}</span>` +
+        ` · ${t.puan} puan`, { oncelik: 4, sure: 7000 });
+      TT.soyle(`🏆 ${turNo}. tur bitti! Şampiyon: @${uidler.get(kid) || t.ad} — ${t.puan} puan. ` +
+        `Yeni tur başlıyor, ${TUR_SORU} soru!`);
+    } else {
+      Spiker.soyle(`🏁 <b>${turNo}. TUR BİTTİ</b> — yeni tur başlıyor`, { oncelik: 4, sure: 5000 });
+    }
+    turNo++;
+    localStorage.setItem('tt-bilgi-tur', String(turNo));
+    turTablo = new Map();
+    desteKar();
+  }
+
   // ---- goruntu -------------------------------------------------------------
+  /* Ekrandaki tablo TURUN tablosu: 40 soruluk yarismanin puani. Boylece
+     sonradan gelen biri de "yetisebilirim" diyor — tum zamanlar tablosunda
+     aylardir oynayanla yarismak yeni geleni cesaretlendirmiyor.
+     (Tum zamanlar tablosu localStorage'da duruyor, silinmiyor.) */
   function tabloCiz() {
-    const list = [...tablo.entries()].map(([kid, t]) => ({ kid, ...t }))
+    const list = [...turTablo.entries()]
+      .map(([kid, t]) => ({ kid, ...t, seri: (tablo.get(kid) || {}).seri || 0 }))
       .sort((a, b) => b.puan - a.puan).slice(0, 7);
     tabloEl.innerHTML = list.length
       ? list.map((t, i) => `<div class="sira${i === 0 ? ' lider' : ''}">
@@ -303,7 +361,7 @@
           ${t.seri > 1 ? `<div class="seri">🔥${t.seri}</div>` : ''}
           <div class="adet">${t.puan}</div>
         </div>`).join('')
-      : '<div class="sira bos">ilk doğruyu sen yaz — tablo kalıcı</div>';
+      : `<div class="sira bos">${turNo}. tur başladı — ilk doğruyu sen yaz</div>`;
   }
 
   function sayacCiz() {

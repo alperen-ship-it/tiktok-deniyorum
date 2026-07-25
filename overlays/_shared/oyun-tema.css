@@ -93,6 +93,39 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
   --yayin-sol: 24px;
 }
 
+/* ---- KATILIM SUTUNU (sag serit) ----
+   Sagdaki 360px, TikTok'un yorum sutunu kapatabilir diye bos birakilmisti.
+   Ama yayinda o alan cogu zaman bombos duruyor ve ekranin besde biri
+   israf oluyordu. Artik orada TEK bir is yapan bir sutun var: yeni gelen
+   izleyiciye ne yapacagini soylemek.
+
+   Neden ayri sutun: oyunlarin yerlesimine hic dokunmuyor (serit zaten
+   padding'di), yani hicbir oyunda tasma riski yok. TikTok o alani
+   kapatirsa da kaybimiz yok — altinda oyun yok, sadece bu cagri var.
+   ?katil=0 ile kapanir. */
+#katilCagri {
+  position: absolute; top: var(--yayin-ust); right: 18px; bottom: var(--yayin-alt);
+  width: calc(var(--yayin-sag) - 36px);
+  display: flex; flex-direction: column; justify-content: center; gap: 18px;
+  padding: 26px 22px;
+  background: var(--panel);
+  border: 3px solid var(--cizgi); border-radius: 22px;
+  box-shadow: 0 6px 0 rgba(10, 6, 30, .45);
+  text-align: center; z-index: 4; pointer-events: none;
+}
+#katilCagri .kcUst   { font-size: 22px; font-weight: 900; letter-spacing: 2px;
+                       color: var(--soluk); text-transform: uppercase; line-height: 1.3; }
+#katilCagri .kcDev   { font-size: 76px; font-weight: 900; line-height: .95;
+                       color: var(--altin); letter-spacing: -1.5px; }
+#katilCagri .kcOk    { font-size: 44px; line-height: 1; }
+#katilCagri .kcAyrac { height: 3px; background: var(--cizgi); border-radius: 2px; margin: 2px 10px; }
+#katilCagri .kcNe    { font-size: 20px; font-weight: 800; letter-spacing: 1.4px;
+                       color: var(--soluk); text-transform: uppercase; }
+#katilCagri .kcKomut { font-size: 38px; font-weight: 900; color: #fff; line-height: 1.15;
+                       word-break: break-word; }
+#katilCagri .kcAlt   { font-size: 19px; font-weight: 700; color: var(--soluk); line-height: 1.4; }
+html.tt-kcyok #katilCagri { display: none; }
+
 /* ---- ortak panel govdesi ---- */
 .kutu {
   background: var(--panel);
@@ -122,9 +155,16 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
 /* ---- KOMUT CIPI ----
    "Random biri gelip bakip 'bu ne ya' demesin" testinin cevabi. Yeni gelen
    izleyicinin 3 saniyede ogrenmesi gereken TEK sey: NE YAZACAGI. Baslik
-   altindaki kucuk yazi bunu tasimiyordu; artik altin, iri ve nabiz atan bir
-   cip olarak baslikta duruyor. Oyun degisse bile bu cip hep ayni yerde —
-   izleyici nereye bakacagini ogreniyor. */
+   altindaki kucuk yazi bunu tasimiyordu; artik altin ve iri bir cip olarak
+   baslikta duruyor. Oyun degisse bile bu cip hep ayni yerde — izleyici
+   nereye bakacagini ogreniyor.
+
+   ! Burada SUREKLI nabiz atan bir scale animasyonu vardi ve OBS'te gozle
+   gorulur sekilde titriyordu: 34px/900 bir yaziyi %3.5 buyutup kucultunce
+   glifler piksel izgarasina oturamiyor, her karede yeniden rasterlenip
+   titriyor (ustelik #kok'un kendi scale'i de var, ic ice transform).
+   Cozum: surekli hareketi kaldir. Dikkat cekmek gerekiyorsa bunu KOMUT
+   DEGISTIGI AN yap — tek ve anlamli bir hareket, sonsuz kipirdanma degil. */
 #komut {
   flex: none; display: flex; align-items: center; gap: 10px;
   background: var(--altin); color: #191434;
@@ -133,13 +173,15 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
   font-size: 34px; font-weight: 900; letter-spacing: -.3px;
   white-space: nowrap;
   box-shadow: 0 4px 0 rgba(12, 8, 34, .55);
-  animation: komutNabiz 2.4s ease-in-out infinite;
 }
-@keyframes komutNabiz {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.035); }
+/* Komut metni degisince tek seferlik dikkat hareketi. Kisa surdugu ve
+   opacity+translateY kullandigi icin yaziyi yeniden olceklemiyor. */
+#komut.degisti { animation: komutDegis .42s cubic-bezier(.22,1,.36,1); }
+@keyframes komutDegis {
+  0%   { transform: translateY(-6px); opacity: .35; }
+  100% { transform: translateY(0);    opacity: 1; }
 }
-html.tt-lite #komut { animation: none; }
+html.tt-lite #komut.degisti { animation: none; }
 #komut .yazEt { font-size: 20px; font-weight: 900; opacity: .62; letter-spacing: 1px; }
 
 /* ---- siralama listesi ----

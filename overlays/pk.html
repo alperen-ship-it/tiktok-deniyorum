@@ -65,8 +65,10 @@
     border: 2px solid var(--cizgi); border-radius: 14px; padding: 6px 16px;
     font-size: 30px; font-weight: 900; letter-spacing: 1px;
   }
-  #speed.acik { display: inline-flex; animation: speedNabiz .6s ease-in-out infinite alternate; }
-  @keyframes speedNabiz { from { transform: scale(1); } to { transform: scale(1.06); } }
+  /* Dikkat cekmek icin scale DEGIL opacity: scale, 30px/900 yaziyi her
+     karede yeniden rasterletip OBS'te titretiyor. Opacity glifi bozmuyor. */
+  #speed.acik { display: inline-flex; animation: speedNabiz .7s ease-in-out infinite alternate; }
+  @keyframes speedNabiz { from { opacity: 1; } to { opacity: .58; } }
   html.tt-lite #speed.acik { animation: none; }
 </style>
 </head>
