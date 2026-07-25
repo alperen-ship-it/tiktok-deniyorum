@@ -30,6 +30,15 @@
   const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
   const flag = (k) => q.get(k) === '1' || q.get(k) === 'true';
 
+  // Bu dosyanin bulundugu klasor (".../overlays/_shared/"). Sprite'lari buna
+  // gore ariyoruz: sayfanin kendisi hangi klasorde olursa olsun dogru yeri
+  // bulsun diye. document.currentScript SADECE script yuklenirken dolu, o
+  // yuzden burada, en ustte yakalamak zorundayiz.
+  const KOK = (function () {
+    const s = document.currentScript && document.currentScript.src;
+    return s ? s.replace(/\/[^/]*$/, '/') : '_shared/';
+  })();
+
   const CHROMA = {
     green: '#00b140',   // yayin standardi yesil
     magenta: '#ff00ff',
@@ -558,6 +567,59 @@
   }
 
   // -------------------------------------------------------------------------
+  // SPRITE'LAR — gorsel varsa gorsel, yoksa emoji
+  // -------------------------------------------------------------------------
+  /**
+   * Oyunlar once emoji ile yazildi ve emoji hala gecerli bir yedek: gorsel
+   * dosyasi yoksa/yuklenemezse oyun bozulmuyor, eskisi gibi calisiyor.
+   * Bu yuzden sprite'lar ZORUNLU degil — ustune eklenen bir katman.
+   *
+   *   const kahraman = TT.sprite('labirent-kahraman', '🐹');
+   *   TT.spriteCiz(ctx, kahraman, x, y, 40);
+   */
+  const spriteler = new Map();
+
+  function sprite(ad, emoji) {
+    const anahtar = ad + '|' + emoji;
+    if (spriteler.has(anahtar)) return spriteler.get(anahtar);
+
+    const s = { ad, emoji, img: null, hazir: false };
+    const img = new Image();
+    img.onload = () => {
+      // 0 boyutlu / bozuk dosyayi hazir sayma, emoji'de kal
+      if (img.naturalWidth > 0) { s.img = img; s.hazir = true; }
+    };
+    img.onerror = () => { /* gorsel yok — emoji ile devam, sessiz */ };
+    img.src = KOK + 'gorsel/' + ad + '.png';
+
+    spriteler.set(anahtar, s);
+    return s;
+  }
+
+  /**
+   * Sprite'i (x,y) MERKEZ olacak sekilde ciz. Emoji yedegi de ayni merkeze
+   * hizalaniyor ki gorsel gelince/gitince karakter yerinden oynamasin.
+   */
+  function spriteCiz(ctx, s, x, y, boyut) {
+    if (s.hazir) {
+      // Piksel sanati: kenarlar bulanmasin, keskin kalsin
+      const eskiYumusatma = ctx.imageSmoothingEnabled;
+      ctx.imageSmoothingEnabled = false;
+      const en = boyut * (s.img.naturalWidth / s.img.naturalHeight);
+      ctx.drawImage(s.img, x - en / 2, y - boyut / 2, en, boyut);
+      ctx.imageSmoothingEnabled = eskiYumusatma;
+      return;
+    }
+
+    ctx.save();
+    ctx.font = `${boyut * 0.86}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(s.emoji, x, y);
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
   // UYANMA PERDESI
   // -------------------------------------------------------------------------
   /**
@@ -718,6 +780,8 @@
     get yatay() { return document.documentElement.classList.contains('tt-yatay'); },
     /** Ilk yorum gelene kadar "nasil oynanir" perdesi goster. */
     uyanis,
+    /** Gorsel varsa gorsel, yoksa emoji ile cizen sprite yardimcisi. */
+    sprite, spriteCiz,
     /** Elle olay tetikle (test / oyun ici). */
     fire: dispatch,
     mockEvent,

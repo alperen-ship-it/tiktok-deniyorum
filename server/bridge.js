@@ -706,7 +706,16 @@ function tarayiciAc(url) {
       process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]]
       : process.platform === 'darwin' ? ['open', [url]]
       : ['xdg-open', [url]];
-    spawn(cmd, cmdArgs, { detached: true, stdio: 'ignore' }).unref();
+    const cocuk = spawn(cmd, cmdArgs, { detached: true, stdio: 'ignore' });
+    // spawn hatasi ASENKRON gelir: komut yoksa (Linux'ta xdg-open kurulu
+    // degilse) 'error' olayi tetiklenir. Dinleyici koymazsak Node bunu
+    // "unhandled error" sayip BUTUN KOPRUYU dusuruyor — yani yayin ortasinda
+    // sunucu oluyor, sirf tarayici acilamadi diye. Yutup devam ediyoruz:
+    // adres zaten konsolda yaziyor, elle yapistirilabilir.
+    cocuk.on('error', () => {
+      console.log('  [kopru] tarayici otomatik acilamadi — adresi elle ac:', url);
+    });
+    cocuk.unref();
   } catch { /* tarayici acilamadiysa adres zaten konsolda yaziyor */ }
 }
 
@@ -732,25 +741,36 @@ server.listen(args.port, '0.0.0.0', async () => {
    TikTok LIVE koprusu ayakta
   ================================================================
    Kontrol paneli : ${base}/
-   WebSocket      : ws://localhost:${args.port}/ws
+      ^ Butun oyunlarin adresi, kopyala dugmeleriyle burada.
+        Asagisini okumana gerek yok, panel yeter.
 
-   >> TikTok LIVE Studio icin (Kaynak ekle > Link) <<
-      "localhost" YAZMA, kabul etmiyor. Bunlari kullan:
+   >> LIVE Studio'ya nasil eklenir (Kaynak ekle > Link) <<
+      "localhost" YAZMA, LIVE Studio kabul etmiyor. Bunu kullan:
 
-     ${tls}/overlays/alerts.html?lite=1
-     ${tls}/overlays/chat.html?lite=1
-     ${tls}/overlays/gift-rain.html?lite=1
-     ${tls}/overlays/like-goal.html?lite=1
-     ${tls}/overlays/battle.html?lite=1
-     ${tls}/overlays/race.html?lite=1
+     ${tls}/overlays/labirent.html?lite=1
+
+      AYNI adresi HEM "Portrait" HEM "Landscape" bolumune ekle.
+      Sayfa kendi en-boy oranini olcup yerlesimini kendi degistiriyor;
+      iki sahne icin iki ayri adrese ihtiyacin yok.
+
+   >> Izleyicinin sohbetten oynadigi oyunlar <<
+     labirent.html   yon yaz (sol/sag/yukari/asagi), cikisi bulun
+     tirmanis.html   sol/sag oyla, yukari tirman
+     boss.html       hep birlikte boss'a vur
+     plinko.html     hediye at, top dussun
+     ordu.html       takim sec, ordu buyusun
+     bolge.html      bolge kap
+
+   >> Klasik uyarilar <<
+     alerts.html  chat.html  gift-rain.html  like-goal.html
+     battle.html  race.html  durum.html
 
      (?lite=1  -> LIVE Studio'nun gomulu tarayicisinda GPU yok,
-                  blur/golge kapaniyor, akici kaliyor)
-     (?v=1     -> 9:16 dikey yayin yerlesimi)
+                  blur/golge kapaniyor, akici kaliyor. HEP KULLAN.)
+     (?v=1 / ?y=1 -> yonelimi elle zorla; normalde gerekmez)
 
    >> OBS icin (Tarayici Kaynagi) — seffaflik dogrudan calisir <<
-     ${base}/overlays/alerts.html
-     ${base}/overlays/chat.html   ... vb.
+     ${base}/overlays/labirent.html   ... vb.
 
    localtest.me acilmiyorsa (modem DNS-rebind korumasi):
      tools\\hosts-ekle.ps1 dosyasini yonetici olarak calistir,

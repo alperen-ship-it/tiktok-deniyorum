@@ -115,6 +115,9 @@
   const GUC   = Number(q.get('guc')) || 90;     // begeni ile dolan mega ziplama bari
   const KARAKTER = q.get('karakter') || '🧗';
 
+  // Gorsel varsa gorsel, yoksa emoji (overlays/_shared/gorsel/<ad>.png)
+  const sprKahraman = TT.sprite('tirmanis-kahraman', KARAKTER);
+
   // Yorumdan oy cikaran kaliplar. Kisa ve dogal yazimlarin hepsi tutsun:
   // "sol", "sola", "<", "1", ok isareti...
   const KALIPLAR = [
@@ -481,10 +484,10 @@
     // --- karakter ---
     const kx = sutunX(ax);
     const ky = H - (ay * SATIR_YUK - kamera);
-    ctx.font = `${Math.round(SATIR_YUK * 0.62)}px "Segoe UI Emoji","Apple Color Emoji",sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(KARAKTER, kx, ky);
+    // spriteCiz merkeze hizaliyor; karakter ayaklari platforma bassin diye
+    // yariciap kadar yukari aliyoruz.
+    const boy = Math.round(SATIR_YUK * 0.72);
+    TT.spriteCiz(ctx, sprKahraman, kx, ky - boy / 2, boy);
   });
 
   ekranYaz();

@@ -103,6 +103,11 @@
   const GUC  = Number(q.get('guc')) || 100;
   const KARAKTER = q.get('karakter') || '🐹';
   const CANAVAR  = q.get('canavar') || '👻';
+
+  // Gorsel varsa gorsel, yoksa yukaridaki emoji.
+  // Dosya yolu: overlays/_shared/gorsel/<ad>.png
+  const sprKahraman = TT.sprite('labirent-kahraman', KARAKTER);
+  const sprCanavar  = TT.sprite('labirent-canavar', CANAVAR);
   const CANAVAR_HIZ = Number(q.get('chiz')) || 2;   // kac turda bir hareket eder
 
   // Yon kaliplari — kisa yazimlarin hepsi tutsun, kimse kilavuz okumasin
@@ -532,13 +537,14 @@
     ctx.stroke();
 
     // --- canavarlar ---
+    // TT.spriteCiz: gorsel dosyasi varsa onu, yoksa emoji. Gorsel yoksa oyun
+    // eskisi gibi calisiyor — sprite'lar zorunlu degil.
     for (const c of canavarlar) {
-      ctx.fillText(CANAVAR, (c.x + .5) * hucre, (c.y + .5) * hucre);
+      TT.spriteCiz(ctx, sprCanavar, (c.x + .5) * hucre, (c.y + .5) * hucre, hucre * 0.72);
     }
 
     // --- oyuncu ---
-    ctx.font = `${hucre * 0.7}px "Segoe UI Emoji","Apple Color Emoji",sans-serif`;
-    ctx.fillText(KARAKTER, (oyuncu.x + .5) * hucre, (oyuncu.y + .5) * hucre);
+    TT.spriteCiz(ctx, sprKahraman, (oyuncu.x + .5) * hucre, (oyuncu.y + .5) * hucre, hucre * 0.8);
 
     ctx.restore();
   });

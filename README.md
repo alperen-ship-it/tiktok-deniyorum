@@ -35,14 +35,28 @@ başla, uğraşma.
 Exe'yi kapatmak = programı durdurmak. Yayın boyunca açık kalmalı (simge durumuna
 küçültebilirsin).
 
-### Exe yoksa / kaynaktan çalıştırmak istersen
+### Exe'yi nereden alacaksın
+
+Exe **depoda durmuyor** — 90 MB'lık ikili dosyalar git'e girmez (`.gitignore`).
+Üç yolun var, en kolayı birincisi:
+
+**1) GitHub üretsin, sen indir (Node kurmana gerek yok)**
+
+1. Depo sayfası → **Actions** sekmesi
+2. Soldan **"EXE üret"** → sağdaki **"Run workflow"** düğmesi
+3. ~3 dakika bekle, yeşil tik gelsin
+4. Aynı sayfanın altında **Artifacts** → `TikTokOyunlar` zip'ini indir
+5. Zip'ten `TikTokOyunlar.exe` çıkar, çift tıkla
+
+**2) Kendi makinende üret** — `paketle.bat` (bir kez Node gerekir)
+
+**3) Kaynaktan çalıştır** — exe'ye hiç gerek yok:
 
 ```bat
 node server/bridge.js --user senin_kullanici_adin
 node server/bridge.js --mock                      # sahte veri, internet gerekmez
 ```
 
-Exe'yi kendin üretmek için: **`paketle.bat`** (ya da `node server/paketle.js --win`).
 Ayrıntılar → [§0. Tek dosya exe](#0-tek-dosya-exe).
 
 ---
@@ -372,6 +386,25 @@ Takımını yaz, haritayı boya. Beğeni de boyar. Sınır organik büyüyor.
 Yeni gelen izleyici geride kalan takıma yazılıyor — maç tek taraflı kilitlenmiyor.
 
 ---
+
+### Görsel (sprite) eklemek — isteğe bağlı
+
+Oyunlardaki karakterler varsayılan olarak **emoji** (🐹 🧗 👻). İstersen kendi
+PNG'ini koyup değiştirebilirsin: `overlays/_shared/gorsel/` klasörüne doğru
+isimle at, oyun otomatik olarak emoji yerine onu kullanır.
+
+| Dosya | Nerede |
+|---|---|
+| `labirent-kahraman.png` | Labirentteki karakter |
+| `labirent-canavar.png` | Labirentteki canavarlar |
+| `tirmanis-kahraman.png` | Tırmanan karakter |
+
+Saydam arka planlı PNG, 96–256 piksel arası, karakter ortada olsun. Ücretsiz
+(CC0) kaynaklar: **kenney.nl/assets**, **opengameart.org** (CC0 filtresi),
+**itch.io/game-assets/free**.
+
+Görsel yoksa ya da yüklenemezse oyun sessizce emojiye düşer — **hiçbir şey
+bozulmaz.** Ayrıntı → [`overlays/_shared/gorsel/OKUBENI.md`](overlays/_shared/gorsel/OKUBENI.md)
 
 ### Widget'lar
 

@@ -1,0 +1,77 @@
+# Windows .exe'yi GitHub'da uretir; kendi makinende Node kurmana gerek kalmaz.
+#
+# NASIL CALISTIRILIR
+#   Depo sayfasi > Actions > "EXE uret" > sagdaki "Run workflow" dugmesi.
+#   ~3 dakika sonra ayni sayfanin altindaki "Artifacts" bolumunden
+#   TikTokOyunlar.zip inersin, icinden TikTokOyunlar.exe cikar.
+#
+#   Etiket atarsan (git tag v1.0.0 && git push --tags) ayrica
+#   Releases sayfasina da exe'yi yukler; orada tek tik indirme olur.
+name: EXE uret
+
+on:
+  workflow_dispatch:        # elle: Actions sekmesinden dugmeye bas
+  push:
+    tags: ['v*']            # v1.0.0 gibi bir etiket atinca Release'e de koy
+
+permissions:
+  contents: write           # Release olusturabilmek icin
+
+jobs:
+  windows-exe:
+    runs-on: ubuntu-latest  # paketle.js --win, Linux'tan da Windows exe uretiyor
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Paketleme araclari (sadece burada gerekli, kullanicida degil)
+      - name: Paketleme araclarini kur
+        run: npm install --no-audit --no-fund esbuild postject
+
+      # TikTok baglantisi icin gereken kutuphane exe'nin icine gomuluyor
+      - name: Sunucu bagimliliklari
+        working-directory: server
+        run: npm install --no-audit --no-fund
+
+      - name: Windows exe uret
+        run: node server/paketle.js --win
+
+      - name: Uretilen dosyayi dogrula
+        run: |
+          ls -la dist/
+          test -f dist/TikTokOyunlar.exe
+          # Bos/yarim kalmis ikili yakala: gercek exe ~90 MB
+          boyut=$(stat -c%s dist/TikTokOyunlar.exe)
+          echo "exe boyutu: $boyut bayt"
+          if [ "$boyut" -lt 40000000 ]; then
+            echo "::error::exe beklenenden kucuk ($boyut bayt) - paketleme yarim kalmis"
+            exit 1
+          fi
+
+      # Herkesin indirebilecegi artifact (etiket gerekmez)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TikTokOyunlar
+          path: dist/TikTokOyunlar.exe
+          retention-days: 30
+          compression-level: 9
+
+      # Etiketle tetiklendiyse Releases sayfasina da koy
+      - name: Release'e ekle
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/TikTokOyunlar.exe \
+            --title "TikTok Yayin Oyuncaklari ${GITHUB_REF_NAME}" \
+            --notes "Tek dosya. Indir, cift tikla. Node kurmana gerek yok.
+
+          Kullanici adini bir kez sorar, sonra hatirlar.
+          Kontrol paneli tarayicida acilir; oyun adreslerini oradan kopyalayip
+          LIVE Studio'da **Kaynak ekle > Link** olarak hem Portrait hem
+          Landscape bolumune yapistir." \
+            || gh release upload "${GITHUB_REF_NAME}" dist/TikTokOyunlar.exe --clobber
