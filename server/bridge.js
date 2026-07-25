@@ -859,7 +859,7 @@ server.listen(args.port, '0.0.0.0', async () => {
      (?v=1 / ?y=1 -> yonelimi elle zorla; normalde gerekmez)
 
    >> OBS icin (Tarayici Kaynagi) — seffaflik dogrudan calisir <<
-     ${base}/overlays/labirent.html   ... vb.
+     ${base}/overlays/oyun.html?lite=1   (1920x1080, tek link)
 
    localtest.me acilmiyorsa (modem DNS-rebind korumasi):
      tools\\hosts-ekle.ps1 dosyasini yonetici olarak calistir,
