@@ -43,12 +43,27 @@ function parseArgs(argv) {
     else if (a === '--no-80') out.no80 = true;
     else if (a === '--oturum') out.oturum = String(argv[++i] || '');
     else if (a === '--idc') out.idc = String(argv[++i] || '');
+    else if (a === '--klasor') out.klasor = String(argv[++i] || '');
+    else if (a === '--gomulu') out.gomulu = true;
     else if (a === '--help' || a === '-h') out.help = true;
   }
   return out;
 }
 
 const args = parseArgs(process.argv);
+
+/* Oyun dosyalari nereden okunacak?
+ *   --klasor <yol>  -> acikca verilen klasor
+ *   (yoksa)         -> exe'nin yanindaki overlays/ klasoru varsa o
+ *   --gomulu        -> her ikisini de yoksay, exe'nin icindekini kullan
+ * Amac: kucuk bir guncelleme icin 90 MB exe'yi bastan indirmemek. */
+let disKlasorYolu = null;
+if (!args.gomulu) {
+  disKlasorYolu = args.klasor ? varlik.disKlasor(args.klasor) : varlik.disKlasorBul();
+  if (args.klasor && !disKlasorYolu) {
+    console.log('  [kopru] --klasor bulunamadi, gomulu surum kullanilacak:', args.klasor);
+  }
+}
 
 if (args.help) {
   console.log(`
@@ -69,6 +84,10 @@ TikTok LIVE koprusu
                      EulerStream'in ucretli planini gerektirir; yoksa bot
                      mesajlari sadece ekranda/konsolda gorunur.
   --idc <bolge>      tt-target-idc cerezi (varsayilan: useast1a)
+  --klasor <yol>     Oyun dosyalarini bu klasorden oku (guncelleme icin).
+                     Verilmezse exe'nin yanindaki overlays/ klasoru varsa
+                     otomatik kullanilir; yoksa exe'ye gomulu surum calisir.
+  --gomulu           Yanindaki overlays/ klasorunu YOKSAY, gomulu surumu kullan
   --verbose, -v      Her olayi konsola bas
 `);
   process.exit(0);
@@ -866,6 +885,17 @@ server.listen(args.port, '0.0.0.0', async () => {
      sonra http://yayin.local:${args.port}/... kullan.
   ================================================================
 `);
+
+  // Dosyalar nereden okunuyor — sessiz kalirsa "guncelledim ama degismedi"
+  // durumu tesbit edilemez oluyor.
+  if (disKlasorYolu) {
+    log('oyun dosyalari DIS KLASORDEN okunuyor:', disKlasorYolu);
+    log('   (guncelleme icin exe degil, sadece bu klasoru degistir)');
+  } else if (varlik.SEA_MI) {
+    log('oyun dosyalari exe\'nin icinden okunuyor (gomulu surum).');
+    log('   Guncellemede exe indirmek istemiyorsan: exe\'nin yanina');
+    log('   guncel "overlays" klasorunu koy, otomatik onu kullanir.');
+  }
 
   // Disaridan veri ceken kaynaklar (Valorant rank, hava, simdi calan...)
   // server/veri-kaynaklari.json varsa devreye giriyor.

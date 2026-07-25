@@ -31,6 +31,41 @@ const SEA_MI = !!(sea && typeof sea.isSea === 'function' && sea.isSea());
 // Kaynak koddan calisirken depo kokü: server/ klasorunun bir ustu
 const KOK = path.resolve(__dirname, '..');
 
+/* ---- DIS KLASOR (guncelleme icin) ----------------------------------------
+ * Exe her sey gomulu geldigi icin, bir oyunda tek satir degisse bile
+ * kullanicinin 90 MB'lik exe'yi bastan indirmesi gerekiyordu. Gereksiz:
+ * degisen sey birkac yuz kilobayt HTML/CSS/JS.
+ *
+ * Artik exe'nin YANINDA bir "overlays" klasoru varsa, dosyalar ONCE oradan
+ * okunuyor; bulunamayan her sey gomulu surumden geliyor. Yani guncelleme =
+ * o klasoru degistirmek. Exe ayni kaliyor.
+ *
+ * Kapatmak icin --gomulu, baska bir yeri gostermek icin --klasor <yol>.
+ */
+let disKok = null;
+
+function disKlasor(yol) {
+  if (!yol) { disKok = null; return null; }
+  const m = path.resolve(yol);
+  try {
+    if (!fs.statSync(m).isDirectory()) return null;
+  } catch { return null; }
+  disKok = m;
+  return m;
+}
+
+/** Exe'nin yanindaki overlays/ klasorunu otomatik bul. */
+function disKlasorBul() {
+  if (!SEA_MI) return null;
+  const yan = path.dirname(process.execPath);
+  // Klasorun kendisi "overlays" ise onun ustunu kok kabul ediyoruz, cunku
+  // varlik adlari "overlays/..." diye basliyor.
+  try {
+    if (fs.statSync(path.join(yan, 'overlays')).isDirectory()) return disKlasor(yan);
+  } catch { /* yok */ }
+  return null;
+}
+
 /**
  * URL yolunu ("/overlays/boss.html") varlik adina cevir ("overlays/boss.html").
  * Klasor disina cikma (path traversal) denemelerini burada kesiyoruz.
@@ -65,8 +100,27 @@ function adaCevir(urlYolu) {
  * @param {string} ad  "overlays/boss.html" gibi, kok-goreli
  * @returns {Buffer|null}
  */
+function diskten(kok, ad) {
+  const hedef = path.resolve(kok, ad);
+  // resolve sonrasi tekrar dogrula — adaCevir'i atlayan bir cagri gelirse diye
+  if (hedef !== kok && !hedef.startsWith(kok + path.sep)) return null;
+  try {
+    const st = fs.statSync(hedef);
+    if (st.isDirectory()) return null;
+    return fs.readFileSync(hedef);
+  } catch {
+    return null;
+  }
+}
+
 function oku(ad) {
   if (ad == null) return null;
+
+  // Dis klasor varsa once oraya bak — guncelleme yolu bu.
+  if (disKok) {
+    const d = diskten(disKok, ad);
+    if (d !== null) return d;
+  }
 
   if (SEA_MI) {
     try {
@@ -77,16 +131,7 @@ function oku(ad) {
     }
   }
 
-  const hedef = path.resolve(KOK, ad);
-  // resolve sonrasi tekrar dogrula — adaCevir'i atlayan bir cagri gelirse diye
-  if (hedef !== KOK && !hedef.startsWith(KOK + path.sep)) return null;
-  try {
-    const st = fs.statSync(hedef);
-    if (st.isDirectory()) return null;
-    return fs.readFileSync(hedef);
-  } catch {
-    return null;
-  }
+  return diskten(KOK, ad);
 }
 
 /** Varlik var mi? (dizin indeksine dusmeden once bakmak icin) */
@@ -94,4 +139,8 @@ function varMi(ad) {
   return oku(ad) !== null;
 }
 
-module.exports = { adaCevir, oku, varMi, SEA_MI, KOK };
+module.exports = {
+  adaCevir, oku, varMi, SEA_MI, KOK,
+  disKlasor, disKlasorBul,
+  get DIS_KOK() { return disKok; },
+};
