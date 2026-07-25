@@ -6,74 +6,105 @@
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
-  #alan { overflow: hidden; flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 10px; }
-  #ust { padding: 9px 14px; }
-  #baslik { font-size: 28px; }
-  #rozet { font-size: 27px; }
+  /* At yarisinin cekiciligi atlardan degil BAHISTEN gelir. Izleyici
+     yarismaci degil bahisci: 8 SABIT at var — kalici isim, kalici forma,
+     tur ustu galibiyet sayisi. Sabit kadro zamanla taraftar biriktirir
+     ("ben hep Şimşek'e oynarım"); her tur degisen rastgele atlarda bu bag
+     kurulamazdi. Jelle'nin takim kimligi dersi burada, gercekten sabit
+     kadronun oldugu yerde uygulaniyor. */
+  #orta { flex: 1; min-height: 0; display: flex; gap: 14px; }
 
-  /* --- seritler --- */
-  .serit {
+  /* ---- saha: 8 kulvar ---- */
+  #sahaKutu { flex: 1; min-width: 0; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+  .kulvar {
     flex: 1; min-height: 0; position: relative;
-    background: rgba(0,0,0,.24);
-    border-radius: 12px;
+    background: rgba(0, 0, 0, .26);
     border: 3px solid var(--cizgi);
+    border-radius: 12px;
     overflow: hidden;
   }
-  /* Bitis cizgisi — damali serit */
-  .serit::after {
-    content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: 10px;
-    background:
-      repeating-linear-gradient(180deg, #fff 0 8px, #17123a 8px 16px);
-    opacity: .8;
+  /* Bitis: damali serit */
+  .kulvar::after {
+    content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: 14px;
+    background: repeating-linear-gradient(180deg, #fff 0 9px, #17123a 9px 18px);
+    opacity: .85;
   }
-  .no {
-    position: absolute; left: 7px; top: 50%; transform: translateY(-50%);
-    width: 26px; height: 26px; border-radius: 8px;
+  .kInfo {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 292px;
+    display: flex; align-items: center; gap: 9px; padding: 0 10px;
+    background: rgba(10, 6, 30, .45);
+    border-right: 3px solid var(--cizgi);
+    z-index: 2;
+  }
+  .kNo {
+    flex: none; width: 34px; height: 34px; border-radius: 9px;
     display: grid; place-items: center;
-    font-size: 14px; font-weight: 900; color: #17123a;
-    border: 3px solid var(--cizgi); z-index: 2;
+    font-size: 20px; font-weight: 900; color: #17123a;
+    border: 3px solid var(--cizgi);
   }
-  .atAd {
-    position: absolute; left: 40px; top: 50%; transform: translateY(-50%);
-    font-size: 13px; font-weight: 800; color: #b9aee8; z-index: 2;
-    text-transform: uppercase; letter-spacing: .3px;
+  .kForma { flex: none; width: 44px; height: 32px; }
+  .kForma img { width: 100%; height: 100%; display: block; }
+  .kAdSar { flex: 1; min-width: 0; }
+  .kAd {
+    font-size: var(--tip-isim); font-weight: 900; text-transform: uppercase;
+    letter-spacing: -.3px; line-height: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  /* Bahis sayaci — o ata kac kisi oynadi */
-  .bahis {
-    position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-    font-size: 15px; font-weight: 900; color: var(--altin); z-index: 2;
+  .kGalibiyet { font-size: 17px; font-weight: 800; color: var(--altin); margin-top: 2px; }
+
+  .kAt {
+    position: absolute; left: 304px; top: 50%;
+    z-index: 3; will-change: transform;
+  }
+  .kAt .govde {
+    font-size: 46px; line-height: 1; display: inline-block;
+    transform: translateY(-50%) scaleX(-1);   /* emoji sola bakiyor; yaris saga */
+  }
+  /* Dortnal sallantisi: transform-only, GPU'suz renderda da ucuz */
+  #sahaKutu.kosuyor .kAt .govde { animation: dortnal .36s ease-in-out infinite alternate; }
+  @keyframes dortnal {
+    from { transform: translateY(-50%) scaleX(-1) translateY(-3px) rotate(-2deg); }
+    to   { transform: translateY(-50%) scaleX(-1) translateY(3px) rotate(2deg); }
+  }
+  html.tt-lite #sahaKutu.kosuyor .kAt .govde { animation: none; }
+
+  /* ---- sag ray: faza gore icerik degistirir ---- */
+  #ray { flex: none; width: 470px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  #fazKutu { flex: 1; min-height: 0; padding: 12px; display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
+  #fazBaslik {
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    color: #a89ce0; padding: 0 4px 4px; flex: none;
+  }
+  .fSatir {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0, 0, 0, .32); border-radius: 12px; padding: 7px 11px;
+  }
+  .fSatir .fNo {
+    flex: none; width: 30px; height: 30px; border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 17px; font-weight: 900; color: #17123a; border: 3px solid var(--cizgi);
+  }
+  .fSatir .fForma { flex: none; width: 38px; height: 27px; }
+  .fSatir .fForma img { width: 100%; height: 100%; display: block; }
+  .fSatir .fAd {
+    flex: 1; min-width: 0; font-size: var(--tip-kucuk); font-weight: 900;
+    text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .fSatir .fSag {
+    flex: none; font-size: var(--tip-kucuk); font-weight: 900; color: var(--altin);
     font-variant-numeric: tabular-nums;
   }
-  .at {
-    position: absolute; top: 50%; left: 116px;   /* etiket sutunundan sonra */
-    font-size: 30px; line-height: 1;
-    transform: translate(0, -50%);
-    will-change: transform; z-index: 3;
-    filter: drop-shadow(0 2px 0 var(--cizgi));
+  .fSatir .fKucuk { flex: none; font-size: 19px; font-weight: 800; color: #a89ce0; font-variant-numeric: tabular-nums; }
+  .fSatir.bos { justify-content: center; color: #8a7fc4; font-weight: 800; font-size: var(--tip-kucuk); padding: 13px; }
+
+  #liderlikKutu { flex: none; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  #liderlikKutu::before {
+    content: 'EN İYİ BAHİSÇİLER';
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    color: #a89ce0; padding: 0 4px 4px;
   }
-  html.tt-lite .at { filter: none; }
 
-  /* Geri sayim serit alaninda DEGIL baslikta: mutlak konumlandirilinca
-     1. seridin sag ucunu ve bahis sayacini kesiyordu. */
-  #geriSayim { flex: none; font-size: 16px; padding: 4px 10px; }
-
-  /* Alt: en cok kazanan bahisciler */
-  #siralama {
-    position: absolute; left: 12px; bottom: 12px; z-index: 4;
-    width: min(300px, 44%);
-    padding: 8px; gap: 5px;
-    background: rgba(18,12,51,.78);
-    border: 3px solid var(--cizgi); border-radius: 16px;
-    box-shadow: 0 4px 0 var(--cizgi);
-    display: none;
-  }
-  #siralama.acik { display: flex; }
-  .sira { padding: 4px 8px; gap: 7px; background: rgba(0,0,0,.3); }
-  .sira .rozet { width: 24px; height: 24px; font-size: 13px; border-width: 2px; }
-  .sira .ad { font-size: 15px; }
-  .sira .adet { font-size: 16px; min-width: 34px; }
-  .sira.bos { font-size: 13px; padding: 8px; }
-
+  #geriSayimSar { display: flex; align-items: center; gap: 10px; }
 </style>
 </head>
 <body>
@@ -85,24 +116,30 @@
     <div id="rozet">🏇</div>
     <div id="baslikSar">
       <div id="baslik">At Yarışı</div>
-      <div id="cagri">1-6 yaz · atını seç</div>
+      <div id="cagri">atının numarasını yaz · bahsini oyna</div>
     </div>
-    <div class="rozetBuyuk" id="geriSayim">⏳ <span id="geriSn">0</span></div>
+    <div id="geriSayimSar">
+      <div class="rozetBuyuk" id="turRozet">KOŞU <span id="turNo">1</span></div>
+      <div class="rozetBuyuk" id="geriSayim">⏳ <span id="geriSn">0</span></div>
+    </div>
     <div id="sayac">
       <div id="sayacBuyuk">0</div>
       <div id="sayacKucuk">bahis</div>
     </div>
   </div>
 
-  <div id="alan" class="kutu">
-    <div id="seritler" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px"></div>
-    <div id="siralama"></div>
-    <div id="kazanan">
-      <div>
-        <div class="kupa">🏆</div>
-        <div class="kimAd" id="kazananAd">—</div>
-        <div class="altYazi" id="kazananAlt">kazandı</div>
+  <div id="orta">
+    <div id="sahaKutu" class="kutu">
+      <!-- kulvarlar JS ile kuruluyor -->
+      <div id="kazanan"></div>
+    </div>
+
+    <div id="ray">
+      <div id="fazKutu" class="kutu">
+        <div id="fazBaslik">ORAN TAHTASI</div>
+        <div id="fazIc" style="display:flex;flex-direction:column;gap:7px;flex:1;min-height:0;overflow:hidden"></div>
       </div>
+      <div id="liderlikKutu" class="kutu"></div>
     </div>
   </div>
 
@@ -111,6 +148,9 @@
 </div>
 
 <script src="_shared/tt.js"></script>
+<script src="_shared/kimlik.js"></script>
+<script src="_shared/spiker.js"></script>
+<script src="_shared/finis.js"></script>
 <script>
 (function () {
   'use strict';
@@ -118,217 +158,338 @@
   const q = new URLSearchParams(location.search);
   const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
 
-  const AT_SAYISI  = Math.max(2, Math.min(8, num('at', 6)));
-  const BAHIS_SN   = num('bahis', 22);    // bahis penceresi
-  const KUTLAMA_SN = num('kutlama', 8);
-  const YARIS_SN   = num('sure', 22);     // yaklasik yaris suresi
+  const BAHIS_SN   = num('bahis', 25);
+  const YARIS_SN   = num('sure', 20);
+  const KUTLAMA_SN = num('kutlama', 10);
 
+  // SABIT KADRO — isimler ve formalar tasarlanmis, hash'e birakilmamis.
+  // Galibiyet sayilari localStorage'da: kadro yayindan yayina tarih biriktirir.
   const ATLAR = [
-    { ad: 'Rüzgâr',  renk: '#ff4d4d' },
-    { ad: 'Şimşek',  renk: '#3fb9ff' },
-    { ad: 'Yıldız',  renk: '#ffd23f' },
-    { ad: 'Kasırga', renk: '#7ed957' },
-    { ad: 'Kartal',  renk: '#ff5fc8' },
-    { ad: 'Alev',    renk: '#ffa62b' },
-    { ad: 'Gölge',   renk: '#a86bff' },
-    { ad: 'Tufan',   renk: '#21d1a1' },
-  ].slice(0, AT_SAYISI);
+    { ad: 'Şimşek',  renk: '#ffd23f', ikincil: '#17123a', desen: 'cizgi' },
+    { ad: 'Poyraz',  renk: '#3fb9ff', ikincil: '#ffffff', desen: 'yarim' },
+    { ad: 'Fırtına', renk: '#ff4d4d', ikincil: '#ffffff', desen: 'halka' },
+    { ad: 'Karayel', renk: '#21d1a1', ikincil: '#17123a', desen: 'duz' },
+    { ad: 'Bozkır',  renk: '#e0b06b', ikincil: '#17123a', desen: 'benek' },
+    { ad: 'Sedef',   renk: '#ff5fc8', ikincil: '#ffffff', desen: 'burgu' },
+    { ad: 'Duman',   renk: '#b9aee8', ikincil: '#17123a', desen: 'benek' },
+    { ad: 'Rüzgar',  renk: '#7ed957', ikincil: '#17123a', desen: 'yarim' },
+  ];
+
+  let galibiyet;
+  try { galibiyet = JSON.parse(localStorage.getItem('tt-at-galibiyet')) || []; }
+  catch { galibiyet = []; }
+  while (galibiyet.length < ATLAR.length) galibiyet.push(0);
+
+  // Formalari bir kez pisir
+  ATLAR.forEach((a) => {
+    a.formaURL = Kimlik.formaPisir(a.renk, a.ikincil, a.desen).toDataURL();
+    // Kazanan karti icin 4x buyuk surum — kucugu buyutunce bulaniyor
+    a.formaBuyukURL = Kimlik.formaPisir(a.renk, a.ikincil, a.desen, 4).toDataURL();
+  });
 
   // ---- durum ---------------------------------------------------------------
   let durum = 'bahis';           // bahis | yaris | bitti
   let sayacSn = BAHIS_SN;
+  let turNo = Number(localStorage.getItem('tt-at-kosu') || 1);
   let bahisler = new Map();      // kid -> {ad, at, kat}
-  let puanlar = new Map();       // kid -> {ad, puan}
-  let ilerleme = [];             // her atin 0..1 arasi ilerlemesi
-  let hiz = [];
+  let puanlar = new Map();       // kid -> {ad, puan} — localStorage yedekli
+  let ilerleme = ATLAR.map(() => 0);
+  let hiz = ATLAR.map(() => 1);
+  let fotoFinisDendi = false, sonDuzlukDendi = false;
+  let sonLider = -1;
 
-  const seritlerEl = document.getElementById('seritler');
-  const siralamaEl = document.getElementById('siralama');
+  try {
+    for (const [kid, o] of JSON.parse(localStorage.getItem('tt-at-puan') || '[]')) puanlar.set(kid, o);
+  } catch { /* bozuk kayit -> sifirdan */ }
+
+  const sahaEl = document.getElementById('sahaKutu');
+  const fazIcEl = document.getElementById('fazIc');
+  const fazBaslikEl = document.getElementById('fazBaslik');
+  const liderlikEl = document.getElementById('liderlikKutu');
   const kazananEl = document.getElementById('kazanan');
-  const akisEl = document.getElementById('akis');
-  let atEl = [], bahisEl = [];
+  Spiker.kur(document.getElementById('akis'));
 
-  function akis(html) {
-    const d = document.createElement('div');
-    d.className = 'satir'; d.innerHTML = html;
-    akisEl.innerHTML = ''; akisEl.appendChild(d);
-    setTimeout(() => d.remove(), 3600);
-  }
-
-  // ---- seritleri kur -------------------------------------------------------
+  // ---- kulvarlar -----------------------------------------------------------
+  const atEl = [];
   ATLAR.forEach((a, i) => {
-    const s = document.createElement('div');
-    s.className = 'serit';
-    s.innerHTML =
-      `<div class="no" style="background:${a.renk}">${i + 1}</div>` +
-      `<div class="atAd">${a.ad}</div>` +
-      `<div class="bahis" data-i="${i}">0</div>` +
-      `<div class="at" data-i="${i}">🏇</div>`;
-    seritlerEl.appendChild(s);
-    atEl.push(s.querySelector('.at'));
-    bahisEl.push(s.querySelector('.bahis'));
+    const k = document.createElement('div');
+    k.className = 'kulvar';
+    k.innerHTML = `
+      <div class="kInfo">
+        <div class="kNo" style="background:${a.renk}">${i + 1}</div>
+        <div class="kForma"><img alt="" src="${a.formaURL}"></div>
+        <div class="kAdSar">
+          <div class="kAd">${a.ad}</div>
+          <div class="kGalibiyet">🏆 ${galibiyet[i]}</div>
+        </div>
+      </div>
+      <div class="kAt"><span class="govde">🏇</span></div>`;
+    sahaEl.insertBefore(k, kazananEl);
+    atEl.push(k.querySelector('.kAt'));
   });
 
-  // At, numara rozeti + isim etiketinin sagindan basliyor (CSS left:116px);
-  // yol da oradan bitis seridine kadar.
-  const BASLA = 116, BITIS_PAY = 46;
-
+  const BASLA = 304, BITIS_PAY = 34;
   function atlariYerlestir() {
     for (let i = 0; i < ATLAR.length; i++) {
       const en = atEl[i].parentNode.clientWidth;
-      const yol = Math.max(0, en - BASLA - BITIS_PAY);
-      atEl[i].style.transform = `translate(${ilerleme[i] * yol}px, -50%)`;
+      const yol = Math.max(0, en - BASLA - BITIS_PAY - 46);
+      atEl[i].style.transform = `translateX(${(ilerleme[i] * yol).toFixed(1)}px)`;
     }
   }
 
-  function bahisSayilariCiz() {
+  // ---- oranlar (pari-mutuel) ----------------------------------------------
+  // Gercek hipodrom mantigi: oran sabit degil, havuzdan gelir. Az oynanan
+  // at kazanirsa cok oder — kalabaligin tersine oynamak odullenir ve
+  // oranlar kendi kendini dengeler.
+  function oranlar() {
     const say = new Array(ATLAR.length).fill(0);
     for (const b of bahisler.values()) say[b.at]++;
-    for (let i = 0; i < ATLAR.length; i++) {
-      bahisEl[i].textContent = say[i] ? say[i] + ' 👤' : '';
-    }
-    document.getElementById('sayacBuyuk').textContent = bahisler.size;
+    const havuz = bahisler.size;
+    return say.map((n) => {
+      if (!havuz || !n) return null;             // hic oynanmamis: oran yok
+      return Math.max(1.2, Math.min(15, havuz / n));
+    });
   }
 
-  function siralamaCiz() {
-    const list = [...puanlar.values()].sort((a, b) => b.puan - a.puan).slice(0, 5);
-    if (!list.length) { siralamaEl.classList.remove('acik'); return; }
-    siralamaEl.classList.add('acik');
-    const MADALYA = ['🥇', '🥈', '🥉'];
-    siralamaEl.innerHTML = list.map((o, i) => {
-      const rz = MADALYA[i] || (i + 1);
-      const stil = i < 3 ? `background:${['#ffd23f', '#d8dbe6', '#e29a5a'][i]}` : 'background:#6b5fb8;color:#fff';
-      return `<div class="sira">
-        <div class="rozet" style="${stil}">${rz}</div>
-        <div class="ad">${o.ad}</div>
-        <div class="adet">${o.puan}</div>
-      </div>`;
-    }).join('');
+  // ---- ray fazlari ---------------------------------------------------------
+  function fSatir(i, sag, kucuk) {
+    const a = ATLAR[i];
+    return `<div class="fSatir">
+      <div class="fNo" style="background:${a.renk}">${i + 1}</div>
+      <div class="fForma"><img alt="" src="${a.formaURL}"></div>
+      <div class="fAd">${a.ad}</div>
+      ${kucuk ? `<div class="fKucuk">${kucuk}</div>` : ''}
+      <div class="fSag">${sag}</div>
+    </div>`;
+  }
+
+  function rayOran() {
+    fazBaslikEl.textContent = 'ORAN TAHTASI';
+    const o = oranlar();
+    const say = new Array(ATLAR.length).fill(0);
+    for (const b of bahisler.values()) say[b.at]++;
+    fazIcEl.innerHTML = ATLAR.map((a, i) =>
+      fSatir(i, o[i] ? 'x' + o[i].toFixed(1) : '—', say[i] ? say[i] + '👤' : '')
+    ).join('');
+  }
+
+  function rayPozisyon() {
+    fazBaslikEl.textContent = 'CANLI POZİSYON';
+    const sira = ATLAR.map((a, i) => i).sort((x, y) => ilerleme[y] - ilerleme[x]);
+    fazIcEl.innerHTML = sira.map((i, poz) =>
+      fSatir(i, (poz + 1) + '.', Math.round(ilerleme[i] * 100) + '%')
+    ).join('');
+  }
+
+  function rayOdeme(kazananAt, dagitilan) {
+    fazBaslikEl.textContent = 'ÖDEMELER';
+    if (!dagitilan.length) {
+      fazIcEl.innerHTML = fSatir(kazananAt, 'kazandı') +
+        '<div class="fSatir bos">kimse bilemedi — puanlar yandı</div>';
+      return;
+    }
+    fazIcEl.innerHTML = fSatir(kazananAt, 'kazandı') + dagitilan.slice(0, 7).map((d) =>
+      `<div class="fSatir">${Kimlik.cip(d.kid, 30)}<div class="fAd">${d.ad}</div><div class="fSag">+${d.kazanc}</div></div>`
+    ).join('');
+  }
+
+  function liderlikCiz() {
+    const list = [...puanlar.entries()]
+      .map(([kid, o]) => ({ kid, ...o }))
+      .sort((a, b) => b.puan - a.puan).slice(0, 5);
+    liderlikEl.innerHTML = list.length
+      ? list.map((o, i) =>
+          `<div class="fSatir">
+            <div class="fNo" style="background:${['#ffd23f', '#d8dbe6', '#e29a5a', '#6b5fb8', '#6b5fb8'][i]};color:${i > 2 ? '#fff' : '#17123a'}">${i + 1}</div>
+            ${Kimlik.cip(o.kid, 30)}
+            <div class="fAd">${o.ad}</div>
+            <div class="fSag">${o.puan}</div>
+          </div>`).join('')
+      : '<div class="fSatir bos">ilk koşu sonrası dolacak</div>';
+  }
+
+  function sayacCiz() {
+    document.getElementById('sayacBuyuk').textContent = bahisler.size;
+    document.getElementById('turNo').textContent = turNo;
+    document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
   }
 
   // ---- yaris ---------------------------------------------------------------
   function yarisBasla() {
-    if (!bahisler.size) { sayacSn = BAHIS_SN; return; }   // kimse oynamadiysa bekle
+    if (!bahisler.size) { sayacSn = BAHIS_SN; return; }
     durum = 'yaris';
     ilerleme = ATLAR.map(() => 0);
-    // Her ata farkli temel hiz + tur icinde degisen anlik hiz:
-    // lider surekli degissin, son ana kadar belli olmasin.
     hiz = ATLAR.map(() => 0.85 + Math.random() * 0.3);
-    document.getElementById('cagri').textContent = 'yarış sürüyor!';
-    akis(`🚦 <b>START</b> — ${bahisler.size} bahis oynandı`);
+    fotoFinisDendi = false; sonDuzlukDendi = false; sonLider = -1;
+    sahaEl.classList.add('kosuyor');
+    document.getElementById('cagri').textContent = 'koşu sürüyor!';
+    Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> — ${bahisler.size} bahis`, { oncelik: 3 });
   }
 
-  let sonZaman = 0;
+  let sonZaman = 0, rayZaman = 0;
   function dongu(t) {
     requestAnimationFrame(dongu);
     if (!sonZaman) sonZaman = t;
-    const dt = Math.min(0.05, (t - sonZaman) / 1000);
+    let dt = Math.min(0.05, (t - sonZaman) / 1000);
     sonZaman = t;
+    dt *= Finis.carpan;                      // foto finiste agir cekim
 
+    if (durum !== 'yaris') return;
+
+    let birinci = -1, enIleri = -1;
+    for (let i = 0; i < ATLAR.length; i++) {
+      hiz[i] += (Math.random() - 0.5) * 1.6 * dt;
+      hiz[i] = Math.max(0.55, Math.min(1.5, hiz[i]));
+      ilerleme[i] += (hiz[i] / YARIS_SN) * dt;
+      if (ilerleme[i] > enIleri) { enIleri = ilerleme[i]; birinci = i; }
+      if (ilerleme[i] >= 1 && durum === 'yaris') { ilerleme[i] = 1; bitir(i); }
+    }
+    atlariYerlestir();
+
+    // Spiker olaylari
     if (durum === 'yaris') {
-      let kazanan = -1;
-      for (let i = 0; i < ATLAR.length; i++) {
-        // Anlik hiz sallanmasi: bazen atilim, bazen yorulma
-        hiz[i] += (Math.random() - 0.5) * 1.6 * dt;
-        hiz[i] = Math.max(0.55, Math.min(1.5, hiz[i]));
-        ilerleme[i] += (hiz[i] / YARIS_SN) * dt;
-        if (ilerleme[i] >= 1) { ilerleme[i] = 1; if (kazanan < 0) kazanan = i; }
+      if (birinci !== sonLider && sonLider >= 0 && enIleri > 0.15 && enIleri < 0.88) {
+        Spiker.soyle('⚡ ' + Spiker.sec(
+          ['<b>%s</b> öne geçiyor!', '<b>%s</b> başı aldı!', '<b>%s</b> dışarıdan geliyor!', '<b>%s</b> temposunu artırdı!'],
+          ATLAR[birinci].ad), { oncelik: 2, anahtar: 'lider' });
       }
-      atlariYerlestir();
-      if (kazanan >= 0) bitir(kazanan);
+      sonLider = birinci;
+
+      if (!sonDuzlukDendi && enIleri > 0.78) {
+        sonDuzlukDendi = true;
+        Spiker.soyle('🔥 <b>SON DÜZLÜK!</b>', { oncelik: 3 });
+      }
+
+      // Foto finis: ilk iki at arasi %2.5'ten az ve cizgiye yaklasildi
+      if (!fotoFinisDendi && enIleri > 0.9) {
+        const sirali = [...ilerleme].sort((a, b) => b - a);
+        if (sirali[0] - sirali[1] < 0.025) {
+          fotoFinisDendi = true;
+          Finis.agirCekim(2, 0.3);
+          Spiker.soyle('🎬 <b>FOTO FİNİŞ!</b>', { oncelik: 3 });
+        }
+      }
+      if ((t - rayZaman) > 250) { rayZaman = t; rayPozisyon(); }
     }
   }
 
   function bitir(i) {
     durum = 'bitti';
     sayacSn = KUTLAMA_SN;
+    sahaEl.classList.remove('kosuyor');
     const at = ATLAR[i];
 
-    // Odul dagit: dogru bilen herkese puan, hediye kati varsa carpanla
-    let kazananSayisi = 0;
+    galibiyet[i]++;
+    localStorage.setItem('tt-at-galibiyet', JSON.stringify(galibiyet));
+    sahaEl.querySelectorAll('.kGalibiyet')[i].textContent = '🏆 ' + galibiyet[i];
+
+    // Odeme: pari-mutuel oran uzerinden. Hediye kati carpani (kat) burada
+    // devreye girer — yarisi HIZLANDIRMAZ, sadece dogru bilenin odulunu buyutur.
+    const o = oranlar()[i] || 2;
+    const dagitilan = [];
     for (const [kid, b] of bahisler) {
       if (b.at !== i) continue;
-      kazananSayisi++;
-      const mevcut = puanlar.get(kid) || { ad: b.ad, puan: 0 };
-      mevcut.ad = b.ad;
-      mevcut.puan += 10 * (b.kat || 1);
-      puanlar.set(kid, mevcut);
+      const kazanc = Math.round(10 * o * (b.kat || 1));
+      const m = puanlar.get(kid) || { ad: b.ad, puan: 0 };
+      m.ad = b.ad; m.puan += kazanc;
+      puanlar.set(kid, m);
+      dagitilan.push({ kid, ad: b.ad, kazanc });
     }
+    dagitilan.sort((a, b) => b.kazanc - a.kazanc);
+    localStorage.setItem('tt-at-puan', JSON.stringify([...puanlar.entries()].slice(0, 100)));
 
-    document.getElementById('kazananAd').textContent = `${i + 1}. ${at.ad}`;
-    document.getElementById('kazananAlt').textContent =
-      kazananSayisi ? `${kazananSayisi} kişi bildi` : 'kimse bilemedi';
-    kazananEl.classList.add('acik');
+    Finis.kart(kazananEl, {
+      url: at.formaBuyukURL,
+      isim: at.ad,
+      alt: dagitilan.length
+        ? `#${i + 1} · oran x${o.toFixed(1)} · ${dagitilan.length} bahisçi kazandı`
+        : `#${i + 1} · kimseye yatan yok — sürpriz koşu`,
+    });
     document.getElementById('cagri').textContent = at.ad + ' kazandı';
-    akis(`🏆 <b style="color:${at.renk}">${at.ad}</b> <span class="ok">▸</span> ${kazananSayisi} kişi kazandı`);
-    siralamaCiz();
+    Spiker.soyle(`🏆 <b>${at.ad}</b> ` + (dagitilan.length ? `— ${dagitilan.length} bahisçiye ödeme` : '— kimse görmedi bunu'),
+      { oncelik: 3, sure: 4500 });
+    rayOdeme(i, dagitilan);
+    liderlikCiz();
   }
 
   function bahseDon() {
     durum = 'bahis';
     sayacSn = BAHIS_SN;
+    turNo++;
+    localStorage.setItem('tt-at-kosu', String(turNo));
     bahisler = new Map();
     ilerleme = ATLAR.map(() => 0);
     atlariYerlestir();
-    bahisSayilariCiz();
-    kazananEl.classList.remove('acik');
-    document.getElementById('cagri').textContent = '1-6 yaz · atını seç';
-    akis('🏇 <b>YENİ YARIŞ</b> — atını seç, 1-' + ATLAR.length + ' yaz');
+    Finis.kapat(kazananEl);
+    document.getElementById('cagri').textContent = 'atının numarasını yaz · bahsini oyna';
+    rayOran(); sayacCiz();
+    Spiker.soyle(`🏇 <b>${turNo}. KOŞU</b> — 1-${ATLAR.length} yaz, bahsini oyna`, { oncelik: 2 });
   }
 
   setInterval(() => {
     sayacSn -= 0.25;
-    document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
     if (sayacSn <= 0) {
       if (durum === 'bahis') yarisBasla();
       else if (durum === 'bitti') bahseDon();
     }
+    document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
   }, 250);
 
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
   const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
 
+  // At adiyla da bahis: "şimşek" yazan 1'e oynamis olur
+  const adTablo = new Map(ATLAR.map((a, i) =>
+    [a.ad.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c'), i]));
+
   TT.on('chat', (ev) => {
     if (durum !== 'bahis') return;
     const kid = kimlik(ev.user);
     if (!kid) return;
-    const m = String(ev.comment || '').match(/\b([1-8])\b/);
-    if (!m) return;
-    const at = Number(m[1]) - 1;
+    const metin = String(ev.comment || '');
+    let at = -1;
+    const m = metin.match(/\b([1-8])\b/);
+    if (m) at = Number(m[1]) - 1;
+    else {
+      const sade = metin.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ş/g, 's')
+        .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')
+        .replace(/[^a-z]/g, '');
+      if (adTablo.has(sade)) at = adTablo.get(sade);
+    }
     if (at < 0 || at >= ATLAR.length) return;
 
     const yeni = !bahisler.has(kid);
-    bahisler.set(kid, { ad: isim(ev.user), at, kat: 1 });
-    bahisSayilariCiz();
+    const onceki = bahisler.get(kid);
+    bahisler.set(kid, { ad: isim(ev.user), at, kat: (onceki && onceki.kat) || 1 });
+    rayOran(); sayacCiz();
     if (yeni) {
-      akis(`<span class="kim">${isim(ev.user)}</span> <span class="ok">▸</span> <b style="color:${ATLAR[at].renk}">${ATLAR[at].ad}</b>`);
+      Spiker.soyle(`<span class="kim">${isim(ev.user)}</span> ▸ <b style="color:${ATLAR[at].renk}">${ATLAR[at].ad}</b>`,
+        { oncelik: 1 });
     }
   });
 
-  // Hediye: bahsi katlar — dogru bilirse daha cok puan.
-  // Yarisi HIZLANDIRMIYOR: para verenin ati onde bitiyor olsa oyun sahte olur.
+  // Hediye: bahsi katlar (x5'e kadar). Yarisi HIZLANDIRMAZ — para verenin
+  // ati one gecseydi izleyici bunu anlar, oyun sahtelesirdi.
   TT.on('gift', (ev) => {
-    const kid = kimlik(ev.user);
-    const b = bahisler.get(kid);
+    const b = bahisler.get(kimlik(ev.user));
     if (!b) return;
     b.kat = Math.min(5, (b.kat || 1) + 1);
-    akis(`🎁 <span class="kim">${b.ad}</span> <span class="ok">▸</span> bahis x${b.kat}`);
+    Spiker.soyle(`🎁 <span class="kim">${b.ad}</span> bahsini katladı — x${b.kat}`, { oncelik: 2 });
   });
 
   // ---- basla ---------------------------------------------------------------
-  ilerleme = ATLAR.map(() => 0);
   atlariYerlestir();
-  bahisSayilariCiz();
+  rayOran(); liderlikCiz(); sayacCiz();
   addEventListener('resize', atlariYerlestir);
-  addEventListener('tt-yon', atlariYerlestir);
   requestAnimationFrame(dongu);
 
   TT.uyanis({
     baslik: 'AT YARIŞI',
-    komutlar: ['1', '3', '6'],
-    aciklama: 'Atının numarasını yaz, bahsini oyna · 🎁 hediye bahsini katlar',
-    cagri: '1-' + ATLAR.length + ' arası yaz, atını seç',
+    komutlar: ['1', '5', 'şimşek'],
+    aciklama: 'Atının numarasını (1-8) ya da adını yaz · az oynanan at çok öder · 🎁 hediye bahsi katlar',
+    cagri: 'bahsini oyna, koşu başlasın',
   });
 })();
 </script>

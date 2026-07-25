@@ -18,6 +18,13 @@
   --altin: #ffd23f;
   --pembe: #ff4d9d;
   --mor: #8b5cf6;
+
+  /* Tip olcegi. 1920'lik tuval telefonda ~390px'e kuculuyor (5x);
+     26px altindaki her yazi izleyicide okunmaz hale geliyor. 26 TABAN. */
+  --tip-dev: 140px;      /* kahraman sayi (kac kisi kaldi, kazanan) */
+  --tip-baslik: 48px;
+  --tip-isim: 28px;
+  --tip-kucuk: 26px;
 }
 
 /* Arka plan: TikTok'ta seffaflik yok, zaten dolu bir zemin istiyoruz */
@@ -64,29 +71,28 @@
 
 /* ---- ortak panel govdesi ---- */
 .kutu {
-  background: linear-gradient(180deg, var(--panel2), var(--panel));
-  border: 4px solid var(--cizgi);
-  border-radius: 22px;
-  box-shadow: 0 6px 0 var(--cizgi), 0 12px 22px rgba(0,0,0,.45);
+  background: var(--panel);
+  border: 3px solid var(--cizgi);
+  border-radius: 18px;
+  box-shadow: 7px 7px 0 rgba(10, 6, 30, .5);   /* sifir blur: bedava derinlik */
 }
 
 /* ---- ust baslik ---- */
 #ust { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
-#rozet { flex: none; font-size: 34px; line-height: 1; filter: drop-shadow(0 3px 0 var(--cizgi)); }
+#rozet { flex: none; font-size: 52px; line-height: 1; }
 #baslikSar { flex: 1; min-width: 0; }
 #baslik {
-  font-size: 34px; font-weight: 900; letter-spacing: -.5px; line-height: 1;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, #fff 40%, var(--altin));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-size: var(--tip-baslik); font-weight: 900; letter-spacing: -1px; line-height: 1;
+  text-transform: uppercase; color: #fff;
+  text-shadow: 0 4px 0 var(--cizgi);   /* blur'suz golge */
 }
 #cagri {
-  margin-top: 4px; font-size: 16px; font-weight: 800; color: #cbc0ff;
+  margin-top: 6px; font-size: var(--tip-kucuk); font-weight: 800; color: #cbc0ff;
   text-transform: uppercase; letter-spacing: .4px;
 }
 #sayac { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
-#sayacBuyuk { font-size: 30px; font-weight: 900; color: var(--altin); line-height: 1; }
-#sayacKucuk { font-size: 12px; font-weight: 700; color: #a89ce0; text-transform: uppercase; }
+#sayacBuyuk { font-size: 44px; font-weight: 900; color: var(--altin); line-height: 1; }
+#sayacKucuk { font-size: 18px; font-weight: 700; color: #a89ce0; text-transform: uppercase; }
 
 /* ---- siralama listesi ---- */
 #siralama { flex: none; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; }
@@ -97,33 +103,33 @@
 .sira .rozet {
   flex: none; width: 30px; height: 30px; border-radius: 9px;
   display: grid; place-items: center;
-  font-size: 15px; font-weight: 900; color: #1a1145;
+  font-size: 18px; font-weight: 900; color: #1a1145;
   border: 3px solid var(--cizgi);
 }
 .sira .bayrak { flex: none; width: 17px; height: 17px; border-radius: 5px; border: 2px solid var(--cizgi); }
 .sira .ad {
-  flex: 1; min-width: 0; font-size: 19px; font-weight: 900; text-transform: uppercase;
+  flex: 1; min-width: 0; font-size: var(--tip-isim); font-weight: 900; text-transform: uppercase;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -.3px;
 }
-.sira .plaka { flex: none; font-size: 13px; font-weight: 900; color: #a89ce0; font-variant-numeric: tabular-nums; }
+.sira .plaka { flex: none; font-size: 20px; font-weight: 900; color: #a89ce0; font-variant-numeric: tabular-nums; }
 .sira .adet {
-  flex: none; font-size: 22px; font-weight: 900; color: var(--altin);
+  flex: none; font-size: var(--tip-isim); font-weight: 900; color: var(--altin);
   font-variant-numeric: tabular-nums; min-width: 34px; text-align: right;
 }
-.sira.bos { justify-content: center; color: #8a7fc4; font-weight: 800; font-size: 15px; padding: 13px; }
+.sira.bos { justify-content: center; color: #8a7fc4; font-weight: 800; font-size: var(--tip-kucuk); padding: 14px; }
 
 /* ---- son olaylar seridi ---- */
-#akis { flex: none; height: 30px; overflow: hidden; position: relative; }
+#akis { flex: none; height: 52px; overflow: hidden; position: relative; }
 .satir {
-  position: absolute; inset: 0; display: flex; align-items: center; gap: 8px;
-  font-size: 16px; font-weight: 800;
+  position: absolute; inset: 0; display: flex; align-items: center; gap: 12px;
+  font-size: 30px; font-weight: 900;
   animation: kay 3.4s ease-out forwards;
 }
 @keyframes kay {
-  0%   { transform: translateY(30px); opacity: 0; }
+  0%   { transform: translateY(52px); opacity: 0; }
   12%  { transform: translateY(0);    opacity: 1; }
   82%  { transform: translateY(0);    opacity: 1; }
-  100% { transform: translateY(-30px); opacity: 0; }
+  100% { transform: translateY(-52px); opacity: 0; }
 }
 html.tt-lite .satir { animation-duration: 2.6s; }
 .satir .kim { color: var(--altin); }
@@ -133,8 +139,8 @@ html.tt-lite .satir { animation-duration: 2.6s; }
 .rozetBuyuk {
   display: inline-flex; align-items: center; gap: 7px;
   background: rgba(0,0,0,.3); border: 3px solid var(--cizgi);
-  border-radius: 14px; padding: 5px 12px;
-  font-size: 19px; font-weight: 900; font-variant-numeric: tabular-nums;
+  border-radius: 14px; padding: 6px 16px;
+  font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums;
 }
 
 /* ---- oyun alani (tuval) ---- */
@@ -149,13 +155,13 @@ html.tt-lite .satir { animation-duration: 2.6s; }
   z-index: 5;
 }
 #kazanan.acik { display: grid; }
-#kazanan .kupa { font-size: 62px; line-height: 1; }
+#kazanan .kupa { font-size: 96px; line-height: 1; }
 #kazanan .kimAd {
-  font-size: 40px; font-weight: 900; color: var(--altin);
+  font-size: 88px; font-weight: 900; color: var(--altin);
   text-transform: uppercase; letter-spacing: -1px;
   max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-#kazanan .altYazi { font-size: 17px; font-weight: 800; color: #cbc0ff; margin-top: 4px; }
+#kazanan .altYazi { font-size: var(--tip-isim); font-weight: 800; color: #cbc0ff; margin-top: 4px; }
 
 /* Sag sutun: sabit kabukta dogrudan ana sutunda akiyor.
    (Eski dikey/yatay izgara dallari silindi — tek yonelim kaldi.) */

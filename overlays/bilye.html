@@ -93,6 +93,9 @@
 </div>
 
 <script src="_shared/tt.js"></script>
+<script src="_shared/kimlik.js"></script>
+<script src="_shared/spiker.js"></script>
+<script src="_shared/finis.js"></script>
 <script>
 (function () {
   'use strict';
@@ -207,9 +210,10 @@
     let i = 0;
     for (const [kid, ad] of katilanlar) {
       // Ust bantta rastgele dagit, hafif yatay hiz ver — her yaris farkli olsun
+      const kim = Kimlik.al(kid);   // kalici skin: ayni izleyici her yayinda ayni bilye
       bilyeler.push({
         ad, kid,
-        renk: RENKLER[i % RENKLER.length],
+        renk: kim.renk,
         x: 90 + Math.random() * (EN - 180),
         y: 60 + Math.random() * 160,
         vx: (Math.random() - 0.5) * 120,
@@ -231,10 +235,19 @@
   }
 
   function adim(dt) {
+    let liderY = 0;
+    for (const b of bilyeler) if (!b.bitti && b.y > liderY) liderY = b.y;
+
     for (const b of bilyeler) {
       if (b.bitti) continue;
 
-      b.vy += YERCEKIMI * dt;
+      // Lastik bant: liderden %10+ geride kalana kademeli ekstra yercekimi.
+      // Pakete dokunmaz, sadece kopanlari toparlar — yoksa kamera lideri
+      // izlerken pist bombos gorunuyor.
+      const gerilik = (liderY - b.y) / Math.max(1, bitis);
+      const yardim = gerilik > 0.1 ? Math.min(0.5, (gerilik - 0.1) * 3) : 0;
+
+      b.vy += YERCEKIMI * (1 + yardim) * dt;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.vx *= SURTUNME; b.vy *= SURTUNME;
@@ -305,6 +318,17 @@
   // ---- cizim ---------------------------------------------------------------
   const tuval = document.getElementById('tuval');
   const ctx = tuval.getContext('2d');
+
+  // Civi kuresi bir kez pisirilir; cizimde drawImage ile olceklenir
+  const civiSprite = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(22, 20, 4, 32, 34, 32);
+    g.addColorStop(0, '#cfc4ff'); g.addColorStop(1, '#6f5fc4');
+    x.beginPath(); x.arc(32, 32, 30, 0, 6.2832);
+    x.fillStyle = g; x.fill();
+    return c;
+  })();
   let W = 0, H = 0, olcek = 1, kamera = 0;
 
   function boyutla() {
@@ -338,28 +362,15 @@
   /** Bilyeyi KURE gibi ciz: duz daire "ucuz" duruyor.
    *  Isik sol ustten: radyal gradyan + parlama noktasi + koyu kenar + golge. */
   function bilyeCiz(b) {
-    const x = b.x, y = b.y;
-
     // yere dusen golge
     ctx.globalAlpha = 0.28;
     ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(x + 3, y + R * 0.85, R * 0.85, R * 0.32, 0, 0, 6.2832); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(b.x + 3, b.y + R * 0.85, R * 0.85, R * 0.32, 0, 0, 6.2832); ctx.fill();
     ctx.globalAlpha = 1;
-
-    const g = ctx.createRadialGradient(x - R * 0.36, y - R * 0.36, R * 0.12, x, y, R * 1.05);
-    g.addColorStop(0, ton(b.renk, 88));
-    g.addColorStop(0.5, b.renk);
-    g.addColorStop(1, ton(b.renk, -78));
-    ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832);
-    ctx.fillStyle = g; ctx.fill();
-    ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(10,6,30,.85)'; ctx.stroke();
-
-    // parlama
-    ctx.globalAlpha = 0.75;
-    ctx.beginPath();
-    ctx.ellipse(x - R * 0.34, y - R * 0.4, R * 0.3, R * 0.2, -0.7, 0, 6.2832);
-    ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.globalAlpha = 1;
+    // Kure onceden pisirildi (kimlik.js): karede sadece drawImage.
+    // Onceki kod her bilye icin her karede createRadialGradient cagiriyordu —
+    // GPU'suz renderda en pahali satir oydu.
+    Kimlik.ciz(ctx, b.kid, b.x, b.y, R * 2.15);
   }
 
   function ciz() {
@@ -371,7 +382,7 @@
     if (durum === 'katilim') onde = 200;
     // Lideri ekranin %42'sinde tut: %34'te arkadaki paket ekran disinda
     // kaliyordu ve yaris tek bilyeden ibaret goruniyordu.
-    const hedef = onde * olcek - H * 0.42;
+    const hedef = onde * olcek - H * 0.52;
     kamera += (hedef - kamera) * 0.12;
     kamera = Math.max(0, Math.min(kamera, pistBoy * olcek - H));
 
@@ -401,16 +412,13 @@
     }
     ctx.stroke();
 
-    // --- civiler: golge + gradyan, duz nokta degil ---
+    // --- civiler: pisirilmis sprite (karede gradyan uretimi yok) ---
     for (const p of pegler) {
       if (p.y < ustSinir || p.y > altSinir) continue;
       ctx.globalAlpha = .3; ctx.fillStyle = '#000';
       ctx.beginPath(); ctx.arc(p.x + 2, p.y + 3, p.r, 0, 6.2832); ctx.fill();
       ctx.globalAlpha = 1;
-      const pg = ctx.createRadialGradient(p.x - p.r * .35, p.y - p.r * .35, p.r * .1, p.x, p.y, p.r);
-      pg.addColorStop(0, '#cfc4ff'); pg.addColorStop(1, '#6f5fc4');
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832);
-      ctx.fillStyle = pg; ctx.fill();
+      ctx.drawImage(civiSprite, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
     }
 
     // --- bitis cizgisi ---
@@ -451,8 +459,10 @@
     ctx.font = '800 15px system-ui, sans-serif';
     ctx.textAlign = 'center';
     canli.forEach((b, i) => {
-      const ey = b.y * olcek - kamera, ex = b.x * olcek;
-      if (ey < 14 || ey > H) return;
+      const ey = b.y * olcek - kamera;
+      // Kenarda kirpilmasin: etiketi sahne icinde tut
+      const ex = Math.min(W - 70, Math.max(70, b.x * olcek));
+      if (ey < 24 || ey > H) return;
       const etiket = (i + 1) + '. ' + b.ad;
       const en = ctx.measureText(etiket).width + 14;
       const ty = ey - R * olcek - 20;
@@ -478,14 +488,20 @@
     for (const b of canli) if (b.y > lider.y) lider = b;
 
     if (sonLider && lider.kid !== sonLider) {
-      akis(`⚡ <span class="kim">${lider.ad}</span> <span class="ok">▸</span> ÖNE GEÇTİ`);
+      akis('⚡ ' + Spiker.sec(
+        ['<span class="kim">%s</span> ÖNE GEÇTİ', '<span class="kim">%s</span> lider!',
+         '<span class="kim">%s</span> araları yarıyor', '<span class="kim">%s</span> burnu önde'],
+        lider.ad), { oncelik: 2, anahtar: 'lider' });
       spikerBekle = 90;
     }
     sonLider = lider.kid;
 
     if (!sonDuzlukDendi && lider.y > bitis * 0.86) {
       sonDuzlukDendi = true;
-      akis('🔥 <b>SON DÜZLÜK!</b>');
+      akis('🔥 <b>SON DÜZLÜK!</b>', { oncelik: 3 });
+      // Finis agir cekimi: yaris yayinlarindaki an. dt dongu icinde
+      // Finis.carpan ile carpiliyor.
+      Finis.agirCekim(1.8, 0.35);
       spikerBekle = 90;
     }
   }
@@ -497,6 +513,7 @@
     let dt = (t - sonZaman) / 1000;
     sonZaman = t;
     if (dt > 0.05) dt = 0.05;          // sekme olursa fizigi patlatma
+    dt *= Finis.carpan;                // son duzlukte agir cekim
 
     if (durum === 'yaris') {
       // Uc alt adim: hizli bilye civiyi delip gecmesin
@@ -518,12 +535,8 @@
 
   // ---- akis / siralama -----------------------------------------------------
   const akisEl = document.getElementById('akis');
-  function akis(html) {
-    const d = document.createElement('div');
-    d.className = 'satir'; d.innerHTML = html;
-    akisEl.innerHTML = ''; akisEl.appendChild(d);
-    setTimeout(() => d.remove(), 3600);
-  }
+  Spiker.kur(akisEl);
+  function akis(html, o) { Spiker.soyle(html, o); }
 
   const sirEl = document.getElementById('siralama');
   const MADALYA = ['🥇', '🥈', '🥉'];
@@ -565,7 +578,7 @@
       <div style="position:absolute;left:0;top:0;bottom:0;width:${yuzde}%;
                   background:${b.renk};opacity:.16;pointer-events:none"></div>
       <div class="rozet" style="${stil};position:relative">${rz}</div>
-      <div class="bayrak" style="background:${b.renk};position:relative"></div>
+      ${Kimlik.cip(b.kid, 26)}
       <div class="ad" style="position:relative">${b.ad} ${ok}</div>
       <div class="adet" style="position:relative">${sag}</div>
     </div>`;
@@ -575,9 +588,10 @@
   function kuyrukCiz() {
     if (durum !== 'katilim') { kuyrukEl.classList.add('gizli'); return; }
     kuyrukEl.classList.remove('gizli');
-    const g = [...katilanlar.values()].slice(-24);
-    kuyrukEl.innerHTML = g.map((ad, i) =>
-      `<div class="fis" style="background:${RENKLER[i % RENKLER.length]}">${ad}</div>`).join('');
+    // Fis rengi = izleyicinin kalici kimlik rengi (bilyesiyle ayni)
+    const g = [...katilanlar.entries()].slice(-24);
+    kuyrukEl.innerHTML = g.map(([kid, ad]) =>
+      `<div class="fis" style="background:${Kimlik.al(kid).renk}">${ad}</div>`).join('');
   }
 
   function sayacCiz() {
@@ -591,17 +605,19 @@
     kazananAdi = b.ad;
     durum = 'bitti';
     sayacSn = KUTLAMA_SN;
-    document.getElementById('kazananAd').textContent = b.ad;
-    document.getElementById('kazananAlt').textContent = 'kazandı · yeni yarış birazdan';
-    kazananEl.classList.add('acik');
+    Finis.kart(kazananEl, {
+      url: Kimlik.al(b.kid).url,
+      isim: b.ad,
+      alt: `${bilyeler.length} bilye arasından birinci`,
+    });
     document.getElementById('cagri').textContent = b.ad + ' kazandı';
-    akis(`🏆 <span class="kim">${b.ad}</span> <span class="ok">▸</span> BİRİNCİ`);
+    akis(`🏆 <span class="kim">${b.ad}</span> BİRİNCİ`, { oncelik: 3, sure: 4500 });
   }
 
   function katilimaDon() {
     durum = 'katilim';
     sayacSn = KATILIM_SN;
-    kazananEl.classList.remove('acik');
+    Finis.kapat(kazananEl);
     document.getElementById('cagri').textContent = 'sohbete yaz · yarışa katıl';
     katilanlar = new Map();
     // Bekleyenleri yeni yarisa al

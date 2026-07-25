@@ -6,51 +6,118 @@
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
-  #alan { overflow: hidden; flex: 1; display: flex; flex-direction: column; }
-  #ust { padding: 9px 14px; }
-  #baslik { font-size: 28px; }
-  #rozet { font-size: 27px; }
+  /* Battle royale'in dramasi SIRALAMA degil AZALMA: buyuk sayi kucule
+     kucule 1'e iner. Kurgu buna gore: solda daralan bolge (arena), sagda
+     dev "N KALDI" sayaci + elenenlerin akisi. Izleyici iki sey izler:
+     sayinin dususu ve kendi adinin listede OLMAMASI. */
+  #orta { flex: 1; min-height: 0; display: flex; gap: 14px; }
 
-  /* Oyuncu izgarasi — herkes kendi adini ARIYOR, oyunun butun cazibesi bu.
-     Ad okunmuyorsa oyun calismiyor demektir, o yuzden fis kucuk ama net. */
-  #izgara {
-    flex: 1; min-height: 0; overflow: hidden;
-    display: flex; flex-wrap: wrap;
-    /* Ortala: az oyuncuyla ustte tek sira kalip altta kocaman bosluk
-       birakmasin. Kalabalikta zaten alani dolduruyor. */
-    align-content: center; justify-content: center;
-    gap: 7px; padding: 10px;
-  }
-  .oyuncu {
-    font-size: 17px; font-weight: 800; padding: 6px 13px; border-radius: 999px;
-    border: 3px solid var(--cizgi); color: #17123a;
-    max-width: 31%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    transition: opacity .4s ease, transform .4s ease;
-  }
-  .oyuncu.elendi {
-    opacity: 0; transform: scale(.55) rotate(-8deg);
-    pointer-events: none;
-  }
-  html.tt-lite .oyuncu { transition: none; }
-  html.tt-lite .oyuncu.elendi { display: none; }
+  /* ---- arena ---- */
+  #arenaKutu { flex: 1; position: relative; overflow: hidden; }
 
-  /* Eleme duyurusu — turun ortasinda buyuk yazi */
-  /* display:grid + place-items:center burada YANLIS calisiyordu: metin ile
-     <b> etiketleri ayri ayri izgara ogesi olup ALT ALTA diziliyordu
-     ("ahmet / ile / ayse / carpisti"). Flex + tek sarmalayici span ile
-     tek satirda akiyor. */
-  #duyuru {
-    flex: none; min-height: 48px;
-    display: flex; align-items: center; justify-content: center;
-    padding: 4px 12px; text-align: center;
-    font-size: 19px; font-weight: 900; color: #ffb4d4;
-    text-shadow: 0 2px 0 var(--cizgi);
+  /* Daralan bolge — battle royale'lerdeki cember. Her turda kuculuyor,
+     jetonlar iceri surukleniyor. transform: scale = bedava animasyon. */
+  #halka {
+    position: absolute; left: 50%; top: 50%;
+    width: 660px; height: 660px;
+    margin: -330px 0 0 -330px;
+    border: 5px solid rgba(255, 210, 63, .55);
+    border-radius: 50%;
+    background: rgba(255, 210, 63, .05);
+    transform: scale(1);
+    transition: transform .9s cubic-bezier(.3, .7, .3, 1);
   }
-  #duyuru b { color: var(--altin); }
+  html.tt-lite #halka { transition: none; }
 
-  #geriSayim {
-    position: absolute; top: 10px; right: 12px; z-index: 3;
+  #jetonlar { position: absolute; inset: 0; }
+
+  /* Oyuncu jetonu: kimlik kuresi. Isim SADECE finalde gorunur — 60 isim
+     ayni anda okunmaz, kalabalik anonim bir kitle olarak dogru his. */
+  .jeton {
+    position: absolute; left: 0; top: 0;
+    width: 48px; height: 48px; margin: -24px 0 0 -24px;
+    background-size: contain; background-repeat: no-repeat;
+    transform: translate(0, 0) scale(0);
+    transition: transform .7s cubic-bezier(.3, .7, .3, 1), opacity .35s ease;
+    will-change: transform;
   }
+  .jeton.geldi { }
+  .jeton .jetonAd {
+    display: none;
+    position: absolute; left: 50%; top: 100%;
+    transform: translateX(-50%);
+    margin-top: 6px;
+    font-size: var(--tip-kucuk); font-weight: 900; color: #fff;
+    text-shadow: 0 3px 0 var(--cizgi);
+    white-space: nowrap; max-width: 220px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .jeton.kalkan { box-shadow: 0 0 0 5px var(--altin); border-radius: 50%; }
+  .jeton.elendi { transition: transform .42s ease-in, opacity .42s ease-in; opacity: 0; }
+  html.tt-lite .jeton { transition: opacity .2s ease; }
+
+  /* Final: 6 kisi kalinca isimler acilir, jetonlar buyur — anonim kitle
+     adim adim taninan finalistlere donusur. */
+  #arenaKutu.final .jeton { width: 72px; height: 72px; margin: -36px 0 0 -36px; }
+  #arenaKutu.final .jeton .jetonAd { display: block; }
+  #arenaKutu.duello .jeton { width: 108px; height: 108px; margin: -54px 0 0 -54px; }
+  #arenaKutu.duello .jeton .jetonAd { font-size: 40px; }
+
+  #vs {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 120px; font-weight: 900; color: var(--altin);
+    text-shadow: 0 6px 0 var(--cizgi);
+    display: none; pointer-events: none;
+  }
+  #arenaKutu.duello #vs { display: block; }
+
+  #geriSayim { position: absolute; top: 14px; right: 14px; z-index: 4; }
+  #turRozet { position: absolute; top: 14px; left: 14px; z-index: 4; }
+
+  /* ---- sag ray ---- */
+  #ray { flex: none; width: 470px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+
+  #kaldiKutu { flex: none; text-align: center; padding: 18px 12px 14px; }
+  #kaldiSayi {
+    font-size: var(--tip-dev); font-weight: 900; line-height: .9;
+    color: #fff; text-shadow: 0 6px 0 var(--cizgi);
+    font-variant-numeric: tabular-nums;
+  }
+  #kaldiSayi.pat { animation: pat .45s ease; }
+  @keyframes pat {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.18); color: var(--pembe); }
+    100% { transform: scale(1); }
+  }
+  html.tt-lite #kaldiSayi.pat { animation: none; }
+  #kaldiEtiket {
+    font-size: var(--tip-kucuk); font-weight: 900; letter-spacing: 5px;
+    color: #a89ce0; margin-top: 2px;
+  }
+
+  #feedKutu { flex: 1; min-height: 0; padding: 12px; display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
+  #feedKutu::before {
+    content: 'SON ELENENLER';
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    color: #a89ce0; padding: 0 4px 4px;
+  }
+  .dusen {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0, 0, 0, .32); border-radius: 12px; padding: 7px 11px;
+    animation: gel .35s ease;
+  }
+  @keyframes gel { from { transform: translateX(60px); opacity: 0; } }
+  html.tt-lite .dusen { animation: none; }
+  .dusen .kuru { font-size: 22px; flex: none; }
+  .dusen .ad {
+    flex: 1; min-width: 0; font-size: var(--tip-kucuk); font-weight: 900;
+    text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: #d9d2ff;
+  }
+  .dusen .sira { flex: none; font-size: 20px; font-weight: 900; color: #8a7fc4;
+                 background: none; padding: 0; font-variant-numeric: tabular-nums; }
+  .dusen.bos { justify-content: center; color: #8a7fc4; font-size: var(--tip-kucuk); font-weight: 800; }
 </style>
 </head>
 <body>
@@ -66,19 +133,27 @@
     </div>
     <div id="sayac">
       <div id="sayacBuyuk">0</div>
-      <div id="sayacKucuk">hayatta</div>
+      <div id="sayacKucuk">katıldı</div>
     </div>
   </div>
 
-  <div id="alan" class="kutu">
-    <div class="rozetBuyuk" id="geriSayim">⏳ <span id="geriSn">0</span></div>
-    <div id="izgara"></div>
-    <div id="duyuru">oyuncular bekleniyor…</div>
-    <div id="kazanan">
-      <div>
-        <div class="kupa">👑</div>
-        <div class="kimAd" id="kazananAd">—</div>
-        <div class="altYazi" id="kazananAlt">son ayakta kalan</div>
+  <div id="orta">
+    <div id="arenaKutu" class="kutu">
+      <div id="halka"></div>
+      <div id="jetonlar"></div>
+      <div id="vs">VS</div>
+      <div class="rozetBuyuk" id="turRozet">TUR <span id="turNo">—</span></div>
+      <div class="rozetBuyuk" id="geriSayim">⏳ <span id="geriSn">0</span></div>
+      <div id="kazanan"></div>
+    </div>
+
+    <div id="ray">
+      <div id="kaldiKutu" class="kutu">
+        <div id="kaldiSayi">0</div>
+        <div id="kaldiEtiket">KALDI</div>
+      </div>
+      <div id="feedKutu" class="kutu">
+        <div class="dusen bos">henüz kimse elenmedi</div>
       </div>
     </div>
   </div>
@@ -88,6 +163,9 @@
 </div>
 
 <script src="_shared/tt.js"></script>
+<script src="_shared/kimlik.js"></script>
+<script src="_shared/spiker.js"></script>
+<script src="_shared/finis.js"></script>
 <script>
 (function () {
   'use strict';
@@ -95,111 +173,162 @@
   const q = new URLSearchParams(location.search);
   const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
 
-  const KATILIM_SN = num('katilim', 30);   // katilim penceresi
-  const TUR_SN     = num('tur', 4);        // kac saniyede bir eleme turu
-  const KUTLAMA_SN = num('kutlama', 8);
-  const MIN_OYUNCU = num('min', 3);        // bu sayinin altinda oyun baslamaz
+  const KATILIM_SN = num('katilim', 30);
+  const TUR_SN     = num('tur', 4);
+  const KUTLAMA_SN = num('kutlama', 9);
+  const MIN_OYUNCU = num('min', 3);
   const ANAHTAR    = (q.get('kelime') || '').toLowerCase();
 
-  // Eleme metinleri — oyunun mizahi burada. "{a}" oyuncu adiyla degisiyor.
+  // Eleme cumleleri — mizah burada. Kisisel/asagilayici degil, sacma-komik:
+  // izleyici kendi adini boyle bir cumlede gormekten keyif almali.
   const OLUMLER = [
-    '{a} çayı döktü, diskalifiye',
-    '{a} şarjı bitti',
-    '{a} annesi çağırdı, gitti',
-    "{a}'yı ayı yedi",
-    '{a} yanlış tuşa bastı',
-    '{a} kahve almaya gitti, dönmedi',
-    '{a} bağlantısı koptu',
-    '{a} tökezledi ve düştü',
-    '{a} uyuyakaldı',
-    '{a} kapı zilini duydu, açmaya gitti',
-    '{a} kediye takıldı',
-    '{a} yanlış yola saptı',
-    '{a} pilini şarj etmeyi unuttu',
-    '{a} sandviçini düşürdü, moral bozuldu',
-    '{a} ayakkabısının bağı çözüldü',
-    '{a} rüzgâra kapıldı',
-    '{a} kuyuya düştü',
-    '{a} yanlışlıkla kendini eledi',
-    '{a} otobüsü kaçırdı',
-    '{a} dizisinin yeni bölümü çıktı, ayrıldı',
+    '%s çayı döktü, diskalifiye',
+    '%s şarj kablosunu evde unuttu',
+    'annesi yemeğe çağırdı, %s eve gitti',
+    'ayı çıktı, %s kaçamadı',
+    '%s yanlış otobüse bindi',
+    '%s kahve molasından dönmedi',
+    'internet koptu, %s düştü',
+    '%s ayakkabı bağcığına takıldı',
+    '%s kestirecekti, uyandırılamadı',
+    '%s zili duyup kapıya koştu',
+    '%s kediyi sevmeye gitti',
+    '%s haritayı ters tuttu',
+    '%s asansörde mahsur kaldı',
+    '%s son sandviçi düşürdü, moral çöktü',
+    '%s selfie çekerken düştü',
+    '%s rüzgâra karşı yürüyemedi',
+    '%s "bir dakika" dedi, dönmedi',
+    '%s kendi tuzağına bastı',
+    '%s dizinin yeni bölümüne gitti',
+    '%s ışıkları kapatmayı unuttu, geri döndü',
   ];
-  const CIFT_OLUM = [
-    '{a} ile {b} çarpıştı, ikisi de gitti',
-    '{a} ve {b} aynı sandalyeye oturdu',
-    '{a} ile {b} tartıştı, ikisi de elendi',
-  ];
-
-  const RENKLER = [
-    '#ff4d4d', '#3fb9ff', '#ffd23f', '#7ed957', '#ff5fc8', '#ffa62b',
-    '#a86bff', '#21d1a1', '#5b7fff', '#b6e02b', '#e05cff', '#00c2c7',
+  const CIFT = [
+    '%s ile %b kafa kafaya çarpıştı',
+    '%s ve %b aynı sandalyeye oturdu',
+    '%s ile %b tartışırken ikisi de düştü',
   ];
 
   // ---- durum ---------------------------------------------------------------
-  let oyuncular = new Map();     // kid -> {ad, renk, el (DOM), canli, kalkan}
+  let oyuncular = new Map();   // kid -> {ad, el, canli, kalkan, aci, uzak}
   let kuyruk = new Map();
-  let durum = 'katilim';         // katilim | oyun | bitti
+  let durum = 'katilim';
   let sayacSn = KATILIM_SN;
+  let baslangicSayisi = 0;
+  let elenmeSirasi = 0;
+  let turNo = 0;
 
-  const izgaraEl = document.getElementById('izgara');
-  const duyuruEl = document.getElementById('duyuru');
+  const arenaEl = document.getElementById('arenaKutu');
+  const halkaEl = document.getElementById('halka');
+  const jetonlarEl = document.getElementById('jetonlar');
+  const feedEl = document.getElementById('feedKutu');
   const kazananEl = document.getElementById('kazanan');
-  const akisEl = document.getElementById('akis');
+  const kaldiEl = document.getElementById('kaldiSayi');
 
-  function akis(html) {
-    const d = document.createElement('div');
-    d.className = 'satir'; d.innerHTML = html;
-    akisEl.innerHTML = ''; akisEl.appendChild(d);
-    setTimeout(() => d.remove(), 3600);
-  }
+  Spiker.kur(document.getElementById('akis'));
 
   const canlilar = () => [...oyuncular.values()].filter((o) => o.canli);
 
-  /** Duyuru yaz. Icerigi TEK bir <span>'a sariyoruz: cipe flex kutusunda
-   *  serbest metin + <b> ayri ayri oge sayilip alt alta diziliyordu. */
-  function duyur(html) { duyuruEl.innerHTML = '<span>' + html + '</span>'; }
+  // ---- arena yerlesimi -----------------------------------------------------
+  const HALKA_R = 330;   // halka temel yaricapi (css ile ayni)
+  let halkaOlcek = 1;
 
-  function sayacCiz() {
-    document.getElementById('sayacBuyuk').textContent =
-      durum === 'katilim' ? oyuncular.size : canlilar().length;
-    document.getElementById('sayacKucuk').textContent =
-      durum === 'katilim' ? 'katıldı' : 'hayatta';
-    document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
+  /** Jetonu acisina/uzakligina gore halkaya yerlestir. */
+  function konumla(o) {
+    const r = arenaEl.getBoundingClientRect();
+    const cx = r.width / 2, cy = r.height / 2;
+    const jetonPay = arenaEl.classList.contains('duello') ? 60 : 34;
+    const yaricap = Math.max(20, HALKA_R * halkaOlcek - jetonPay);
+    const x = cx + Math.cos(o.aci) * o.uzak * yaricap;
+    const y = cy + Math.sin(o.aci) * o.uzak * yaricap;
+    o.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(1)`;
   }
 
+  function hepsiniKonumla() {
+    for (const o of canlilar()) konumla(o);
+  }
+
+  /** Bolgeyi mevcut nufusa gore daralt; jetonlar iceri suruklenir. */
+  function bolgeDaralt() {
+    const canli = canlilar().length;
+    const oran = baslangicSayisi ? canli / baslangicSayisi : 1;
+    halkaOlcek = 0.34 + 0.66 * oran;
+    if (arenaEl.classList.contains('duello')) halkaOlcek = 0.5;
+    halkaEl.style.transform = `scale(${halkaOlcek.toFixed(3)})`;
+    hepsiniKonumla();
+  }
+
+  // ---- oyuncu --------------------------------------------------------------
   function oyuncuEkle(kid, ad) {
     if (oyuncular.has(kid)) return;
-    const renk = RENKLER[oyuncular.size % RENKLER.length];
+    const kim = Kimlik.al(kid);
     const el = document.createElement('div');
-    el.className = 'oyuncu';
-    el.style.background = renk;
-    el.textContent = ad;
-    izgaraEl.appendChild(el);
-    oyuncular.set(kid, { ad, renk, el, canli: true, kalkan: false });
+    el.className = 'jeton';
+    el.style.backgroundImage = `url(${kim.url})`;
+    el.innerHTML = `<span class="jetonAd">${ad}</span>`;
+    jetonlarEl.appendChild(el);
+
+    const o = {
+      ad, el, canli: true, kalkan: false,
+      aci: Math.random() * 6.2832,
+      uzak: 0.15 + Math.random() * 0.8,
+    };
+    oyuncular.set(kid, o);
+    // Bir kare sonra konumla ki scale(0) -> scale(1) gecisi oynasin
+    requestAnimationFrame(() => konumla(o));
+    sayacCiz();
   }
 
-  /** Bir oyuncuyu ele: once gorsel olarak sondur, sonra DOM'dan cikar. */
   function ele(o) {
     o.canli = false;
     o.el.classList.add('elendi');
-    setTimeout(() => { if (o.el.parentNode) o.el.remove(); }, 500);
+    o.el.style.transform += ' scale(0) rotate(-120deg)';
+    setTimeout(() => o.el.remove(), 450);
+
+    elenmeSirasi++;
+    const sira = baslangicSayisi - elenmeSirasi + 1;
+    const bos = feedEl.querySelector('.dusen.bos');
+    if (bos) bos.remove();
+    const satir = document.createElement('div');
+    satir.className = 'dusen';
+    satir.innerHTML = `<span class="kuru">💀</span><span class="ad">${o.ad}</span><span class="sira">#${sira}</span>`;
+    feedEl.insertBefore(satir, feedEl.children[0] || null);
+    while (feedEl.children.length > 9) feedEl.lastChild.remove();
+  }
+
+  // ---- goruntu -------------------------------------------------------------
+  function sayacCiz() {
+    const canli = canlilar().length;
+    document.getElementById('sayacBuyuk').textContent =
+      durum === 'katilim' ? oyuncular.size : canli;
+    document.getElementById('sayacKucuk').textContent =
+      durum === 'katilim' ? 'katıldı' : 'hayatta';
+    document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
+    document.getElementById('turNo').textContent = turNo || '—';
+
+    const yeni = String(durum === 'katilim' ? oyuncular.size : canli);
+    if (kaldiEl.textContent !== yeni) {
+      kaldiEl.textContent = yeni;
+      kaldiEl.classList.remove('pat');
+      void kaldiEl.offsetWidth;         // animasyonu yeniden tetikle
+      kaldiEl.classList.add('pat');
+    }
   }
 
   // ---- eleme turu ----------------------------------------------------------
   function tur() {
     const c = canlilar();
     if (c.length <= 1) { bitir(c[0]); return; }
+    turNo++;
 
-    // Kac kisi elenecek: kalabalikken cok, aza dusunce tek tek —
-    // final heyecani sonda olsun diye.
+    // Kalabalikta toplu, sona dogru tek tek — final gerilimi sonda.
     let elenecek;
     if (c.length > 40) elenecek = Math.ceil(c.length * 0.28);
     else if (c.length > 12) elenecek = Math.ceil(c.length * 0.22);
     else if (c.length > 4) elenecek = 2;
     else elenecek = 1;
-    elenecek = Math.min(elenecek, c.length - 1);   // en az 1 kisi kalsin
+    elenecek = Math.min(elenecek, c.length - 1);
 
-    // Karistir, bastan elenecek kadarini al
     const karisik = c.slice();
     for (let i = karisik.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -209,67 +338,87 @@
     const gidenler = [];
     for (const o of karisik) {
       if (gidenler.length >= elenecek) break;
-      if (o.kalkan) {                        // hediye kalkani bir turluk
+      if (o.kalkan) {
         o.kalkan = false;
-        o.el.style.boxShadow = '';
-        akis(`🛡️ <span class="kim">${o.ad}</span> <span class="ok">▸</span> kalkanla kurtuldu`);
+        o.el.classList.remove('kalkan');
+        Spiker.soyle(`🛡️ <span class="kim">${o.ad}</span> kalkanla kurtuldu`, { oncelik: 2 });
         continue;
       }
       gidenler.push(o);
       ele(o);
     }
 
-    // Duyuru metni
+    // Spiker: tur basina TEK cumle — one cikan kurban + varsa kalabalik notu.
+    // Her elenene ayri cumle kurmak spikeri bogar; tam kayit zaten feed'de.
     if (gidenler.length === 2 && Math.random() < 0.5) {
-      const s = CIFT_OLUM[Math.floor(Math.random() * CIFT_OLUM.length)];
-      duyur(s.replace('{a}', `<b>${gidenler[0].ad}</b>`)
-             .replace('{b}', `<b>${gidenler[1].ad}</b>`));
-    } else if (gidenler.length === 1) {
-      const s = OLUMLER[Math.floor(Math.random() * OLUMLER.length)];
-      duyur(s.replace('{a}', `<b>${gidenler[0].ad}</b>`));
+      const s = CIFT[Math.floor(Math.random() * CIFT.length)];
+      Spiker.soyle('💥 ' + s.replace('%s', `<b>${gidenler[0].ad}</b>`).replace('%b', `<b>${gidenler[1].ad}</b>`));
     } else if (gidenler.length) {
-      const s = OLUMLER[Math.floor(Math.random() * OLUMLER.length)];
-      duyur(s.replace('{a}', `<b>${gidenler[0].ad}</b>`) +
-            ` <span style="opacity:.75">ve ${gidenler.length - 1} kişi daha</span>`);
+      let cumle = '💀 ' + Spiker.sec(OLUMLER, `<b>${gidenler[0].ad}</b>`);
+      if (gidenler.length > 1) cumle += ` <span style="opacity:.7">+${gidenler.length - 1} kişi</span>`;
+      Spiker.soyle(cumle);
     }
 
     const kalan = canlilar();
-    if (kalan.length <= 1) bitir(kalan[0]);
-    else if (kalan.length <= 3) akis(`🔥 <b>FİNAL</b> — ${kalan.length} kişi kaldı`);
+    arenaEl.classList.toggle('final', kalan.length <= 6 && kalan.length > 2);
+    if (kalan.length === 2) {
+      arenaEl.classList.add('duello');
+      arenaEl.classList.remove('final');
+      // Iki finalist karsi karsiya: sol ve sag
+      const [a, b] = kalan;
+      a.aci = Math.PI; a.uzak = 0.55;
+      b.aci = 0;       b.uzak = 0.55;
+      Spiker.soyle(`⚔️ <b>SON DÜELLO</b> — ${a.ad} × ${b.ad}`, { oncelik: 3, sure: 4000 });
+      Finis.agirCekim(2.2, 0.4);
+    } else if (kalan.length <= 6 && kalan.length > 2) {
+      Spiker.soyle(`🔥 <b>FİNAL ${kalan.length}</b> — isimler açıldı`, { oncelik: 2, anahtar: 'final' });
+    }
+
+    bolgeDaralt();
     sayacCiz();
+    if (kalan.length <= 1) bitir(kalan[0]);
   }
 
   function bitir(o) {
     durum = 'bitti';
     sayacSn = KUTLAMA_SN;
+    arenaEl.classList.remove('final', 'duello');
     const ad = o ? o.ad : '—';
-    document.getElementById('kazananAd').textContent = ad;
-    kazananEl.classList.add('acik');
+    Finis.kart(kazananEl, {
+      url: o ? Kimlik.al([...oyuncular.entries()].find(([, v]) => v === o)[0]).url : null,
+      isim: ad,
+      alt: `${baslangicSayisi} kişi arasından son ayakta kalan`,
+    });
     document.getElementById('cagri').textContent = ad + ' kazandı';
-    duyur(`<b>${ad}</b> son ayakta kalan!`);
-    akis(`👑 <span class="kim">${ad}</span> <span class="ok">▸</span> KAZANDI`);
+    Spiker.soyle(`👑 <span class="kim">${ad}</span> SON AYAKTA KALAN`, { oncelik: 3, sure: 4500 });
   }
 
   function katilimaDon() {
     durum = 'katilim';
     sayacSn = KATILIM_SN;
-    kazananEl.classList.remove('acik');
+    turNo = 0; elenmeSirasi = 0;
+    Finis.kapat(kazananEl);
+    arenaEl.classList.remove('final', 'duello');
     document.getElementById('cagri').textContent = 'sohbete yaz · oyuna gir';
-    duyur('oyuncular bekleniyor…');
-    izgaraEl.innerHTML = '';
+    jetonlarEl.innerHTML = '';
+    feedEl.innerHTML = '<div class="dusen bos">henüz kimse elenmedi</div>';
     oyuncular = new Map();
+    halkaOlcek = 1;
+    halkaEl.style.transform = 'scale(1)';
     for (const [kid, ad] of kuyruk) oyuncuEkle(kid, ad);
     kuyruk = new Map();
     sayacCiz();
-    akis('💀 <b>YENİ OYUN</b> — sohbete yaz, katıl');
+    Spiker.soyle('💀 <b>YENİ OYUN</b> — sohbete yaz, katıl', { oncelik: 2 });
   }
 
   function oyunBasla() {
     if (oyuncular.size < MIN_OYUNCU) { sayacSn = KATILIM_SN; return; }
     durum = 'oyun';
     sayacSn = TUR_SN;
-    duyur('oyun başladı!');
-    akis(`🚦 <b>BAŞLADI</b> — ${oyuncular.size} kişi`);
+    baslangicSayisi = oyuncular.size;
+    elenmeSirasi = 0;
+    Spiker.soyle(`🚦 <b>BAŞLADI</b> — ${oyuncular.size} kişi, tek kişi kalana kadar`, { oncelik: 2 });
+    bolgeDaralt();
     sayacCiz();
   }
 
@@ -280,7 +429,7 @@
       else if (durum === 'oyun') { tur(); sayacSn = TUR_SN; }
       else katilimaDon();
     }
-    sayacCiz();
+    document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
   }, 250);
 
   // ---- olaylar -------------------------------------------------------------
@@ -291,27 +440,28 @@
     const kid = kimlik(ev.user);
     if (!kid) return;
     if (ANAHTAR && !String(ev.comment || '').toLowerCase().includes(ANAHTAR)) return;
-    if (durum === 'katilim') { oyuncuEkle(kid, isim(ev.user)); sayacCiz(); }
+    if (durum === 'katilim') oyuncuEkle(kid, isim(ev.user));
     else if (!oyuncular.has(kid)) kuyruk.set(kid, isim(ev.user));
   });
 
-  // Hediye: bir turluk kalkan. Elenmis oyuncuyu geri getirmiyoruz —
-  // "para verince olmez" hissi oyunu bozar; sadece bir tur dayanikliligi.
+  // Hediye: BIR turluk kalkan. Eleneni geri getirmiyoruz — "para verince
+  // olmezlik" oyunu sahtelestirir; kalkan sadece bir tur dayaniklilik.
   TT.on('gift', (ev) => {
     const o = oyuncular.get(kimlik(ev.user));
     if (!o || !o.canli || o.kalkan) return;
     o.kalkan = true;
-    o.el.style.boxShadow = '0 0 0 4px #ffd23f';
-    akis(`🎁 <span class="kim">${o.ad}</span> <span class="ok">▸</span> kalkan aldı`);
+    o.el.classList.add('kalkan');
+    Spiker.soyle(`🎁 <span class="kim">${o.ad}</span> kalkan kuşandı`, { oncelik: 1 });
   });
 
+  addEventListener('resize', hepsiniKonumla);
   sayacCiz();
 
   TT.uyanis({
     baslik: 'SON AYAKTA KALAN',
     komutlar: ['bir şey yaz'],
-    aciklama: 'Sohbete yazan oyuna girer · her turda birileri elenir · 🎁 hediye kalkan verir',
-    cagri: 'yaz ve adını listede gör',
+    aciklama: 'Yazan oyuna girer · her turda birileri elenir · 🎁 hediye bir turluk kalkan',
+    cagri: 'yaz, jetonunu arenada gör',
   });
 })();
 </script>

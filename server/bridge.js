@@ -754,9 +754,9 @@ server.listen(args.port, '0.0.0.0', async () => {
       iki sahne icin iki ayri adrese ihtiyacin yok.
 
    >> Oyunlar — sohbet oynuyor, sen hicbir sey yapmiyorsun <<
-     bilye.html   yazan herkes bir bilye alir, pistten asagi yarisir
-     kalan.html   battle royale, her turda birileri elenir, son kalan kazanir
-     at.html      1-6 yaz, atina bahis oyna, dogru bilen puan alir
+     bilye.html   yazana OZEL bilye (kalici renk+desen), pist asagi yaris
+     kalan.html   battle royale: bolge daralir, "N KALDI" geriye sayar
+     at.html      8 sabit at, 1-8 yaz bahis oyna, oranlar havuzdan
 
       Ucu de kendi kendine donuyor: katilim penceresi acilir, oyun
       oynanir, kazanan cikar, yeni tur baslar. Mudahale gerekmiyor.
