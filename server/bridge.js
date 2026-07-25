@@ -832,11 +832,15 @@ server.listen(args.port, '0.0.0.0', async () => {
    >> LIVE Studio'ya nasil eklenir (Kaynak ekle > Link) <<
       "localhost" YAZMA, LIVE Studio kabul etmiyor. Bunu kullan:
 
-     ${tls}/overlays/bilye.html?lite=1
+     ${tls}/overlays/oyun.html?lite=1
 
       AYNI adresi HEM "Portrait" HEM "Landscape" bolumune ekle.
       Sayfa kendi en-boy oranini olcup yerlesimini kendi degistiriyor;
       iki sahne icin iki ayri adrese ihtiyacin yok.
+
+      TEK LINK YETER: oyun.html uc oyunu sirayla dondurur, gecisleri
+      tur arasinda yapar, bos odada demo calistirir. Istersen oyunlari
+      tek tek de ekleyebilirsin:
 
    >> Oyunlar — sohbet oynuyor, sen hicbir sey yapmiyorsun <<
      bilye.html   yazana OZEL bilye (kalici renk+desen), pist asagi yaris

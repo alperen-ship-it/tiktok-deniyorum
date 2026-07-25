@@ -63,6 +63,25 @@
   #arenaKutu.duello .jeton { width: 108px; height: 108px; margin: -54px 0 0 -54px; }
   #arenaKutu.duello .jeton .jetonAd { font-size: 40px; }
 
+  /* Felaket uyarisi: vurmadan once NEREYE vuracagi gorunur — izleyici
+     kacabilsin diye. Arka plan gradyanlari JS'te piksel cinsinden kurulur. */
+  #tehlike {
+    position: absolute; left: 50%; top: 50%;
+    border-radius: 50%;
+    pointer-events: none; display: none; z-index: 2;
+    animation: tehlikeNabiz 0.7s ease-in-out infinite alternate;
+  }
+  #tehlike.acik { display: block; }
+  @keyframes tehlikeNabiz { from { opacity: .55; } to { opacity: .95; } }
+  html.tt-lite #tehlike { animation: none; opacity: .8; }
+  #tehlikeIkon {
+    position: absolute; z-index: 3; font-size: 58px; line-height: 1;
+    transform: translate(-50%, -50%);
+    pointer-events: none; display: none;
+    text-shadow: 0 4px 0 var(--cizgi);
+  }
+  #tehlikeIkon.acik { display: block; }
+
   #vs {
     position: absolute; left: 50%; top: 50%;
     transform: translate(-50%, -50%);
@@ -140,6 +159,8 @@
   <div id="orta">
     <div id="arenaKutu" class="kutu">
       <div id="halka"></div>
+      <div id="tehlike"></div>
+      <div id="tehlikeIkon">☄️</div>
       <div id="jetonlar"></div>
       <div id="vs">VS</div>
       <div class="rozetBuyuk" id="turRozet">TUR <span id="turNo">—</span></div>
@@ -318,18 +339,171 @@
     }
   }
 
+  // ---- FELAKETLER ----------------------------------------------------------
+  // "Cok bos" elestirisinin cevabi: elemeler artik gorunmez zar degil,
+  // IZLENEBILIR OLAYLAR. Her tur bir felaket geliyor, vurmadan once nereye
+  // vuracagi gosteriliyor ve o esnada sohbete yazan oyuncunun jetonu
+  // guvenli bolgeye KACIYOR. Izleyiciye oyun ortasinda da is cikiyor.
+  const tehlikeEl = document.getElementById('tehlike');
+  const tehlikeIkonEl = document.getElementById('tehlikeIkon');
+  const FELAKETLER = [
+    { tip: 'meteor',   ikon: '☄️', uyari: '☄️ METEOR geliyor — işaretli alandan KAÇ! (yaz = kaç)',
+      cumle: '☄️ meteor düştü — %s altında kaldı' },
+    { tip: 'dalga',    ikon: '🌊', uyari: '🌊 DALGA geliyor — kenardakiler İÇERİ! (yaz = kaç)',
+      cumle: '🌊 dalga vurdu — %s sürüklendi' },
+    { tip: 'cukur',    ikon: '🕳️', uyari: '🕳️ ORTA ÇÖKÜYOR — merkezdekiler KENARA! (yaz = kaç)',
+      cumle: '🕳️ zemin çöktü — %s düştü' },
+    { tip: 'yildirim', ikon: '⚡', uyari: '⚡ YILDIRIM geliyor — işaretli dilimden KAÇ! (yaz = kaç)',
+      cumle: '⚡ yıldırım çarptı — %s kömür oldu' },
+  ];
+  let felaket = null;      // {f, macı, muzak, sekAci, uyariBitis, kacanlar:Set}
+  let bosVurus = 0;
+
+  function bolgede(o) {
+    if (!felaket) return false;
+    const f = felaket.f;
+    if (f.tip === 'dalga') return o.uzak > 0.6;
+    if (f.tip === 'cukur') return o.uzak < 0.45;
+    if (f.tip === 'yildirim') {
+      let fark = ((o.aci - felaket.sekAci) % 6.2832 + 6.2832) % 6.2832;
+      return fark < 1.75;   // ~100 derecelik dilim
+    }
+    // meteor: normalize kutupsal -> kartezyen mesafe
+    const dx = o.uzak * Math.cos(o.aci) - felaket.muzak * Math.cos(felaket.macı);
+    const dy = o.uzak * Math.sin(o.aci) - felaket.muzak * Math.sin(felaket.macı);
+    return Math.hypot(dx, dy) < 0.46;
+  }
+
+  /** Guvenli bolgeye tasi (kacis). */
+  function kac(o) {
+    for (let i = 0; i < 14; i++) {
+      const aday = { aci: Math.random() * 6.2832, uzak: 0.12 + Math.random() * 0.78 };
+      if (!bolgede(aday)) { o.aci = aday.aci; o.uzak = aday.uzak; konumla(o); return true; }
+    }
+    return false;
+  }
+
+  function felaketBaslat() {
+    const f = FELAKETLER[Math.floor(Math.random() * FELAKETLER.length)];
+    felaket = {
+      f,
+      macı: Math.random() * 6.2832,
+      muzak: 0.15 + Math.random() * 0.55,
+      sekAci: Math.random() * 6.2832,
+      uyariBitis: Date.now() + 3200,
+      kacanlar: new Set(),
+    };
+
+    // Uyari katmanini halkanin GUNCEL boyutuna gore piksel piksel kur
+    const cap = 660 * halkaOlcek;
+    tehlikeEl.style.width = tehlikeEl.style.height = cap + 'px';
+    tehlikeEl.style.margin = `${-cap / 2}px 0 0 ${-cap / 2}px`;
+    const R = 'rgba(255,77,77,.32)';
+    let arka = '', ikonX = 50, ikonY = 50;
+    if (f.tip === 'dalga') {
+      arka = `radial-gradient(circle, transparent 0 ${cap * 0.29}px, ${R} ${cap * 0.3}px)`;
+      ikonY = 8;
+    } else if (f.tip === 'cukur') {
+      arka = `radial-gradient(circle, ${R} 0 ${cap * 0.22}px, transparent ${cap * 0.23}px)`;
+    } else if (f.tip === 'yildirim') {
+      const derece = felaket.sekAci * 180 / Math.PI + 90;   // conic 12 yonunden baslar
+      arka = `conic-gradient(from ${derece.toFixed(0)}deg, ${R} 0deg 100deg, transparent 100deg)`;
+      const orta = felaket.sekAci + 0.87;
+      ikonX = 50 + Math.cos(orta) * 32; ikonY = 50 + Math.sin(orta) * 32;
+    } else {
+      const mx = 50 + felaket.muzak * 50 * Math.cos(felaket.macı);
+      const my = 50 + felaket.muzak * 50 * Math.sin(felaket.macı);
+      arka = `radial-gradient(circle at ${mx.toFixed(1)}% ${my.toFixed(1)}%, ${R} 0 ${cap * 0.22}px, transparent ${cap * 0.23}px)`;
+      ikonX = mx; ikonY = my;
+    }
+    tehlikeEl.style.background = arka;
+    tehlikeEl.classList.add('acik');
+
+    const ar = arenaEl.clientWidth, ab = arenaEl.clientHeight;
+    tehlikeIkonEl.textContent = f.ikon;
+    tehlikeIkonEl.style.left = (ar / 2 - cap / 2 + cap * ikonX / 100) + 'px';
+    tehlikeIkonEl.style.top = (ab / 2 - cap / 2 + cap * ikonY / 100) + 'px';
+    tehlikeIkonEl.classList.add('acik');
+
+    Spiker.soyle(f.uyari, { oncelik: 2, sure: 3000 });
+
+    // Botlar da kacsin (kusurlu: %55 sans, rastgele gecikme) — demo turlari
+    // olu durmasin, gercek oyunculara da ornek olsun
+    for (const [kid, o] of oyuncular) {
+      if (!o.canli || !Kimlik.botMu(kid) || !bolgede(o)) continue;
+      if (Math.random() < 0.55) {
+        setTimeout(() => { if (felaket && o.canli) kac(o); }, 400 + Math.random() * 2200);
+      }
+    }
+  }
+
+  function felaketVur() {
+    const f = felaket.f;
+    tehlikeEl.classList.remove('acik');
+    tehlikeIkonEl.classList.remove('acik');
+
+    const c = canlilar();
+    // Eski tempo formulu artik TAVAN: felaket dogal olarak kac kisiyi
+    // yakalarsa o kadar, ama tempoyu bozacak kadar cok olmasin.
+    let tavan;
+    if (c.length > 40) tavan = Math.ceil(c.length * 0.3);
+    else if (c.length > 12) tavan = Math.ceil(c.length * 0.24);
+    else tavan = 2;
+    tavan = Math.min(tavan, c.length - 1);
+
+    let kurbanlar = c.filter((o) => bolgede(o));
+    // sansli kurtulanlar: tavani asani rastgele affet
+    while (kurbanlar.length > tavan) kurbanlar.splice(Math.floor(Math.random() * kurbanlar.length), 1);
+
+    const gidenler = [];
+    for (const o of kurbanlar) {
+      if (o.kalkan) {
+        o.kalkan = false;
+        o.el.classList.remove('kalkan');
+        Spiker.soyle(`🛡️ <span class="kim">${o.ad}</span> kalkanla kurtuldu`, { oncelik: 2 });
+        continue;
+      }
+      gidenler.push(o);
+      ele(o);
+    }
+
+    if (!gidenler.length) {
+      bosVurus++;
+      Spiker.soyle('😮 herkes kaçtı — kimse elenmedi!', { oncelik: 1 });
+      // iki bos vurus ust uste: oyun surunmesin, klasik eleme devreye girer
+      if (bosVurus >= 2) {
+        bosVurus = 0;
+        const kalanlar = canlilar();
+        if (kalanlar.length > 1) {
+          const kurban = kalanlar[Math.floor(Math.random() * kalanlar.length)];
+          ele(kurban);
+          Spiker.soyle('💀 ' + Spiker.sec(OLUMLER, `<b>${kurban.ad}</b>`));
+        }
+      }
+    } else {
+      bosVurus = 0;
+      let cumle = f.cumle.replace('%s', `<b>${gidenler[0].ad}</b>`);
+      if (gidenler.length > 1) cumle += ` <span style="opacity:.7">+${gidenler.length - 1} kişi</span>`;
+      Spiker.soyle(cumle);
+    }
+
+    felaket = null;
+    sayacSn = TUR_SN;   // vurusdan sonra sayac tazelenmezse turlar ust uste biner
+    turSonu();
+  }
+
   // ---- eleme turu ----------------------------------------------------------
   function tur() {
     const c = canlilar();
     if (c.length <= 1) { bitir(c[0]); return; }
     turNo++;
 
-    // Kalabalikta toplu, sona dogru tek tek — final gerilimi sonda.
-    let elenecek;
-    if (c.length > 40) elenecek = Math.ceil(c.length * 0.28);
-    else if (c.length > 12) elenecek = Math.ceil(c.length * 0.22);
-    else if (c.length > 4) elenecek = 2;
-    else elenecek = 1;
+    // Kalabalik: felaket sistemi (izlenebilir olay + kacis penceresi).
+    // Final (<=4 kisi): klasik hizli eleme — kucuk grupta bolge oyunu
+    // anlamini yitiriyor, gerilim tek tek dususte.
+    if (c.length > 4) { felaketBaslat(); sayacCiz(); return; }
+
+    let elenecek = 1;
     elenecek = Math.min(elenecek, c.length - 1);
 
     const karisik = c.slice();
@@ -362,6 +536,11 @@
       Spiker.soyle(cumle);
     }
 
+    turSonu();
+  }
+
+  /** Tur kapanisi: final/duello gecisleri + bolge daralmasi (ortak yol). */
+  function turSonu() {
     const kalan = canlilar();
     arenaEl.classList.toggle('final', kalan.length <= 6 && kalan.length > 2);
     if (kalan.length === 2) {
@@ -399,18 +578,37 @@
     Spiker.soyle(`👑 <span class="kim">${ad}</span> SON AYAKTA KALAN`, { oncelik: 3, sure: 4500 });
     if (o && kazananKid && !Kimlik.botMu(kazananKid)) {
       TT.soyle(`💀 @${uidler.get(kazananKid) || ad} son ayakta kalan! ${baslangicSayisi} kişiyi devirdi 👑`);
+      try {
+        const ss = JSON.parse(localStorage.getItem('tt-kalan-sampiyonlar') || '[]');
+        ss.unshift(ad);
+        localStorage.setItem('tt-kalan-sampiyonlar', JSON.stringify(ss.slice(0, 5)));
+      } catch { /* olsun */ }
     }
   }
 
   function katilimaDon() {
     durum = 'katilim';
+    // Oyun merkezi (oyun.html) icinde calisiyorsak tur bitisini haber ver —
+    // merkez oyun gecisini TUR ARASINDA yapar, yaris ortasinda degil.
+    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
     sayacSn = KATILIM_SN;
     turNo = 0; elenmeSirasi = 0;
     Finis.kapat(kazananEl);
     arenaEl.classList.remove('final', 'duello');
     document.getElementById('cagri').textContent = 'sohbete yaz · oyuna gir';
     jetonlarEl.innerHTML = '';
-    feedEl.innerHTML = '<div class="dusen bos">henüz kimse elenmedi</div>';
+    felaket = null; bosVurus = 0;
+    tehlikeEl.classList.remove('acik');
+    tehlikeIkonEl.classList.remove('acik');
+    // Sampiyonlar duvari: onceki kazananlar katilim ekraninda gorunur —
+    // "gecen sefer ben kazandim" geri getirme kancasi.
+    let duvar = '';
+    try {
+      const ss = JSON.parse(localStorage.getItem('tt-kalan-sampiyonlar') || '[]');
+      if (ss.length) duvar = ss.map((ad) =>
+        `<div class="dusen"><span class="kuru">👑</span><span class="ad">${ad}</span></div>`).join('');
+    } catch { /* olsun */ }
+    feedEl.innerHTML = duvar || '<div class="dusen bos">henüz kimse elenmedi</div>';
     oyuncular = new Map();
     halkaOlcek = 1;
     halkaEl.style.transform = 'scale(1)';
@@ -451,11 +649,28 @@
     sayacSn -= 0.25;
     if (sayacSn <= 0) {
       if (durum === 'katilim') oyunBasla();
-      else if (durum === 'oyun') { tur(); sayacSn = TUR_SN; }
-      else katilimaDon();
+      else if (durum === 'oyun') {
+        // Felaket uyarisi surerken TUR ACMA ve (kritik) asagidaki 'bitti'
+        // dalina da DUSME — onceki hali "oyun+felaket" durumunu else'e
+        // dusurup oyunu uyarinin ortasinda bastan baslatiyordu.
+        if (!felaket) { tur(); sayacSn = TUR_SN; }
+      }
+      else if (durum === 'bitti') katilimaDon();
     }
     document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
+    if (felaket && Date.now() > felaket.uyariBitis) felaketVur();
   }, 250);
+
+  // Gezinme: jetonlar arada kipirdasinca ekran olu durmuyor. Uyari
+  // sirasinda durur — kacis hareketi net gorunsun.
+  setInterval(() => {
+    if (durum !== 'oyun' || felaket) return;
+    for (const o of canlilar()) {
+      o.aci += (Math.random() - 0.5) * 0.5;
+      o.uzak = Math.max(0.1, Math.min(0.9, o.uzak + (Math.random() - 0.5) * 0.12));
+      konumla(o);
+    }
+  }, 2600);
 
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
@@ -468,8 +683,18 @@
     if (!kid) return;
     if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
     if (ANAHTAR && !String(ev.comment || '').toLowerCase().includes(ANAHTAR)) return;
-    if (durum === 'katilim') oyuncuEkle(kid, isim(ev.user));
-    else if (!oyuncular.has(kid)) kuyruk.set(kid, isim(ev.user));
+    if (durum === 'katilim') { oyuncuEkle(kid, isim(ev.user)); return; }
+    // OYUN ICI ETKI: felaket uyarisi sirasinda yazan oyuncu kacar (tur
+    // basina bir kez). Izleyicinin oyun ortasinda da yapacak isi var.
+    const o = oyuncular.get(kid);
+    if (felaket && o && o.canli && !felaket.kacanlar.has(kid)) {
+      felaket.kacanlar.add(kid);
+      // Her yazan GORUNUR sekilde kacar — tehlikede degilse bile kipirdar.
+      // "Yazdim, bir sey oldu" geri bildirimi mekanikten onemli.
+      kac(o);
+      return;
+    }
+    if (!oyuncular.has(kid)) kuyruk.set(kid, isim(ev.user));
   });
 
   // Hediye: BIR turluk kalkan. Eleneni geri getirmiyoruz — "para verince
@@ -485,10 +710,20 @@
   addEventListener('resize', hepsiniKonumla);
   sayacCiz();
 
+  // ?debug=1: dis testlerin ic durumu okuyabilmesi icin
+  if (q.get('debug') === '1') {
+    window.KALAN_DBG = () => ({
+      durum, n: oyuncular.size, canli: canlilar().length,
+      tur: turNo, sayacSn: +sayacSn.toFixed(1),
+      felaket: felaket ? felaket.f.tip : null, bosVurus,
+      kacan: felaket ? felaket.kacanlar.size : -1,
+    });
+  }
+
   TT.uyanis({
     baslik: 'SON AYAKTA KALAN',
     komutlar: ['bir şey yaz'],
-    aciklama: 'Yazan oyuna girer · her turda birileri elenir · 🎁 hediye bir turluk kalkan',
+    aciklama: 'Yazan oyuna girer · felaket uyarısında YAZ = kaç · 🎁 hediye bir turluk kalkan',
     cagri: 'yaz, jetonunu arenada gör',
   });
 })();

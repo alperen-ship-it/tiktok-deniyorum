@@ -674,6 +674,9 @@
 
   function katilimaDon() {
     durum = 'katilim';
+    // Oyun merkezi (oyun.html) icinde calisiyorsak tur bitisini haber ver —
+    // merkez oyun gecisini TUR ARASINDA yapar, yaris ortasinda degil.
+    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
     sayacSn = KATILIM_SN;
     Finis.kapat(kazananEl);
     document.getElementById('cagri').textContent = 'sohbete yaz · yarışa katıl';

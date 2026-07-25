@@ -534,6 +534,9 @@
 
   function bahseDon() {
     durum = 'bahis';
+    // Oyun merkezi (oyun.html) icinde calisiyorsak tur bitisini haber ver —
+    // merkez oyun gecisini TUR ARASINDA yapar, yaris ortasinda degil.
+    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
     sayacSn = BAHIS_SN;
     turNo++;
     localStorage.setItem('tt-at-kosu', String(turNo));

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Oyun Merkezi — tek link, tam otomasyon</title>
+<style>
+  /* TEK LINK MODU.
+     Yayinci LIVE Studio'ya SADECE bu sayfayi ekler; oyunlar burada doner.
+     Neden iframe: her oyun kendi sabit 1920x1080 kabugunu, fizigini ve
+     durumunu yonetiyor — hepsini tek sayfada birlestirmek yerine oldugu
+     gibi yukleyip sirayla gostermek hem basit hem saglam. Ayni kaynaktan
+     (kopru) servis edildikleri icin postMessage ile konusabiliyoruz. */
+  html, body { margin: 0; width: 100%; height: 100%; background: #1a1145; overflow: hidden; }
+  iframe {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+    opacity: 1; transition: opacity .45s ease;
+  }
+  iframe.soluk { opacity: 0; }
+
+  /* "Siradaki oyun" rozeti — son 45 saniyede gorunur */
+  #siradaki {
+    position: fixed; top: 14px; left: 50%; transform: translate(-50%, -80px);
+    background: #2b2170; color: #fff;
+    border: 3px solid #17123a; border-radius: 999px;
+    box-shadow: 5px 5px 0 rgba(10, 6, 30, .5);
+    padding: 10px 22px;
+    font: 900 22px/1 system-ui, sans-serif;
+    letter-spacing: .3px;
+    transition: transform .4s ease;
+    z-index: 5; white-space: nowrap;
+  }
+  #siradaki.acik { transform: translate(-50%, 0); }
+  #siradaki b { color: #ffd23f; }
+</style>
+</head>
+<body>
+
+<iframe id="sahne" allow="autoplay"></iframe>
+<div id="siradaki">birazdan: <b>—</b></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+
+  // ---- ayarlar -------------------------------------------------------------
+  // ?dk=6            oyun basina sure (dakika)
+  // ?sn=90           ayni sey saniye cinsinden (test icin; dk'yi ezer)
+  // ?oyunlar=bilye,at  donecek oyunlar ve sirasi
+  // ?duyuru=0        gecislerde sohbet botuna yazma
+  // Geri kalan TUM parametreler oyunlara AYNEN aktarilir (?lite=1&sag=24...)
+  const OYUNLAR = {
+    bilye: { dosya: 'bilye.html', ad: 'Bilye Yarışı', ikon: '🏁' },
+    kalan: { dosya: 'kalan.html', ad: 'Son Ayakta Kalan', ikon: '💀' },
+    at:    { dosya: 'at.html',    ad: 'At Yarışı',       ikon: '🏇' },
+  };
+  const SIRA = (q.get('oyunlar') || 'bilye,kalan,at')
+    .split(',').map((s) => s.trim()).filter((s) => OYUNLAR[s]);
+  if (!SIRA.length) SIRA.push('bilye', 'kalan', 'at');
+
+  const SURE_MS = q.has('sn')
+    ? (Number(q.get('sn')) || 90) * 1000
+    : (Number(q.get('dk')) || 6) * 60 * 1000;
+  const DUYURU = q.get('duyuru') !== '0' && q.get('mock') !== '1';
+
+  // Oyunlara aktarilacak parametreler (merkyzin kendi anahtarlarini cikar)
+  const aktar = new URLSearchParams(q);
+  for (const k of ['dk', 'sn', 'oyunlar', 'duyuru']) aktar.delete(k);
+  const EK = aktar.toString() ? '&' + aktar.toString() : '';
+
+  // ---- durum ---------------------------------------------------------------
+  const sahne = document.getElementById('sahne');
+  const rozet = document.getElementById('siradaki');
+  let indeks = 0;
+  let basladi = 0;               // bu oyunun acilis zamani
+  let gecisBekliyor = false;     // sure doldu, tur bitisini bekliyoruz
+  let zorlaZaman = 0;
+
+  function oyunAc(i) {
+    indeks = (i + SIRA.length) % SIRA.length;
+    const o = OYUNLAR[SIRA[indeks]];
+    sahne.classList.add('soluk');
+    setTimeout(() => {
+      sahne.src = o.dosya + '?' + 'ic=1' + EK;
+      sahne.onload = () => sahne.classList.remove('soluk');
+      basladi = Date.now();
+      gecisBekliyor = false;
+      rozet.classList.remove('acik');
+    }, 460);
+  }
+
+  function siradakiOyun() { return OYUNLAR[SIRA[(indeks + 1) % SIRA.length]]; }
+
+  function gecisiIste() {
+    if (SIRA.length < 2) return;         // tek oyun donuyorsa gecis yok
+    gecisBekliyor = true;
+    zorlaZaman = Date.now() + 90 * 1000; // tur sinyali hic gelmezse emniyet
+  }
+
+  function gec() {
+    const o = siradakiOyun();
+    if (DUYURU) {
+      // Sohbet botuna gecis duyurusu — izleyici oyunun degistigini
+      // sohbetten de gorsun. Kopru yoksa fetch sessizce duser.
+      try {
+        fetch('/api/soyle?text=' + encodeURIComponent(
+          `🎮 Sıradaki oyun: ${o.ikon} ${o.ad} — ekrana bak, katıl!`)).catch(() => {});
+      } catch { /* olsun */ }
+    }
+    oyunAc(indeks + 1);
+  }
+
+  // Oyunlar tur bitiminde parent'a haber veriyor; gecisi TUR ARASINDA
+  // yapiyoruz ki yaris/eleme ortasinda ekran degismesin.
+  addEventListener('message', (ev) => {
+    if (ev.data && ev.data.tt === 'tur-bitti' && gecisBekliyor) gec();
+  });
+
+  setInterval(() => {
+    const gecen = Date.now() - basladi;
+
+    // Son 45 saniyede "siradaki" rozetini goster
+    if (SIRA.length > 1 && gecen > SURE_MS - 45 * 1000) {
+      const o = siradakiOyun();
+      rozet.innerHTML = 'birazdan: <b>' + o.ikon + ' ' + o.ad + '</b>';
+      rozet.classList.add('acik');
+    }
+
+    if (!gecisBekliyor && gecen >= SURE_MS) gecisiIste();
+    // Emniyet: oyun tur sinyali gonderemiyorsa (donmus iframe vb.) zorla gec
+    if (gecisBekliyor && Date.now() > zorlaZaman) gec();
+  }, 1000);
+
+  oyunAc(0);
+})();
+</script>
+</body>
+</html>
