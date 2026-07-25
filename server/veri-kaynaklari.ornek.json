@@ -1,0 +1,55 @@
+[
+  {
+    "_aciklama": "Bu dosyayi 'veri-kaynaklari.json' adiyla kopyala ve kendi bilgilerinle doldur. Baslamak icin kapali:true olanlari kapali birak, sadece kullanacagini ac.",
+
+    "ad": "ornek-kapali",
+    "kapali": true,
+    "url": "https://ornek.com/api",
+    "aralik": 60,
+    "alanlar": { "deger": "data.value" }
+  },
+
+  {
+    "_aciklama": "VALORANT RANK — HenrikDev API. Once https://docs.henrikdev.xyz uzerinden UCRETSIZ anahtar al, asagidaki ANAHTARIN yazan yeri degistir. Bolge: eu / na / ap / kr. Isim ve etiketi kendi hesabinla degistir (Oyuncu#TAG -> .../Oyuncu/TAG).",
+
+    "ad": "valorant",
+    "kapali": true,
+    "url": "https://api.henrikdev.xyz/valorant/v2/mmr/eu/OYUNCUADI/TAG",
+    "basliklar": { "Authorization": "ANAHTARIN" },
+    "aralik": 120,
+    "alanlar": {
+      "rank": "data.current_data.currenttierpatched",
+      "puan": "data.current_data.ranking_in_tier",
+      "sonMac": "data.current_data.mmr_change_to_last_game",
+      "gorsel": "data.current_data.images.small",
+      "hesap": "data.name"
+    }
+  },
+
+  {
+    "_aciklama": "SPOTIFY / SIMDI CALAN — kendi kucuk servisini calistiriyorsan ya da bir now-playing API'n varsa. Ornek yapi.",
+
+    "ad": "muzik",
+    "kapali": true,
+    "url": "http://localhost:3000/simdi-calan",
+    "aralik": 15,
+    "alanlar": {
+      "sarki": "item.name",
+      "sanatci": "item.artists.0.name",
+      "gorsel": "item.album.images.0.url"
+    }
+  },
+
+  {
+    "_aciklama": "HAVA DURUMU — anahtar gerektirmeyen basit bir ornek. Enlem/boylami kendi sehrine gore degistir (asagidaki Istanbul).",
+
+    "ad": "hava",
+    "kapali": true,
+    "url": "https://api.open-meteo.com/v1/forecast?latitude=41.01&longitude=28.98&current=temperature_2m",
+    "aralik": 600,
+    "alanlar": {
+      "sicaklik": "current.temperature_2m",
+      "birim": "current_units.temperature_2m"
+    }
+  }
+]

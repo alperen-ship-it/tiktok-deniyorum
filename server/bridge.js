@@ -18,15 +18,17 @@
  */
 
 const http = require('http');
-const fs = require('fs');
 const path = require('path');
 const { attach } = require('./ws-mini');
+const veri = require('./veri');
+const varlik = require('./varlik');
+const ayar = require('./ayar');
 
 // ---------------------------------------------------------------------------
 // Argumanlar
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
-  const out = { port: 8787, mock: false, user: null, verbose: false, rate: 1 };
+  const out = { port: 8787, mock: false, user: null, verbose: false, rate: 1, bekle: 15 };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--mock' || a === '-m') out.mock = true;
@@ -34,6 +36,8 @@ function parseArgs(argv) {
     else if (a === '--user' || a === '-u') out.user = String(argv[++i] || '').replace(/^@/, '');
     else if (a === '--port' || a === '-p') out.port = Number(argv[++i]) || out.port;
     else if (a === '--rate') out.rate = Number(argv[++i]) || 1;
+    else if (a === '--bekle') out.bekle = Number(argv[++i]) || 15;
+    else if (a === '--tarayici') out.tarayici = true;
     else if (a === '--key' || a === '-k') out.key = String(argv[++i] || '');
     else if (a === '--gifts') out.gifts = true;
     else if (a === '--no-80') out.no80 = true;
@@ -52,6 +56,8 @@ TikTok LIVE koprusu
   --mock, -m         Sahte olay uret, TikTok'a baglanma
   --port, -p <n>     HTTP/WS portu (varsayilan 8787)
   --rate <n>         Mock modda olay hizi carpani (varsayilan 1)
+  --bekle <sn>       Yayin kapaliysa kac saniyede bir tekrar denensin (varsayilan 15)
+  --tarayici         Acilista kontrol panelini varsayilan tarayicida ac
   --key, -k <k>      EulerStream imzalama anahtari (ya da EULER_API_KEY ortam degiskeni)
   --gifts            Hediye katalogunu da cek (ikon URL'leri icin) — UCRETLI uc,
                      varsayilan kapali. Kapaliyken hediye adi/elmas degeri yine gelir.
@@ -60,8 +66,6 @@ TikTok LIVE koprusu
 `);
   process.exit(0);
 }
-
-const ROOT = path.resolve(__dirname, '..');
 
 // ---------------------------------------------------------------------------
 // Statik dosya sunucusu
@@ -81,13 +85,6 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-function safeJoin(root, urlPath) {
-  const decoded = decodeURIComponent(urlPath.split('?')[0]);
-  const target = path.resolve(root, '.' + decoded);
-  // dizin disina cikma (path traversal) engeli
-  if (target !== root && !target.startsWith(root + path.sep)) return null;
-  return target;
-}
 
 const server = http.createServer((req, res) => {
   const urlPath = (req.url || '/').split('?')[0];
@@ -126,6 +123,9 @@ const server = http.createServer((req, res) => {
     }
 
     args.user = kullanici;
+    // Tek dosya modunda paneldeki degisiklik kalici olsun — bir dahaki
+    // acilista tekrar sormayalim.
+    if (varlik.SEA_MI) ayar.kullaniciKaydet(kullanici);
     kopar();
     startLive(kullanici).catch((e) => log('!! baglanti hatasi:', e?.message || e));
     res.end(JSON.stringify({ ok: true, mode: 'live', user: kullanici }));
@@ -149,46 +149,55 @@ const server = http.createServer((req, res) => {
         mode: state.mode,
         user: args.user,
         connected: state.connected,
+        bekliyor: !!state.bekliyor,
         clients: wss.clients.size,
         events: state.eventCount,
         uptime: Math.round(process.uptime()),
+        veriKaynaklari: veriCekici ? veriCekici.kaynaklar() : [],
       })
     );
     return;
   }
 
-  let target = safeJoin(ROOT, urlPath);
-  if (!target) {
+  // --- statik dosyalar -----------------------------------------------------
+  // Diskten mi yoksa exe'nin icinden mi okundugunu varlik.js biliyor.
+  let ad = varlik.adaCevir(urlPath);
+  if (ad === null) {
     res.writeHead(403).end('403');
     return;
   }
 
-  // / -> kontrol paneli
-  if (urlPath === '/') target = path.join(ROOT, 'overlays', 'index.html');
+  if (ad === '') ad = 'overlays/index.html';           // / -> kontrol paneli
+  let govde = varlik.oku(ad);
+  if (govde === null && !path.extname(ad)) {
+    govde = varlik.oku(ad.replace(/\/$/, '') + '/index.html');   // klasor -> index
+  }
 
-  fs.stat(target, (err, st) => {
-    if (!err && st.isDirectory()) target = path.join(target, 'index.html');
+  if (govde === null) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('404 - bulunamadi: ' + urlPath);
+    return;
+  }
 
-    fs.readFile(target, (err2, data) => {
-      if (err2) {
-        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
-        res.end('404 - bulunamadi: ' + urlPath);
-        return;
-      }
-      res.writeHead(200, {
-        'content-type': MIME[path.extname(target).toLowerCase()] || 'application/octet-stream',
-        'cache-control': 'no-store',
-        'access-control-allow-origin': '*',
-      });
-      res.end(data);
-    });
+  res.writeHead(200, {
+    'content-type': MIME[path.extname(ad).toLowerCase()] || 'application/octet-stream',
+    'cache-control': 'no-store',
+    'access-control-allow-origin': '*',
   });
+  res.end(govde);
 });
 
 const wss = attach(server, {
   path: '/ws',
   onConnect(client) {
-    client.send({ type: 'hello', mode: state.mode, user: args.user, ts: Date.now() });
+    client.send({
+      type: 'hello',
+      mode: state.mode,
+      user: args.user,
+      connected: state.connected,
+      bekliyor: !!state.bekliyor,
+      ts: Date.now(),
+    });
     log(`overlay baglandi (toplam ${wss.clients.size})`);
   },
 });
@@ -202,6 +211,7 @@ const state = { mode: 'idle', connected: false, eventCount: 0 };
 // Panelden kullanici adi degistirilince eskisinin arkada calismaya devam
 // etmemesi icin gerekli.
 let canliBaglanti = null;
+let veriCekici = null;
 const mockZamanlayicilar = [];
 
 function kopar() {
@@ -213,7 +223,24 @@ function kopar() {
   // ikisini de clearTimeout ile iptal edebiliyoruz.
   while (mockZamanlayicilar.length) clearTimeout(mockZamanlayicilar.pop());
   state.connected = false;
+  state.bekliyor = false;
   state.mode = 'idle';
+}
+
+/**
+ * Overlay'lere "su an ne durumdayiz" bilgisini yolla. Oyunlar bunu dinleyip
+ * yayin baslamadan once "YAYIN BEKLENIYOR" perdesi gosteriyor, ilk yorum
+ * gelince oyuna geciyor.
+ */
+function durumYayinla() {
+  wss.broadcast({
+    type: 'durum',
+    mode: state.mode,
+    user: args.user,
+    connected: state.connected,
+    bekliyor: !!state.bekliyor,
+    ts: Date.now(),
+  });
 }
 
 function log(...a) {
@@ -497,14 +524,18 @@ async function startLive(username) {
   //   https://www.eulerstream.com  ->  API key al
   //   set EULER_API_KEY=xxxx    (ya da --key xxxx)
   const apiKey = args.key || process.env.EULER_API_KEY;
-  if (apiKey && SignConfig) {
-    SignConfig.apiKey = apiKey;
-    log('EulerStream imzalama anahtari ayarlandi.');
-  } else {
-    log('EulerStream anahtari yok — anonim limitle deneniyor.');
-    log('  Limite takilirsan eulerstream.com uzerinden ucretsiz anahtar al,');
-    log('  sonra:  set EULER_API_KEY=<anahtar>   (Windows CMD)');
+  // Yayin beklerken bu blok her 15 saniyede bir tekrar yazilirdi; ilk seferde
+  // soylemek yeterli.
+  if (!state.bekliyor) {
+    if (apiKey && SignConfig) {
+      log('EulerStream imzalama anahtari ayarlandi.');
+    } else {
+      log('EulerStream anahtari yok — anonim limitle deneniyor.');
+      log('  Limite takilirsan eulerstream.com uzerinden ucretsiz anahtar al,');
+      log('  sonra:  set EULER_API_KEY=<anahtar>   (Windows CMD)');
+    }
   }
+  if (apiKey && SignConfig) SignConfig.apiKey = apiKey;
 
   let Ctor = TikTokLiveConnection;
   if (!Ctor) {
@@ -553,31 +584,86 @@ async function startLive(username) {
 
   conn.on('streamEnd', () => {
     state.connected = false;
-    log('yayin bitti');
+    log('yayin bitti — yeniden yayin beklemeye geciliyor.');
+    durumYayinla();
+    // Yayin bitti diye programi kapatma; ayni oturumda tekrar yayin acabilir.
+    const tekrar = setTimeout(() => {
+      if (args.user === username) startLive(username).catch(() => {});
+    }, Math.max(10, Number(args.bekle) || 15) * 1000);
+    mockZamanlayicilar.push(tekrar);
   });
   conn.on('disconnected', () => {
     state.connected = false;
+    durumYayinla();
     log('baglanti koptu, 10 sn sonra tekrar denenecek');
     setTimeout(() => conn.connect().catch(() => {}), 10000);
   });
-  conn.on('error', (e) => log('hata:', e?.message || e));
+  // Kutuphane hata olayinda cogu zaman Error degil, icinde tam stack olan bir
+  // nesne yolluyor. Ham haliyle basilinca konsol okunmaz oluyor — ozetliyoruz.
+  // Yayin beklerken zaten normal bir durum, hic basmiyoruz.
+  conn.on('error', (e) => {
+    if (state.bekliyor) return;
+    const ozet = e?.info || e?.message || e?.exception?.message || String(e);
+    log('hata:', ozet);
+  });
 
+  // Onceki deneme kalintisi kalmasin — her tekrar denemede yeni bir baglanti
+  // nesnesi kuruluyor, eskisi arkada sessizce ugrasmaya devam etmesin.
+  if (canliBaglanti && canliBaglanti !== conn) {
+    try { canliBaglanti.disconnect(); } catch { /* zaten kapali */ }
+  }
   canliBaglanti = conn;
 
-  log(`@${username} yayinina baglaniliyor...`);
+  if (!state.bekliyor) log(`@${username} yayinina baglaniliyor...`);
   try {
     const st = await conn.connect();
     state.connected = true;
+    if (state.bekliyor) log('YAYIN BASLADI — baglaniliyor.');
+    state.bekliyor = false;
+    durumYayinla();
     log(`BAGLANDI  roomId=${st?.roomId ?? '?'}`);
   } catch (e) {
     state.connected = false;
     const msg = e?.message || String(e);
+
+    // --- YAYIN BEKLEME MODU ---------------------------------------------
+    // Kullanici henuz yayinda degilse bu bir hata degil, sadece "daha
+    // baslamadi" demek. Uygulamayi acik birakip yayina gecince kendiliginden
+    // baglanmasi, yayin oncesi tek isi "programi ac" yapiyor.
+    //
+    // Yayin kapaliyken kutuphane iki farkli hata veriyor: bazen dogrudan
+    // UserOfflineError, bazen de once oda kimligini bulamayip
+    // "Failed to retrieve Room ID" diyor. Ikisi de "henuz yayinda degil"
+    // demek, ikisinde de beklemeye geciyoruz.
+    if (/offline|room ?id/i.test(msg)) {
+      state.denemeSayisi = (state.denemeSayisi || 0) + 1;
+      if (!state.bekliyor) {
+        state.bekliyor = true;
+        state.mode = 'bekliyor';
+        log(`@${username} henuz yayinda degil — YAYIN BEKLENIYOR.`);
+        log('   Yayina gectiginde kendiliginden baglanacak, bu pencereyi kapatma.');
+        durumYayinla();
+      }
+      // Uzun sure hic baglanamiyorsak kullanici adi yanlis yazilmis olabilir.
+      // 20 deneme ~ 5 dakika; bir kez hatirlat, sonra yine sus.
+      if (state.denemeSayisi === 20) {
+        log(`   (${state.denemeSayisi} denemedir baglanamadim. Kullanici adini`);
+        log(`    kontrol et: tiktok.com/@${username} calisiyor mu?)`);
+      }
+      // Sessizce tekrar dene; kullaniciyi log yagmuruna bogma
+      const tekrar = setTimeout(() => {
+        if (args.user === username) startLive(username).catch(() => {});
+      }, Math.max(10, Number(args.bekle) || 15) * 1000);
+      mockZamanlayicilar.push(tekrar);
+      return;
+    }
+
+    state.bekliyor = false;
+    state.denemeSayisi = 0;
     log('!! Baglanilamadi:', msg);
     log('');
 
-    if (/offline/i.test(msg)) {
-      log('   Kullanici su an CANLI yayinda degil.');
-    } else if (/Business plan|requires a .*plan|MissingTokens/i.test(msg)) {
+    if (/Business plan|requires a .*plan|MissingTokens/i.test(msg)) {
       // En sik ve en can sikici durum: zincirin geri kalani calisiyor,
       // sadece imzalama paywall'a takiliyor.
       log('   >>> IMZALAMA PAYWALL <<<');
@@ -612,7 +698,28 @@ async function startLive(username) {
 // ---------------------------------------------------------------------------
 // Baslat
 // ---------------------------------------------------------------------------
-server.listen(args.port, '0.0.0.0', () => {
+/** Varsayilan tarayicida bir adres ac (Windows/mac/Linux). */
+function tarayiciAc(url) {
+  try {
+    const { spawn } = require('child_process');
+    const [cmd, cmdArgs] =
+      process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]]
+      : process.platform === 'darwin' ? ['open', [url]]
+      : ['xdg-open', [url]];
+    spawn(cmd, cmdArgs, { detached: true, stdio: 'ignore' }).unref();
+  } catch { /* tarayici acilamadiysa adres zaten konsolda yaziyor */ }
+}
+
+// EXE olarak calisirken hicbir arguman yok: kullanici cift tikladi. O zaman
+// kullanici adini sorup kaydediyoruz ve paneli kendimiz aciyoruz.
+const TEK_DOSYA = varlik.SEA_MI;
+if (TEK_DOSYA && !argVerildi('--tarayici')) args.tarayici = true;
+
+function argVerildi(bayrak) {
+  return process.argv.includes(bayrak);
+}
+
+server.listen(args.port, '0.0.0.0', async () => {
   const base = `http://localhost:${args.port}`;
   // TikTok LIVE Studio'nun "Link" kaynagi ham IP ve `localhost` yazimini
   // REDDEDIYOR; gercek bir alan adi istiyor. localtest.me herkese acik bir
@@ -651,8 +758,21 @@ server.listen(args.port, '0.0.0.0', () => {
   ================================================================
 `);
 
+  // Disaridan veri ceken kaynaklar (Valorant rank, hava, simdi calan...)
+  // server/veri-kaynaklari.json varsa devreye giriyor.
+  veriCekici = veri.baslat(emit, log);
+
+  // Tek dosya modunda arguman yok — adi ayar dosyasindan al, yoksa sor.
+  if (TEK_DOSYA && !args.mock && !args.user) {
+    args.user = await ayar.kullaniciAdi(null);
+  }
+
+  // EXE olarak calisirken kullanicinin gorecegi tek sey konsol penceresi
+  // olurdu; paneli kendimiz aciyoruz ki cift tiklayip devam etsin.
+  if (args.tarayici) tarayiciAc(base + '/');
+
   if (args.mock || !args.user) {
-    if (!args.mock) log('--user verilmedi, mock moda geciliyor.');
+    if (!args.mock) log('kullanici adi yok, TEST moduna geciliyor.');
     startMock();
   } else {
     startLive(args.user).catch((e) => {

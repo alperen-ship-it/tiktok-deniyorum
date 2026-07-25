@@ -72,7 +72,26 @@
     // LIVE Studio'nun Link kaynagi yazilim render yapiyor: agir efektler
     // saniyede 5 kareye dusuruyor. lite modda hepsini kapatiyoruz.
     if (cfg.lite) root.classList.add('tt-lite');
-    if (cfg.vertical) root.classList.add('tt-vertical');
+
+    // --- Yon: elle degil, OLCEREK belirle ---------------------------------
+    // LIVE Studio'nun dual layout'unda ayni Link kaynagi hem dikey hem yatay
+    // sahnede gorunuyor ve icerigini degistiremiyorsun — sadece kutunun
+    // boyutu degisiyor. O yuzden sayfa kendi oranina bakip uyum saglamali.
+    // ?v=1 / ?y=1 ile zorlanabilir; verilmezse otomatik.
+    function yonBelirle() {
+      const zorlaDikey = cfg.vertical;
+      const zorlaYatay = flag('y') || flag('yatay');
+      const oran = innerWidth / Math.max(1, innerHeight);
+
+      const yatay = zorlaYatay || (!zorlaDikey && oran > 1.15);
+      root.classList.toggle('tt-yatay', yatay);
+      root.classList.toggle('tt-vertical', !yatay);
+
+      // Overlay'ler yeniden yerlesebilsin diye haber ver
+      global.dispatchEvent(new CustomEvent('tt-yon', { detail: { yatay, oran } }));
+    }
+    yonBelirle();
+    addEventListener('resize', yonBelirle);
 
     // Perde en arkada dursun: body'nin ilk cocugu olarak ekliyoruz
     if (cfg.perde && !document.getElementById('tt-perde')) {
@@ -539,6 +558,139 @@
   }
 
   // -------------------------------------------------------------------------
+  // UYANMA PERDESI
+  // -------------------------------------------------------------------------
+  /**
+   * Oyun sayfalari bunu cagirinca, ilk gercek olay gelene kadar ekranda
+   * "ne yazacaksin" perdesi durur. Ilk olayda kaybolur ve oyun baslar.
+   *
+   *   TT.uyanis({
+   *     baslik: 'LABİRENT',
+   *     komutlar: ['SOL','SAĞ','YUKARI','AŞAĞI'],
+   *     aciklama: 'Çoğunluk hangi yönü yazarsa oraya gidiyoruz',
+   *     tetik: 'chat gift',   // hangi olay oyunu uyandirir
+   *     baslat() { ... },     // uyaninca calisacak fonksiyon (istege bagli)
+   *     hatirlat: 75,         // kac saniye sessizlikten sonra serit gosterilsin
+   *   })
+   *
+   * Donus: { get uyandi(), uyan() }  — oyun kendi de uyandirabilir.
+   */
+  // Perdeyi kaldiran olaylar: izleyicinin BILEREK yaptigi her sey.
+  // 'viewers' burada YOK — kopru onu 5 saniyede bir kendiliginden yolluyor,
+  // tetik sayilsa oyun kimse yokken de baslardi. 'member' de yok: odaya
+  // girmek katilim degil, sadece izlemek.
+  const UYANDIRAN = 'chat gift like follow share subscribe';
+
+  function uyanis(opts) {
+    const o = opts || {};
+    const tetikler = String(o.tetik || UYANDIRAN).split(/[\s,]+/);
+    const hatirlatSn = o.hatirlat == null ? 75 : Number(o.hatirlat);
+    let uyandi = false;
+    let sonOlay = Date.now();
+
+    const perde = document.createElement('div');
+    perde.id = 'tt-uyanis';
+    perde.className = 'tt-oyun';
+    perde.dataset.durum = 'bekliyor';
+
+    const durumEl = document.createElement('div');
+    durumEl.className = 'durum';
+    durumEl.textContent = 'bağlanıyor';
+
+    const baslikEl = document.createElement('div');
+    baslikEl.className = 'baslik';
+    baslikEl.textContent = o.baslik || 'HAZIR';
+
+    const aciklamaEl = document.createElement('div');
+    aciklamaEl.className = 'aciklama';
+    aciklamaEl.textContent = o.aciklama || '';
+
+    const komutlarEl = document.createElement('div');
+    komutlarEl.className = 'komutlar';
+    for (const k of o.komutlar || []) {
+      const d = document.createElement('div');
+      d.className = 'komut';
+      d.textContent = k;
+      komutlarEl.appendChild(d);
+    }
+
+    const cagriEl = document.createElement('div');
+    cagriEl.className = 'cagri';
+    cagriEl.textContent = o.cagri || 'sohbete yaz, oyun başlasın';
+
+    const kutu = document.createElement('div');
+    kutu.className = 'kutu';
+    kutu.append(durumEl, baslikEl, komutlarEl, aciklamaEl, cagriEl);
+    perde.appendChild(kutu);
+
+    // Oyun basladiktan sonra ara ara gosterilen ince hatirlatma seridi
+    const serit = document.createElement('div');
+    serit.id = 'tt-serit';
+    for (const k of o.komutlar || []) {
+      const d = document.createElement('div');
+      d.className = 'komut';
+      d.textContent = k;
+      serit.appendChild(d);
+    }
+
+    document.body.append(perde, serit);
+
+    /** Kopru "yayin bekleniyor" mu diyor, bagli mi — perdenin ust satiri. */
+    function durumYaz(d) {
+      if (uyandi) return;
+      if (d && d.bekliyor) {
+        perde.dataset.durum = 'bekliyor';
+        durumEl.textContent = 'yayın bekleniyor';
+      } else if (d && d.connected) {
+        perde.dataset.durum = 'canli';
+        durumEl.textContent = 'yayın açık · ilk yorumu bekliyorum';
+      } else if (status === 'mock') {
+        perde.dataset.durum = 'canli';
+        durumEl.textContent = 'test modu';
+      } else if (status === 'live') {
+        perde.dataset.durum = 'canli';
+        durumEl.textContent = 'bağlandı · ilk yorumu bekliyorum';
+      } else {
+        perde.dataset.durum = 'kopuk';
+        durumEl.textContent = 'köprü kapalı';
+      }
+    }
+
+    on('hello durum', durumYaz);
+    setInterval(() => durumYaz(null), 2000);
+    durumYaz(null);
+
+    function uyan() {
+      if (uyandi) return;
+      uyandi = true;
+      perde.classList.add('gitti');
+      if (o.komutlar && o.komutlar.length && hatirlatSn > 0) seritDongusu();
+      try { o.baslat?.(); } catch (e) { console.error('[TT] baslat hatasi', e); }
+      global.dispatchEvent(new CustomEvent('tt-uyan'));
+    }
+
+    // Ilk gercek olayda uyan
+    on(tetikler, uyan);
+    // Sessizlik olcumu her olayda tazelensin
+    on('*', () => { sonOlay = Date.now(); });
+
+    /** Uzun sessizlikte kurallari kisa sure geri goster. */
+    function seritDongusu() {
+      setInterval(() => {
+        if (Date.now() - sonOlay < hatirlatSn * 1000) return;
+        serit.classList.add('gorunur');
+        setTimeout(() => serit.classList.remove('gorunur'), 7000);
+        sonOlay = Date.now();   // ust uste gostermesin
+      }, 5000);
+    }
+
+    return {
+      get uyandi() { return uyandi; },
+      uyan,
+    };
+  }
+
+  // -------------------------------------------------------------------------
   // Baslat
   // -------------------------------------------------------------------------
   function boot() {
@@ -562,6 +714,10 @@
 
   global.TT = {
     cfg, on, off,
+    /** Su an yatay duzende miyiz? Oyunlar yerlesimi buna gore ayarlayabilir. */
+    get yatay() { return document.documentElement.classList.contains('tt-yatay'); },
+    /** Ilk yorum gelene kadar "nasil oynanir" perdesi goster. */
+    uyanis,
     /** Elle olay tetikle (test / oyun ici). */
     fire: dispatch,
     mockEvent,

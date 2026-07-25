@@ -12,26 +12,81 @@ içine kendi HTML içeriğini nasıl sokacağın, ve yayına koyabileceğin **ç
 
 ---
 
-## TL;DR — 3 dakikada yayında
+## TL;DR — yayın açmadan önce yapman gereken tek şey
 
-```bat
-git clone <bu-depo> && cd tiktok-deniyorum
-node server/bridge.js --mock
-```
+**`TikTokOyunlar.exe`'ye çift tıkla.** Hepsi bu.
 
-Tarayıcıda `http://localhost:8787/` aç → kontrol paneli açılır, tüm oyuncakların
-canlı önizlemesi orada. Beğendiğinin adresini kopyala:
+İlk açılışta bir kere TikTok kullanıcı adını sorar, kaydeder, bir daha sormaz.
+Sonra kontrol paneli tarayıcıda kendiliğinden açılır. Yayında değilsen
+**"YAYIN BEKLENİYOR"** yazar ve yayına geçtiğin an kendiliğinden bağlanır —
+programa geri dönmen gerekmez.
+
+Panelden istediğin oyunun adresini kopyala:
 
 | Nereye koyacaksın | Adres |
 |---|---|
-| **TikTok LIVE Studio** → Kaynak ekle → **Link** | `http://localtest.me:8787/overlays/alerts.html?lite=1` |
-| **OBS** → Tarayıcı Kaynağı | `http://localhost:8787/overlays/alerts.html` |
+| **TikTok LIVE Studio** → Kaynak ekle → **Link** | `http://localtest.me:8787/overlays/labirent.html?lite=1` |
+| **OBS** → Tarayıcı Kaynağı | `http://localhost:8787/overlays/labirent.html` |
 
 ⚠️ LIVE Studio'da `127.0.0.1` **reddedilebilir** (sürüme göre değişiyor, aşağıda
 açıkladım). Yukarıdaki `localtest.me` adresi her iki durumda da çalışır — onunla
 başla, uğraşma.
 
-Gerçek yayına bağlanmak için: `node server/bridge.js --user senin_kullanici_adin`
+Exe'yi kapatmak = programı durdurmak. Yayın boyunca açık kalmalı (simge durumuna
+küçültebilirsin).
+
+### Exe yoksa / kaynaktan çalıştırmak istersen
+
+```bat
+node server/bridge.js --user senin_kullanici_adin
+node server/bridge.js --mock                      # sahte veri, internet gerekmez
+```
+
+Exe'yi kendin üretmek için: **`paketle.bat`** (ya da `node server/paketle.js --win`).
+Ayrıntılar → [§0. Tek dosya exe](#0-tek-dosya-exe).
+
+---
+
+## 0. Tek dosya exe
+
+`dist/TikTokOyunlar.exe` — **86 MB, yanına hiçbir klasör gerekmiyor.** Node'un
+kendisi, köprü sunucusu ve bütün oyunlar tek dosyanın içinde gömülü. Kopyaladığın
+makinede Node kurulu olması gerekmez.
+
+### Nasıl üretiliyor
+
+Node'un **SEA** (Single Executable Application) mekanizması: `node.exe`nin içine
+kendi kodunu ve dosyalarını enjekte ediyorsun.
+
+1. `esbuild` → `server/bridge.js` + bağımlılıkları tek bir `.cjs` dosyasına toplanır
+2. `overlays/` altındaki her dosya **asset** olarak listelenir
+3. nodejs.org'dan hedef işletim sisteminin `node` ikilisi indirilir
+4. `postject` blob'u ikilinin içine enjekte eder
+
+Çalışma anında `server/varlik.js` dosyaları nereden okuyacağını biliyor: kaynak
+koddan çalışıyorsan diskten (düzenle-yenile döngüsü bozulmasın), exe'den
+çalışıyorsan `sea.getRawAsset` ile içeriden.
+
+```bat
+paketle.bat                        REM Windows exe
+node server/paketle.js --win --linux
+```
+
+### İlk çalıştırmada göreceklerin
+
+**Windows SmartScreen uyarısı çıkacak.** Exe imzalı değil (kod imzalama
+sertifikası yıllık ücretli). Uyarı ekranında **"Ek bilgi"** → **"Yine de çalıştır"**.
+Bu beklenen bir durum, exe'yle ilgili bir sorun değil — imzasız her programda çıkıyor.
+
+Ayarların `tiktok-ayarlar.json` olarak **exe'nin yanına** yazılır. Exe'yi başka
+klasöre taşırsan ayarlar da taşınmalı, yoksa kullanıcı adını tekrar sorar.
+
+### Exe ne yapmıyor
+
+- **Kendi kendini güncellemiyor.** Oyunlarda değişiklik yaparsam `paketle.bat`'ı
+  tekrar çalıştırman gerekir.
+- **Yayını başlatmıyor.** Yayını her zamanki gibi LIVE Studio / OBS ile sen
+  açıyorsun; exe sadece sohbet verisini çekip oyunları besliyor.
 
 ---
 
@@ -258,15 +313,76 @@ kullan, şeffaflık kendiliğinden çalışır.
 
 ## 3. Oyuncaklar
 
-Altısı da hazır, gerçek tarayıcıda test edildi (WebSocket bağlanıyor, olaylar
-akıyor, konsol temiz).
+Hepsi hazır, gerçek tarayıcıda test edildi (WebSocket bağlanıyor, olaylar akıyor,
+konsol temiz). İki gruba ayrılıyorlar:
+
+**Widget'lar** — izleyici bakar, etkileşim tek yönlü:
+`alerts` · `chat` · `gift-rain` · `like-goal` · `battle` · `race` · `durum`
+
+**Oyunlar** — izleyici *oynar*, yorumu oyunu değiştirir:
+`labirent` · `tirmanis` · `boss` · `plinko` · `ordu` · `bolge`
 
 > **Not:** LIVE Studio'nun kendi hazır widget'ları var — Uyarılar, Sohbet Kutusu,
 > Hedef, Liderlik Tablosu, Geri Sayım. Buradaki `alerts` / `chat` / `like-goal`
 > onlarla örtüşüyor; farkı tamamen senin kontrolünde olması (renk, metin, animasyon,
-> eşikler). **`battle`, `race` ve `gift-rain`'in yerel karşılığı yok** — asıl değer orada.
+> eşikler). **Oyunların hiçbirinin yerel karşılığı yok** — asıl değer orada.
 
-### 🔔 `alerts.html` — Uyarılar
+---
+
+### Oyunlar — sohbet oynuyor
+
+Altısında da aynı iki kural geçerli:
+
+- **Yorum + beğeni = ana döngü.** Herkes bedava katılabiliyor.
+- **Hediye = ULTİ.** Elmas değerine göre 5 kademe, her birinin adı ve görsel
+  efekti farklı: 🔥 ATEŞ TOPU (≥0) · ⚡ YILDIRIM (≥10) · ☄️ METEOR YAĞMURU (≥100) ·
+  🌋 KIYAMET (≥1000) · 💀 İNFAZ (≥10000).
+  Ayrıca **kombo barı**: yorum ve beğeniler ortak bir barı doldurur, dolunca
+  *bedava takım ultisi* patlar — hediye gönderemeyen izleyici de ulti hissi yaşar.
+
+Her oyun, ilk yorum gelene kadar **"nasıl oynanır"** perdesi gösterir; ilk
+etkileşimde perde kalkar ve oyun başlar. Uzun sessizlikte kurallar ince bir şerit
+olarak geri gelir (sonradan katılan izleyici için).
+
+#### 🧭 `labirent.html` — 4 yönlü labirent
+İzleyiciler `sol` / `sağ` / `yukarı` / `aşağı` yazar, en çok oy alan yöne gidilir.
+Duvara çıkan yönler ✕ ile işaretlenir. Hazine topla, hayaletlerden kaç.
+Ultiler: duvar kır · 3 adım koş · canavarları dağıt · hazineleri topla · çıkışa ışınlan.
+`w a s d`, `← → ↑ ↓`, `2 4 6 8` yazımları da sayılıyor.
+
+#### 🧗 `tirmanis.html` — ortak tırmanış
+Üç aday platform gösterilir, sohbet `sol` / `zıpla` / `sağ` yazarak seçer.
+Yükseldikçe rekor kırılır. Beğeni gücü doldurur.
+
+#### 🐉 `boss.html` — ortak canavar avı
+Ne yazarsan yaz vuruyorsun (%12 kritik). Boss düşünce bir sonrakine geçilir, her
+tur güçlenir. Hasar tablosu ve MVP var. Gecikmeli "hayalet" can barı — vuruşun ne
+kadar götürdüğü gözle görülüyor.
+
+#### 🎯 `plinko.html` — yaz, topun düşsün
+Her yorum bir top bırakır, klasik plinko dağılımı (kenarda ×25, ortada ×0.5).
+Ulti kademeleri 3 / 8 / 18 top veriyor, üst kademeler kenara nişanlı atıyor.
+
+#### ⚔️ `ordu.html` — şeritli otomatik savaş
+Takımını yaz (`mavi` / `kırmızı`), askerin sahaya iner. Hediye kahraman çağırır
+(🗡️ 🛡️ 🐺 🐲 ☠️, çarpan 3 → 110). Şerit tabanlı simülasyon: yüzlerce birim ucuza dönüyor.
+
+#### 🗺️ `bolge.html` — harita boyama
+Takımını yaz, haritayı boya. Beğeni de boyar. Sınır organik büyüyor.
+Yeni gelen izleyici geride kalan takıma yazılıyor — maç tek taraflı kilitlenmiyor.
+
+---
+
+### Widget'lar
+
+#### 📊 `durum.html` — dışarıdan çekilen veri kartı
+Valorant rankın, çalan şarkı, hava durumu… `server/veri-kaynaklari.json`'a bir API
+tanımlıyorsun, köprü periyodik çekip overlay'e yolluyor.
+İstek **sunucudan** gidiyor: CORS'a takılmıyor ve API anahtarın yayında ekranda görünmüyor.
+`?kaynak=valorant&baslik=RANK&ana=rank&alt=puan,sonMac&gorsel=gorsel&kose=sag-ust`
+Başlamak için `server/veri-kaynaklari.ornek.json`'ı kopyala.
+
+#### 🔔 `alerts.html` — Uyarılar
 Hediye / takip / paylaşım / abone bildirimi. Elmas değerine göre 4 kademe: büyük
 hediyede kart sallanır ve konfeti patlar. Kuyruk var, hediye yağmurunda ekran kusmaz.
 
@@ -303,12 +419,55 @@ Yorum yazan herkes bir yarışçı olur. Yorum ilerletir, hediye fırlatır, ilk
 | Parametre | Ne yapar |
 |---|---|
 | `?lite=1` | **LIVE Studio için şart.** Pahalı efektleri kapatır. |
-| `?v=1` | 9:16 dikey yayın yerleşimi |
 | `?mock=1` | Sunucu olmadan sahte olay üretir — `file://` ile bile çalışır |
 | `?bg=green` | Yeşil zemin (chroma key gerekirse) — `green\|magenta\|blue\|#RRGGBB` |
 | `?scale=1.4` | Tümünü büyüt/küçült |
 | `?debug=1` | Sağ altta bağlantı göstergesi + konsol logu |
 | `?src=tikfinity` | Olay kaynağını zorla (`bridge` \| `tikfinity`) |
+| `?perde=1` | Arkayı karartan perde — oyun ana içerikse aç |
+| `?guvenli=1` | Ölü bölgeleri kırmızı tarayarak göster (**yayına alma**) |
+
+### Dikey / yatay — Dual layout
+
+LIVE Studio'nun **Dual layout**'unda aynı Link kaynağı hem dikey hem yatay sahnede
+görünüyor ve içeriğini değiştiremiyorsun — sadece kutunun boyutu değişiyor. Yani
+tek bir sayfa iki farklı en-boy oranında çalışmak zorunda.
+
+Sayfa bunu **kendisi ölçüyor**: en/boy oranına bakıp yerleşimi ve ölü bölge
+paylarını değiştiriyor. İki sahneye de aynı adresi ekleyebilirsin, ekstra bir şey
+yapman gerekmiyor.
+
+| Parametre | Ne yapar |
+|---|---|
+| _(hiçbiri)_ | **Önerilen.** Oranı ölçüp kendi karar verir |
+| `?v=1` | Dikeye zorla |
+| `?y=1` | Yataya zorla |
+
+### Ölü bölgeler
+
+TikTok LIVE izlerken ekranın büyük kısmını TikTok'un **kendi arayüzü** kaplıyor:
+üstte yayıncı bilgisi ve en çok hediye gönderenler, altta kayan yorum akışı ve
+hediye çubuğu, sağda beğeni/paylaş/hediye ikonları. Oraya koyduğun her şey
+izleyicide **görünmez**.
+
+İki kademe var:
+
+| Kademe | Ne için | Dikey (üst/alt/sağ/sol) | Yatay |
+|---|---|---|---|
+| `--dz-*` gevşek | Kısa ömürlü uyarılar | %14 / %32 / %17 / %4 | %10 / %14 / %6 / %6 |
+| `--dz2-*` sıkı | **Kalıcı şeyler: oyun tahtası, skor** | %22 / %42 / %19 / %8 | %13 / %18 / %26 / %7 |
+
+Sıkı kademe neden daha geniş: (1) alttaki %32 kimsenin yeri — TikTok'un sert
+blokladığı %26'nın üstünde ama yorum akışının gerçekte ulaştığı %39-44'ün altında;
+(2) **yanlardan kırpılma** — 1080×1920 yayın, 19.5:9 veya 20:9 bir telefonda ekranı
+doldururken her kenardan %9-12 kırpılıyor.
+
+URL'den ayarlanabiliyor: `?dzust=14&dzalt=32&dzsag=17&dzsol=4` ve `?dz2alt=45`
+`?genis=1` → oyunları da gevşek alana al.
+
+> ⚠️ **Bu yüzdeleri kendi telefonunda doğrula.** LIVE Studio'nun "mobil önizleme"
+> düğmesiyle 10 dakikada hepsini yanlışlayabilirsin. Değerler topluluk
+> ölçümlerinden geliyor, TikTok arayüzü de sürekli değişiyor.
 
 Göstergenin rengi: 🟢 canlı · 🟠 mock · 🔵 bağlanıyor · 🔴 kopuk
 

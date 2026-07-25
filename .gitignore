@@ -1,6 +1,15 @@
 node_modules/
 package-lock.json
 
+# Paketleme ciktilari — 90 MB'lik ikili dosyalar, depoya girmez.
+# Yeniden uretmek icin:  paketle.bat   (ya da: node server/paketle.js --win)
+dist/
+
+# Kullaniciya ozel: exe'nin yanina kaydettigi kullanici adi
+tiktok-ayarlar.json
+kullanici-adi.txt
+server/veri-kaynaklari.json
+
 # recon ciktilari — makineye ozel, kullanici adi/makine adi icerebilir
 recon/tls-recon-raporu.txt
 recon/asar-cikti/

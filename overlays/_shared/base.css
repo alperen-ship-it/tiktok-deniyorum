@@ -48,6 +48,32 @@
   --dz2-sol: 8%;
 }
 
+/* ---------------------------------------------------------------------------
+   YATAY DÜZEN
+   LIVE Studio'nun "Dual layout" özelliğinde ayni Link kaynagi hem dikeyde
+   hem yatayda gorunuyor — icerigi degistiremiyorsun, sadece boyut/konum.
+   Yani TEK bir sayfa iki farkli en-boy oraninda calismak zorunda.
+
+   tt.js oranı olcup html'e .tt-yatay ya da .tt-vertical veriyor.
+   Yatayda TikTok arayuzu cok daha az yer kapliyor: yorum akisi sagda dar bir
+   sutun ve gizlenebiliyor, alttaki dev olu bolge yok.
+--------------------------------------------------------------------------- */
+html.tt-yatay {
+  --dz-ust: 10%;
+  --dz-alt: 14%;
+  --dz-sag: 6%;
+  --dz-sol: 6%;
+
+  --dz2-ust: 13%;
+  --dz2-alt: 18%;
+  --dz2-sag: 26%;   /* sagda yorum sutunu icin genis pay */
+  --dz2-sol: 7%;
+}
+
+/* Yatayda dikey icin kucultulmus yazilar gereksiz yere kucuk kaliyor */
+html.tt-yatay #bossAd { font-size: 30px; }
+html.tt-yatay #talimat { font-size: 19px; }
+
 /* Icerigi guvenli alana hapseden yardimcilar */
 .tt-guvenli {          /* gecici seyler: uyarilar, kisa omurlu bildirimler */
   position: fixed;
@@ -189,6 +215,128 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
   color: var(--tt-cyan);
 }
 .tt-hint.gone { display: none; }
+
+/* ---------------------------------------------------------------------------
+   UYANMA PERDESİ  (TT.uyanis)
+   Yayın açılmadan / ilk yorum gelmeden önce ekranda duran çağrı ekranı.
+   İki işi var:
+     1) Yayıncıya "bağlantı var mı, ne bekliyorum" demek
+     2) İZLEYİCİYE NE YAZACAĞINI ÖĞRETMEK — asıl değerli olan bu. Kimse
+        kuralları bilmeden yorum yazmaz, oyun da hiç başlamaz.
+   İlk gerçek olay gelince kayboluyor, uzun sessizlikte ince şerit olarak
+   geri geliyor (yeni gelen izleyici kuralları görsün).
+--------------------------------------------------------------------------- */
+/* Dış katman: TÜM ekranı kaplayan karartma. Perde oyunun üstünde duruyor;
+   karartma olmazsa oyun tahtası yazının arkasından geçiyor ve çağrı
+   okunmuyor — yani izleyici ne yazacağını anlamıyor. */
+#tt-uyanis {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147481000;
+  transition: opacity .5s;
+  background: radial-gradient(ellipse at 50% 45%, rgba(6, 7, 12, .82), rgba(6, 7, 12, .94));
+}
+#tt-uyanis.gitti { opacity: 0; visibility: hidden; }
+
+/* İç katman: yazılar sıkı güvenli alanda kalıyor ki TikTok arayüzü kesmesin */
+#tt-uyanis .kutu {
+  position: absolute;
+  top: var(--dz2-ust);
+  bottom: var(--dz2-alt);
+  left: var(--dz2-sol);
+  right: var(--dz2-sag);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+#tt-uyanis .baslik {
+  font-size: 46px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+#tt-uyanis .durum {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  opacity: .75;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#tt-uyanis .durum::before {
+  content: '';
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #f59e0b;
+  animation: tt-nabiz 1.4s ease-in-out infinite;
+}
+#tt-uyanis[data-durum="canli"] .durum::before { background: #22c55e; }
+#tt-uyanis[data-durum="kopuk"] .durum::before { background: #ef4444; }
+
+#tt-uyanis .komutlar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+#tt-uyanis .komut {
+  font-size: 25px;
+  font-weight: 900;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, .55);
+  border: 2px solid rgba(255, 255, 255, .3);
+}
+#tt-uyanis .aciklama { font-size: 19px; font-weight: 700; opacity: .9; max-width: 100%; }
+#tt-uyanis .cagri {
+  font-size: 21px;
+  font-weight: 900;
+  color: var(--tt-cyan);
+  animation: tt-nabiz 1.8s ease-in-out infinite;
+}
+
+@keyframes tt-nabiz {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+/* Oyun başladıktan sonraki hatırlatma şeridi — perdeden çok daha küçük,
+   oyunun üstünü kapatmıyor. */
+#tt-serit {
+  position: fixed;
+  left: var(--dz2-sol);
+  right: var(--dz2-sag);
+  bottom: var(--dz2-alt);
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  pointer-events: none;
+  z-index: 2147481000;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .4s, transform .4s;
+}
+#tt-serit.gorunur { opacity: 1; transform: none; }
+#tt-serit .komut {
+  font-size: 17px;
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, .6);
+  border: 1px solid rgba(255, 255, 255, .25);
+}
+
+html.tt-yatay #tt-uyanis .baslik { font-size: 38px; }
+html.tt-yatay #tt-uyanis .komut { font-size: 21px; }
+html.tt-yatay #tt-uyanis .aciklama { font-size: 17px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
