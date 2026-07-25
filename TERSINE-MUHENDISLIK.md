@@ -388,6 +388,86 @@ Dürüst olmak gerekirse şunları kanıtlayamadık:
 
 `recon/tls-recon.ps1` çıktısını paylaşırsan bunların çoğu netleşir.
 
+## 8. EulerStream bağımlılığından kurtulmak — keşif notları
+
+> **Durum: sadece öğrenme.** Hiçbiri uygulanmadı, kodda karşılığı yok.
+> Bugün köprü hâlâ Euler'in imza servisini kullanıyor. Bu bölüm, ileride
+> yapılacaksa nereden başlanacağını yazıya geçirmek için var.
+
+### Neden Euler'e bağlıyız
+
+Tek sebep: TikTok'un webcast WebSocket adresi **imzalı** olmak zorunda —
+`X-Bogus`, `X-Gnarly`, `msToken`. Bu parametreleri TikTok'un obfuscate
+edilmiş `webmssdk.js`'i üretiyor ve tarayıcı bilgilerini (UA, sürüm,
+ekran) kodluyor; `browser_version` / `browser_name` sorgu parametreleri
+ve `User-Agent` başlığıyla tutmazsa TikTok isteği reddediyor.
+
+Geri kalan her şeyin **zaten Euler'siz yolu var**: `fetchRoomInfoFromHtmlRoute`,
+`fetchRoomInfoFromApiLiveRoute`, `fetchRoomIdComposite` doğrudan TikTok'a
+gidiyor. `tiktok-live-api-sdk@0.4.0-beta1`'in rota listesini çıkardığımızda
+gerçekten Euler'e bağımlı olan yalnızca iki uç nokta kaldı:
+
+| Rota | Ne yapıyor | Not |
+|---|---|---|
+| `GET /webcast/rooms/{room_id}/connect` | imzalı WS adresi | asıl kilit |
+| `POST /webcast/rooms/{room_id}/chat` | sohbete mesaj yazma | Euler'de ücretli (`PremiumFeatureError`) |
+
+### Kanca hazır: `SignConfig.basePath`
+
+`tiktok-live-api-sdk`, OpenAPI'den üretilmiş bir axios istemcisi ve
+`basePath` yapılandırılabilir (`dist/*.d.ts` içinde doğrulandı).
+`SignConfig` tipi de `Partial<ClientConfiguration>` — yani:
+
+```js
+SignConfig.basePath = 'http://localhost:9999';   // butun Euler cagrilari bize duser
+```
+
+EulerStream bunu "Custom Sign Servers" başlığıyla kendi dokümanında da
+belgeliyor. Yani kütüphaneyi çatallamaya gerek yok, resmî kanca bu.
+
+Varsayılan hostlar (bundle'dan çıkarıldı): `tiktok.eulerstream.com`,
+`www.eulerstream.com`.
+
+### İki uygulama yolu
+
+**A — Kendi imzalayıcımız.** Headless Chromium'da TikTok'un kendi
+`webmssdk.js`'ini çalıştırıp imzayı hesaplatmak. `carcabot/tiktok-signature`
+tam olarak bunu yapıyor (açık kaynak, ücretsiz, Docker'lı).
+*Maliyeti:* bakım koşu bandı — TikTok algoritmayı döndürdükçe kırılır.
+
+**B — Hiç imzalamamak (tercih edilen).** TikTok LIVE sayfasını kullanıcının
+kendi tarayıcısında aç, CDP `Network.webSocketFrameReceived` ile ham
+çerçeveleri yakala, kütüphanenin **zaten dışa açtığı** fonksiyona ver:
+
+```js
+deserializeWebSocketMessage(binaryMessage: Uint8Array): Promise<DecodedWebcastPushFrame>
+```
+
+İmzayı TikTok'un kendi sayfası atıyor; bizim çözmemiz gereken bir şey yok.
+Sohbete yazmak da bedavaya geliyor — gerçek yorum kutusuna yazılıyor,
+premium plan gerekmiyor. Windows'ta zaten kurulu olan Edge'i
+`--remote-debugging-port` ile kalıcı profilde açmak yeterli; exe'ye
+Chromium paketlemeye gerek yok.
+
+*Maliyeti:* açık bir tarayıcı süreci (~300–400MB) · TikTok sayfa yapısını
+değiştirirse hook kırılabilir (imza rotasyonundan çok daha seyrek) ·
+ToS açısından durum bütün ekosistemle aynı: tek hesap, tek oda, kendi yayın.
+
+### Yapılacaksa nasıl kurulmalı
+
+Değiştirilebilir kaynak katmanı: `--kaynak euler` (bugünkü davranış, dokunulmaz)
+/ `--kaynak tarayici` (yeni). Biri düşerse diğerine geçilir. Köprü zaten
+tek tip olay şeması yaydığı için **oyunlar tarafında tek satır değişmez**.
+
+### EulerStream GitHub org — ne var ne yok
+
+7 depo. İşe yarayabilecekler: `Euler-WebSocket-SDK` (TS, WS bağlantı yönetimi),
+`Euler-Connect` (Chrome eklentisi — ama imzayı atlatmıyor, kendi servisleri için
+oturum aracısı), `TikTok-Live-Api` (C# istemci). İmza sunucusunun kendisi
+kapalı kaynak; org'da yok.
+
+---
+
 ## Kaynaklar
 
 Bulgular şu projelerin kaynak kodundan çıkarıldı:
@@ -398,6 +478,8 @@ yerel protokolün kaynağı) · `Zumbisinho/GD-TiktokLive` (`services.json` şem
 `Loukious/TikTokStreamKeyGenerator` (UA/sürüm sabitleri) ·
 `NoMercy-ac/NoMercy` (yakalanmış gerçek kurulum yolları) ·
 `zerodytrash/TikTok-Live-Connector` · `isaackogan/TikTokLive` ·
-`steveseguin/social_stream` · `streamlabs/desktop`
+`steveseguin/social_stream` · `streamlabs/desktop` ·
+`carcabot/tiktok-signature` · `justbeluga/tiktok-web-reverse-engineering` ·
+`eulerstream/*` (org taraması) · `tiktok-live-api-sdk@0.4.0-beta1` (bundle analizi)
 
 ---
