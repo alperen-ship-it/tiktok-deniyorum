@@ -14,10 +14,13 @@
   #baslik { font-size: 28px; }
   #rozet { font-size: 27px; }
 
+  /* Panel eskiden sag USTTEYDI ve tam bilyelerin yaristigi yeri kapatiyordu.
+     Kamera lideri ust ucte tuttugu icin aksiyon hep ustte oluyor; panel
+     alta indi. */
   #siralama {
-    position: absolute; top: 12px; right: 12px; z-index: 3;
-    width: min(300px, 46%);
-    padding: 8px; gap: 5px;
+    position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 3;
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding: 7px; gap: 5px;
     background: rgba(18,12,51,.72);
     border: 3px solid var(--cizgi); border-radius: 16px;
     box-shadow: 0 4px 0 var(--cizgi);
@@ -32,7 +35,7 @@
      bu oyunda siralama pistin icinde, o yuzden izgarayi geri aliyoruz. */
   html.tt-yatay #kok { display: flex; flex-direction: column; }
   html.tt-yatay #alan { grid-area: auto; }
-  html.tt-yatay #siralama { width: min(320px, 30%); }
+  html.tt-yatay #siralama { grid-template-columns: repeat(3, 1fr); }
 
   /* Katilim ekrani — yarisa girenlerin baloncuklari */
   #kuyruk {
@@ -124,34 +127,41 @@
 
       if (tip === 0) {
         // --- civi tarlasi: klasik pinball dagilimi ---
-        for (let s = 0; s < 5; s++) {
-          const kaydir = (s % 2) * 60;
-          for (let x = 70 + kaydir; x < EN - 50; x += 120) {
-            pegler.push({ x, y: y + s * 105, r: 13 });
+        for (let s = 0; s < 7; s++) {
+          const kaydir = (s % 2) * 55;
+          for (let x = 60 + kaydir; x < EN - 40; x += 110) {
+            pegler.push({ x, y: y + s * 78, r: 14 });
           }
         }
-        y += 5 * 105 + 90;
+        y += 7 * 78 + 40;
 
       } else if (tip === 1) {
         // --- zikzak rampalar: kalabaligi bir yana surer, oradan dokulur ---
         const sol = b % 2 === 0;
         duvarlar.push(sol
-          ? { x1: 0, y1: y, x2: EN - 180, y2: y + 210 }
-          : { x1: EN, y1: y, x2: 180, y2: y + 210 });
-        y += 260;
+          ? { x1: 0, y1: y, x2: EN - 150, y2: y + 175 }
+          : { x1: EN, y1: y, x2: 150, y2: y + 175 });
+        // Rampa boyunca kucuk civiler: bilyeler tek sira halinde
+        // kaymasin, dagilsin — bos rampa cok sakin duruyordu.
+        for (let k = 1; k <= 4; k++) {
+          pegler.push({ x: sol ? k * 165 : EN - k * 165, y: y + 42 * k + 26, r: 9 });
+        }
+        y += 200;
         duvarlar.push(sol
-          ? { x1: EN, y1: y, x2: 180, y2: y + 210 }
-          : { x1: 0, y1: y, x2: EN - 180, y2: y + 210 });
-        y += 300;
+          ? { x1: EN, y1: y, x2: 150, y2: y + 175 }
+          : { x1: 0, y1: y, x2: EN - 150, y2: y + 175 });
+        y += 215;
 
       } else {
         // --- engel sutunlari + orta ada ---
         for (let s = 0; s < 3; s++) {
-          pegler.push({ x: EN * 0.5, y: y + s * 150, r: 34 });
-          pegler.push({ x: EN * 0.16, y: y + 75 + s * 150, r: 20 });
-          pegler.push({ x: EN * 0.84, y: y + 75 + s * 150, r: 20 });
+          pegler.push({ x: EN * 0.5,  y: y + s * 118, r: 30 });
+          pegler.push({ x: EN * 0.16, y: y + 59 + s * 118, r: 19 });
+          pegler.push({ x: EN * 0.84, y: y + 59 + s * 118, r: 19 });
+          pegler.push({ x: EN * 0.33, y: y + s * 118, r: 12 });
+          pegler.push({ x: EN * 0.67, y: y + s * 118, r: 12 });
         }
-        y += 3 * 150 + 90;
+        y += 3 * 118 + 45;
       }
     }
 
@@ -196,7 +206,7 @@
         y: 60 + Math.random() * 160,
         vx: (Math.random() - 0.5) * 120,
         vy: 0,
-        bitti: false, sira: 0,
+        bitti: false, sira: 0, iz: [],
       });
       i++;
     }
@@ -308,6 +318,42 @@
   addEventListener('resize', boyutla);
   addEventListener('tt-yon', boyutla);
 
+  // Rengi acip koyultan yardimcilar — kure golgelemesi icin.
+  function ton(hex, k) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.min(255, Math.max(0, ((n >> 16) & 255) + k));
+    const g = Math.min(255, Math.max(0, ((n >> 8) & 255) + k));
+    const b = Math.min(255, Math.max(0, (n & 255) + k));
+    return `rgb(${r} ${g} ${b})`;
+  }
+
+  /** Bilyeyi KURE gibi ciz: duz daire "ucuz" duruyor.
+   *  Isik sol ustten: radyal gradyan + parlama noktasi + koyu kenar + golge. */
+  function bilyeCiz(b) {
+    const x = b.x, y = b.y;
+
+    // yere dusen golge
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(x + 3, y + R * 0.85, R * 0.85, R * 0.32, 0, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    const g = ctx.createRadialGradient(x - R * 0.36, y - R * 0.36, R * 0.12, x, y, R * 1.05);
+    g.addColorStop(0, ton(b.renk, 88));
+    g.addColorStop(0.5, b.renk);
+    g.addColorStop(1, ton(b.renk, -78));
+    ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(10,6,30,.85)'; ctx.stroke();
+
+    // parlama
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.ellipse(x - R * 0.34, y - R * 0.4, R * 0.3, R * 0.2, -0.7, 0, 6.2832);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
   function ciz() {
     ctx.clearRect(0, 0, W, H);
 
@@ -315,7 +361,9 @@
     let onde = 0;
     for (const b of bilyeler) if (!b.bitti && b.y > onde) onde = b.y;
     if (durum === 'katilim') onde = 200;
-    const hedef = onde * olcek - H * 0.34;
+    // Lideri ekranin %42'sinde tut: %34'te arkadaki paket ekran disinda
+    // kaliyordu ve yaris tek bilyeden ibaret goruniyordu.
+    const hedef = onde * olcek - H * 0.42;
     kamera += (hedef - kamera) * 0.12;
     kamera = Math.max(0, Math.min(kamera, pistBoy * olcek - H));
 
@@ -326,10 +374,18 @@
     const ustSinir = kamera / olcek - 60;
     const altSinir = (kamera + H) / olcek + 60;
 
-    // --- duvarlar ---
-    ctx.strokeStyle = '#6f5fd0';
-    ctx.lineWidth = 9;
+    // --- duvarlar: iki katmanli, kalinlik hissi versin ---
     ctx.lineCap = 'round';
+    ctx.strokeStyle = '#241b5e';
+    ctx.lineWidth = 13;
+    ctx.beginPath();
+    for (const d of duvarlar) {
+      if (Math.max(d.y1, d.y2) < ustSinir || Math.min(d.y1, d.y2) > altSinir) continue;
+      ctx.moveTo(d.x1, d.y1); ctx.lineTo(d.x2, d.y2);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = '#7d6ce0';
+    ctx.lineWidth = 7;
     ctx.beginPath();
     for (const d of duvarlar) {
       if (Math.max(d.y1, d.y2) < ustSinir || Math.min(d.y1, d.y2) > altSinir) continue;
@@ -337,50 +393,94 @@
     }
     ctx.stroke();
 
-    // --- civiler ---
-    ctx.fillStyle = '#8b7ae0';
+    // --- civiler: golge + gradyan, duz nokta degil ---
     for (const p of pegler) {
       if (p.y < ustSinir || p.y > altSinir) continue;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = .3; ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.arc(p.x + 2, p.y + 3, p.r, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 1;
+      const pg = ctx.createRadialGradient(p.x - p.r * .35, p.y - p.r * .35, p.r * .1, p.x, p.y, p.r);
+      pg.addColorStop(0, '#cfc4ff'); pg.addColorStop(1, '#6f5fc4');
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+      ctx.fillStyle = pg; ctx.fill();
     }
 
     // --- bitis cizgisi ---
     if (bitis > ustSinir && bitis < altSinir) {
-      ctx.fillStyle = '#ffd23f';
-      ctx.fillRect(0, bitis, EN, 12);
-      ctx.fillStyle = '#17123a';
-      for (let x = 0; x < EN; x += 60) ctx.fillRect(x, bitis, 30, 12);
+      for (let x = 0; x < EN; x += 40) {
+        for (let k = 0; k < 2; k++) {
+          ctx.fillStyle = ((x / 40 + k) % 2) ? '#17123a' : '#fff';
+          ctx.fillRect(x, bitis + k * 11, 40, 11);
+        }
+      }
     }
+
+    // --- iz (motion trail): hiz hissi duz daireyle gelmiyor ---
+    for (const b of bilyeler) {
+      if (b.bitti || !b.iz) continue;
+      for (let i = 0; i < b.iz.length; i++) {
+        const p = b.iz[i];
+        if (p.y < ustSinir || p.y > altSinir) continue;
+        ctx.globalAlpha = 0.05 + 0.16 * (i / b.iz.length);
+        ctx.beginPath(); ctx.arc(p.x, p.y, R * (0.45 + 0.45 * i / b.iz.length), 0, 6.2832);
+        ctx.fillStyle = b.renk; ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
 
     // --- bilyeler ---
     for (const b of bilyeler) {
       if (b.bitti) continue;
       if (b.y < ustSinir || b.y > altSinir) continue;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, R, 0, 6.2832);
-      ctx.fillStyle = b.renk;
-      ctx.fill();
-      ctx.lineWidth = 4; ctx.strokeStyle = '#17123a'; ctx.stroke();
+      bilyeCiz(b);
     }
     ctx.restore();
 
-    // --- onde gidenlerin adi (dunya degil ekran uzayinda, okunakli kalsin) ---
+    // --- lider etiketleri (ekran uzayi: olcekten bagimsiz okunakli) ---
     const canli = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 3);
-    ctx.font = '700 15px system-ui, sans-serif';
+    ctx.font = '800 15px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    for (const b of canli) {
-      const ey = b.y * olcek - kamera;
-      if (ey < 0 || ey > H) continue;
-      const ex = b.x * olcek;
-      ctx.lineWidth = 4; ctx.strokeStyle = '#17123a';
-      ctx.strokeText(b.ad, ex, ey - R * olcek - 7);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(b.ad, ex, ey - R * olcek - 7);
-    }
+    canli.forEach((b, i) => {
+      const ey = b.y * olcek - kamera, ex = b.x * olcek;
+      if (ey < 14 || ey > H) return;
+      const etiket = (i + 1) + '. ' + b.ad;
+      const en = ctx.measureText(etiket).width + 14;
+      const ty = ey - R * olcek - 20;
+      ctx.fillStyle = 'rgba(12,8,40,.82)';
+      ctx.beginPath(); ctx.roundRect(ex - en / 2, ty, en, 19, 7); ctx.fill();
+      ctx.fillStyle = i === 0 ? '#ffd23f' : '#fff';
+      ctx.fillText(etiket, ex, ty + 14);
+    });
   }
 
   // ---- dongu ---------------------------------------------------------------
-  let sonZaman = 0;
+  // ---- spiker --------------------------------------------------------------
+  // Jelle's Marble Runs'in isi tutan yani yarisi SPOR YAYINI gibi anlatmasi:
+  // canli siralama, pozisyon degisimi, "son duzluk". Sessiz bir fizik
+  // simulasyonu ucuz duruyor; olaylari soyleyince yaris haline geliyor.
+  let sonLider = null, sonDuzlukDendi = false, spikerBekle = 0;
+
+  function spikerKontrol() {
+    if (spikerBekle > 0) { spikerBekle--; return; }
+    const canli = bilyeler.filter((b) => !b.bitti);
+    if (!canli.length) return;
+    let lider = canli[0];
+    for (const b of canli) if (b.y > lider.y) lider = b;
+
+    if (sonLider && lider.kid !== sonLider) {
+      akis(`⚡ <span class="kim">${lider.ad}</span> <span class="ok">▸</span> ÖNE GEÇTİ`);
+      spikerBekle = 90;
+    }
+    sonLider = lider.kid;
+
+    if (!sonDuzlukDendi && lider.y > bitis * 0.86) {
+      sonDuzlukDendi = true;
+      akis('🔥 <b>SON DÜZLÜK!</b>');
+      spikerBekle = 90;
+    }
+  }
+
+  let sonZaman = 0, izSayac = 0;
   function dongu(t) {
     requestAnimationFrame(dongu);
     if (!sonZaman) sonZaman = t;
@@ -391,6 +491,17 @@
     if (durum === 'yaris') {
       // Uc alt adim: hizli bilye civiyi delip gecmesin
       for (let i = 0; i < 3; i++) adim(dt / 3);
+      // Iz noktalari — hiz hissi icin
+      izSayac += dt;
+      if (izSayac > 0.045) {
+        izSayac = 0;
+        for (const b of bilyeler) {
+          if (b.bitti) continue;
+          b.iz.push({ x: b.x, y: b.y });
+          if (b.iz.length > 7) b.iz.shift();
+        }
+      }
+      spikerKontrol();
     }
     ciz();
   }
@@ -421,18 +532,32 @@
       sirEl.innerHTML = onde.length
         ? onde.map((b, i) => satirHtml(i, b, Math.round(b.y / bitis * 100) + '%')).join('')
         : '<div class="sira bos">yarış başlıyor…</div>';
+      onde.forEach((b, i) => oncekiSira.set(b.kid, i));
       return;
     }
     sirEl.innerHTML = list.map((b, i) => satirHtml(i, b, b.sira + '.')).join('');
   }
+  // Onceki sira: yukselen/dusen oklari icin. Gercek yaris yayinlarinda
+  // pozisyon degisimi en cok izlenen sey.
+  let oncekiSira = new Map();
+
   function satirHtml(i, b, sag) {
     const rz = MADALYA[i] || (i + 1);
     const stil = i < 3 ? `background:${['#ffd23f', '#d8dbe6', '#e29a5a'][i]}` : 'background:#6b5fb8;color:#fff';
-    return `<div class="sira">
-      <div class="rozet" style="${stil}">${rz}</div>
-      <div class="bayrak" style="background:${b.renk}"></div>
-      <div class="ad">${b.ad}</div>
-      <div class="adet">${sag}</div>
+    const onc = oncekiSira.get(b.kid);
+    let ok = '';
+    if (onc != null && onc !== i) {
+      ok = onc > i ? '<span style="color:#7ed957;font-size:12px">▲</span>'
+                   : '<span style="color:#ff6b6b;font-size:12px">▼</span>';
+    }
+    const yuzde = Math.max(0, Math.min(100, Math.round(b.y / bitis * 100)));
+    return `<div class="sira" style="position:relative;overflow:hidden">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:${yuzde}%;
+                  background:${b.renk};opacity:.16;pointer-events:none"></div>
+      <div class="rozet" style="${stil};position:relative">${rz}</div>
+      <div class="bayrak" style="background:${b.renk};position:relative"></div>
+      <div class="ad" style="position:relative">${b.ad} ${ok}</div>
+      <div class="adet" style="position:relative">${sag}</div>
     </div>`;
   }
 
@@ -476,6 +601,7 @@
     }
     kuyruk = new Map();
     bilyeler = []; bitirenler = [];
+    sonLider = null; sonDuzlukDendi = false; oncekiSira = new Map();
     pistUret();
     kamera = 0;
     sayacCiz(); kuyrukCiz(); siralamaCiz();
