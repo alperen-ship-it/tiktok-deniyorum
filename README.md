@@ -4,7 +4,7 @@
 
 **İzleyicinin sohbete yazarak oynadığı oyunlar. Aç, bırak, karışma.**
 
-Üç oyun bir arada döner: bilye yarışı · tepe savaşı · at yarışı bahsi.
+Üç oyun bir arada döner: bilye yarışı · bilgi yarışması · at yarışı bahsi.
 Yayıncı hiçbir şeye dokunmaz — oyunlar kendi kendine tur atar, kazananları
 kutlar, oda boşken demo oynar, izleyici geldiğinde gerçek oyuna geçer.
 
@@ -87,12 +87,12 @@ Hepsi `oyun.html`'e eklenir, oyunlara aktarılır. Örnek:
 |---|---|
 | `?lite=1` | GPU'suz tarayıcı modu (LIVE Studio'da **şart**) |
 | `?dk=6` | Oyun başına dakika (tek link modunda) |
-| `?oyunlar=bilye,at` | Hangi oyunlar, hangi sırayla (ek: `kalan` battle royale hâlâ mevcut) |
+| `?oyunlar=bilye,at` | Hangi oyunlar, hangi sırayla (ek: `tepe`, `kalan` rotasyon dışı ama mevcut) |
 | `?duyuru=0` | Geçiş duyurusunu kapat |
 | `?sag=24&alt=24` | Kenar paylarını daralt, sahneyi büyüt (piksel) |
 | `?ust= ?sol=` | Diğer kenarlar — TikTok arayüzünün kapattığı alana göre |
 
-Tek tek oyun eklemek istersen: `bilye.html`, `kalan.html`, `at.html` (hepsi
+Tek tek oyun eklemek istersen: `bilye.html`, `bilgi.html`, `at.html` (hepsi
 `?lite=1` ile). Her birinin kendi parametreleri kontrol panelinde yazılı.
 
 ---
@@ -151,7 +151,7 @@ Test için `?mock=1` — sunucu olmadan sahte olaylarla çalışır. Ayrıntı:
 ```
 overlays/
   oyun.html          ← TEK LİNK: oyunları döndüren merkez
-  bilye.html  tepe.html  at.html  (kalan.html: rotasyon dışı, ?oyunlar= ile açılır)
+  bilye.html  bilgi.html  at.html   (tepe.html, kalan.html: rotasyon dışı)
   index.html         ← kontrol paneli (adresleri kopyala, test olayı gönder)
   _shared/           tt.js · kimlik.js · spiker.js · finis.js · juice.js
                      oyun-tema.css · base.css · font/ (Outfit, OFL)

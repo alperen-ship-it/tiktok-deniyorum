@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Bilgi Yarışması — ilk doğru cevap kazanır</title>
+<link rel="stylesheet" href="_shared/base.css">
+<link rel="stylesheet" href="_shared/oyun-tema.css">
+<style>
+  /* TikTok'un kendi viral formati (TikTok Trivia) uyarlamasi. Yazma
+     rekabetini DOGRUDAN kullanir: soru cikar, sohbete A/B/C/D yazilir,
+     ILK dogru cevaplayan en cok puani alir. Spam odullendirmez —
+     hiz + bilgi kazandirir, o yuzden ekran da sakin kalir. */
+  #orta { flex: 1; min-height: 0; display: flex; gap: 14px; }
+  #sahne { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ---- soru karti ---- */
+  #soruKutu { flex: none; padding: 22px 26px; position: relative; overflow: hidden; }
+  #kategori {
+    font-size: 20px; font-weight: 900; letter-spacing: 2px;
+    color: var(--soluk); text-transform: uppercase;
+  }
+  #soru {
+    margin-top: 8px;
+    font-size: 46px; font-weight: 700; line-height: 1.15;
+    color: var(--murekkep);
+  }
+  /* Sure cubugu: kartin alt kenari boyunca akar */
+  #sureCubuk {
+    position: absolute; left: 0; bottom: 0; height: 7px;
+    background: var(--altin); width: 100%;
+    transition: width .25s linear;
+  }
+  #sureCubuk.az { background: var(--mercan); }
+
+  /* ---- siklar ---- */
+  #siklar { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .sik {
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 22px;
+    background: var(--panel); border: 2px solid var(--cizgi); border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(12, 8, 34, .55);
+    transition: background .35s ease, opacity .35s ease;
+  }
+  .sik .harf {
+    flex: none; width: 62px; height: 62px; border-radius: 16px;
+    display: grid; place-items: center;
+    font-size: 34px; font-weight: 900; color: #191434;
+    background: var(--soluk); border: 2px solid var(--cizgi);
+  }
+  .sik .metin { flex: 1; min-width: 0; font-size: 34px; font-weight: 700; color: var(--murekkep); }
+  /* Kac kisi bu sikki secti — cevap acilinca gorunur */
+  .sik .oy {
+    flex: none; font-size: var(--tip-kucuk); font-weight: 900; color: var(--soluk);
+    font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .3s ease;
+  }
+  .sik.acik .oy { opacity: 1; }
+  .sik.dogru { background: #1f5c3a; }
+  .sik.dogru .harf { background: #7ed957; }
+  .sik.yanlis { opacity: .38; }
+  .sik.elendi { opacity: .22; }   /* begeni ipucuyla elenen sik */
+
+  /* ---- sag ray ---- */
+  #ray { flex: none; width: 470px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  #ipucuKutu { flex: none; padding: 12px 14px; }
+  #ipucuBaslik {
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px; color: var(--soluk);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  #ipucuYol {
+    margin-top: 8px; height: 14px; border-radius: 8px;
+    background: rgba(0, 0, 0, .3); overflow: hidden;
+  }
+  #ipucuDolu { height: 100%; width: 0; background: var(--altin); transition: width .3s ease; }
+
+  #tabloKutu { flex: 1; min-height: 0; padding: 8px 6px; overflow: hidden; }
+  #tabloKutu::before {
+    content: '🏆 PUAN TABLOSU · KALICI'; display: block;
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    color: var(--soluk); padding: 4px 12px 6px;
+  }
+  .seri { flex: none; font-size: 20px; font-weight: 900; color: var(--mercan); }
+
+  /* ---- ilk dogru bilenler seridi ---- */
+  #hizli { flex: none; min-height: 46px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .hizliFis {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(246, 201, 79, .14); border: 2px solid var(--cizgi);
+    border-radius: 999px; padding: 5px 14px 5px 6px;
+    font-size: var(--tip-kucuk); font-weight: 700; color: var(--murekkep);
+    animation: fisGel .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes fisGel { from { transform: scale(.7); opacity: 0; } }
+  html.tt-lite .hizliFis { animation: none; }
+  .hizliFis b { color: var(--altin); }
+</style>
+</head>
+<body>
+<div id="zemin"></div>
+
+<div id="kok" class="tt-oyun">
+
+  <div id="ust" class="kutu">
+    <div id="rozet">🧠</div>
+    <div id="baslikSar">
+      <div id="baslik">Bilgi Yarışması</div>
+      <div id="cagri">A · B · C · D yaz — ilk doğru en çok puanı alır</div>
+    </div>
+    <div class="rozetBuyuk" id="soruNo">SORU <span id="soruSayi">1</span></div>
+    <div id="sayac">
+      <div id="sayacBuyuk">0</div>
+      <div id="sayacKucuk">yarışan</div>
+    </div>
+  </div>
+
+  <div id="orta">
+    <div id="sahne">
+      <div id="soruKutu" class="kutu">
+        <div id="kategori">GENEL</div>
+        <div id="soru">Hazırlanıyor…</div>
+        <div id="sureCubuk"></div>
+      </div>
+      <div id="siklar"></div>
+      <div id="hizli"></div>
+    </div>
+
+    <div id="ray">
+      <div id="ipucuKutu" class="kutu">
+        <div id="ipucuBaslik"><span>❤️ İPUCU BARI</span><span id="ipucuDurum">beğeni gönder</span></div>
+        <div id="ipucuYol"><div id="ipucuDolu"></div></div>
+      </div>
+      <div id="tabloKutu" class="kutu"><div id="tabloIc"></div></div>
+    </div>
+  </div>
+
+  <div id="akis"></div>
+
+</div>
+
+<script src="_shared/tt.js"></script>
+<script src="_shared/kimlik.js"></script>
+<script src="_shared/spiker.js"></script>
+<script src="_shared/finis.js"></script>
+<script src="_shared/juice.js"></script>
+<script src="_shared/sorular.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
+
+  const SORU_SN  = num('sure', 18);     // cevap penceresi
+  const ACIK_SN  = num('acik', 7);      // cevap gosterim suresi
+  const IPUCU    = num('ipucu', 60);    // kac begeni bir sikki eler
+
+  const HARFLER = ['A', 'B', 'C', 'D'];
+
+  // ---- durum ---------------------------------------------------------------
+  let soru = null, soruIdx = -1;
+  let durum = 'soru';          // soru | acik
+  let kalanSn = SORU_SN;
+  let cevaplar = new Map();    // kid -> {ad, sik, sira, kat}
+  let elenen = new Set();      // ipucuyla elenen sik indeksleri
+  let begeniSayaci = 0;
+  let soruSayisi = Number(localStorage.getItem('tt-bilgi-no') || 1);
+
+  // Kalici tablo: kid -> {ad, puan, dogru, seri, enIyiSeri}
+  let tablo = new Map();
+  try {
+    for (const [k, v] of JSON.parse(localStorage.getItem('tt-bilgi-tablo') || '[]')) tablo.set(k, v);
+  } catch { /* sifirdan */ }
+
+  // Ust uste ayni soru cikmasin: son gorulenleri hatirla
+  let sonGorulen = [];
+
+  const soruEl = document.getElementById('soru');
+  const katEl = document.getElementById('kategori');
+  const siklarEl = document.getElementById('siklar');
+  const cubukEl = document.getElementById('sureCubuk');
+  const hizliEl = document.getElementById('hizli');
+  const tabloEl = document.getElementById('tabloIc');
+  const ipucuDoluEl = document.getElementById('ipucuDolu');
+  const ipucuDurumEl = document.getElementById('ipucuDurum');
+  const uidler = new Map();
+
+  Spiker.kur(document.getElementById('akis'));
+
+  // ---- soru akisi ----------------------------------------------------------
+  function yeniSoru() {
+    durum = 'soru';
+    kalanSn = SORU_SN;
+    cevaplar = new Map();
+    elenen = new Set();
+    begeniSayaci = 0;
+    ipucuDoluEl.style.width = '0';
+    ipucuDurumEl.textContent = 'beğeni gönder';
+    hizliEl.innerHTML = '';
+
+    // Tekrar etmeyen rastgele secim
+    let i;
+    do { i = Math.floor(Math.random() * SORULAR.length); }
+    while (SORULAR.length > 12 && sonGorulen.includes(i));
+    sonGorulen.push(i);
+    if (sonGorulen.length > 10) sonGorulen.shift();
+
+    soruIdx = i;
+    soru = SORULAR[i];
+    katEl.textContent = soru.k;
+    soruEl.textContent = soru.s;
+    document.getElementById('soruSayi').textContent = soruSayisi;
+
+    siklarEl.innerHTML = soru.c.map((metin, k) =>
+      `<div class="sik" data-k="${k}">
+         <div class="harf">${HARFLER[k]}</div>
+         <div class="metin">${metin}</div>
+         <div class="oy" data-oy="${k}">0</div>
+       </div>`).join('');
+
+    cubukEl.classList.remove('az');
+    cubukEl.style.width = '100%';
+    document.getElementById('cagri').textContent = 'A · B · C · D yaz — ilk doğru en çok puanı alır';
+    sayacCiz();
+  }
+
+  function cevabiAc() {
+    durum = 'acik';
+    kalanSn = ACIK_SN;
+
+    // Sik oylarini goster, dogruyu isaretle
+    const oySay = [0, 0, 0, 0];
+    for (const c of cevaplar.values()) oySay[c.sik]++;
+    siklarEl.querySelectorAll('.sik').forEach((el) => {
+      const k = Number(el.dataset.k);
+      el.classList.add('acik');
+      el.querySelector('.oy').textContent = oySay[k] + ' 👤';
+      el.classList.add(k === soru.d ? 'dogru' : 'yanlis');
+    });
+
+    // Puanlama: ilk dogru en cok alir (hiz odulu), sonrakiler azalarak
+    const dogrular = [...cevaplar.entries()]
+      .filter(([, c]) => c.sik === soru.d)
+      .sort((a, b) => a[1].sira - b[1].sira);
+
+    dogrular.forEach(([kid, c], sira) => {
+      const taban = Math.max(30, 100 - sira * 8);
+      const t = tablo.get(kid) || { ad: c.ad, puan: 0, dogru: 0, seri: 0, enIyiSeri: 0 };
+      t.ad = c.ad;
+      t.seri = (t.seri || 0) + 1;
+      t.enIyiSeri = Math.max(t.enIyiSeri || 0, t.seri);
+      // Seri carpani: ust uste dogru bilmek katlanarak odullendirilir
+      const carpan = Math.min(3, 1 + (t.seri - 1) * 0.25) * (c.kat || 1);
+      t.puan += Math.round(taban * carpan);
+      t.dogru += 1;
+      if (!Kimlik.botMu(kid)) tablo.set(kid, t);
+    });
+    // Yanlis bilenin serisi kirilir
+    for (const [kid, c] of cevaplar) {
+      if (c.sik === soru.d) continue;
+      const t = tablo.get(kid);
+      if (t) { t.seri = 0; tablo.set(kid, t); }
+    }
+    localStorage.setItem('tt-bilgi-tablo',
+      JSON.stringify([...tablo.entries()].sort((a, b) => b[1].puan - a[1].puan).slice(0, 150)));
+
+    // Ilk dogru bilenler seridi
+    hizliEl.innerHTML = dogrular.slice(0, 6).map(([kid, c], i) =>
+      `<div class="hizliFis">${Kimlik.cip(kid, 30)}
+        <span>${c.ad}</span>${i === 0 ? ' <b>EN HIZLI</b>' : ''}</div>`).join('')
+      || '<div class="hizliFis" style="background:rgba(0,0,0,.25)">kimse bilemedi 😶</div>';
+
+    if (dogrular.length) {
+      const [kid, c] = dogrular[0];
+      const t = tablo.get(kid);
+      Juice.konfeti({ y: 0.42, adet: 26 });
+      Spiker.soyle(`⚡ <span class="kim">${c.ad}</span> ilk doğru cevabı verdi!` +
+        (t && t.seri > 2 ? ` <b>${t.seri} SERİ</b>` : ''), { oncelik: 3, sure: 4200 });
+      if (!Kimlik.botMu(kid)) {
+        TT.soyle(`🧠 Doğru cevap: ${soru.c[soru.d]} — en hızlı @${uidler.get(kid) || c.ad}! 🎉`);
+      }
+    } else {
+      Spiker.soyle(`😶 Kimse bilemedi — doğrusu: <b>${soru.c[soru.d]}</b>`, { oncelik: 2, sure: 4000 });
+    }
+
+    soruSayisi++;
+    localStorage.setItem('tt-bilgi-no', String(soruSayisi));
+    tabloCiz();
+    document.getElementById('cagri').textContent = 'doğru cevap: ' + soru.c[soru.d];
+    // Merkeze haber: oyun gecisi tur ARASINDA yapilsin
+    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
+  }
+
+  // ---- goruntu -------------------------------------------------------------
+  function tabloCiz() {
+    const list = [...tablo.entries()].map(([kid, t]) => ({ kid, ...t }))
+      .sort((a, b) => b.puan - a.puan).slice(0, 7);
+    tabloEl.innerHTML = list.length
+      ? list.map((t, i) => `<div class="sira${i === 0 ? ' lider' : ''}">
+          <div class="rozet" style="background:${['var(--altin)', '#d8dbe6', '#e29a5a'][i] || '#6b5fb8'};color:${i > 2 ? '#fff' : '#191434'}">${i + 1}</div>
+          ${Kimlik.cip(t.kid, 30)}
+          <div class="ad">${t.ad}</div>
+          ${t.seri > 1 ? `<div class="seri">🔥${t.seri}</div>` : ''}
+          <div class="adet">${t.puan}</div>
+        </div>`).join('')
+      : '<div class="sira bos">ilk doğruyu sen yaz — tablo kalıcı</div>';
+  }
+
+  function sayacCiz() {
+    document.getElementById('sayacBuyuk').textContent = cevaplar.size;
+  }
+
+  // ---- saat ----------------------------------------------------------------
+  setInterval(() => {
+    kalanSn -= 0.25;
+    if (durum === 'soru') {
+      const oran = Math.max(0, kalanSn / SORU_SN);
+      cubukEl.style.width = (oran * 100).toFixed(1) + '%';
+      cubukEl.classList.toggle('az', oran < 0.3);
+      if (kalanSn <= 0) cevabiAc();
+    } else if (kalanSn <= 0) {
+      yeniSoru();
+    }
+  }, 250);
+
+  // ---- olaylar -------------------------------------------------------------
+  const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
+  const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
+
+  /** Yorumdan sik cikar: "A", "b", "1", "şık c", "cevap 2"... */
+  function sikBul(metin) {
+    const t = String(metin || '').trim().toLocaleLowerCase('tr');
+    // Uzun mesaj cevap degil sohbettir: "b" ya da "bence b" cevaptir ama
+    // icinde tesadufen " a " gecen uzun bir cumle cevap sayilmamali.
+    if (t.length > 24) return -1;
+    const harf = t.match(/(?:^|\s)([abcd])(?:\s|$|\)|\.)/);
+    if (harf) return HARFLER.indexOf(harf[1].toLocaleUpperCase('tr'));
+    const rakam = t.match(/(?:^|\s)([1-4])(?:\s|$|\)|\.)/);
+    if (rakam) return Number(rakam[1]) - 1;
+    return -1;
+  }
+
+  TT.on('chat', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid || durum !== 'soru') return;
+    if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
+    const sik = sikBul(ev.comment);
+    if (sik < 0 || sik > 3) return;
+    if (cevaplar.has(kid)) return;              // ilk cevap gecerli, spam ise yaramaz
+    if (elenen.has(sik)) return;                // ipucuyla elenmis sik secilemez
+    cevaplar.set(kid, { ad: isim(ev.user), sik, sira: cevaplar.size, kat: 1 });
+    sayacCiz();
+  });
+
+  // Begeni: ORTAK ipucu bari. Dolunca yanlis siklardan biri elenir —
+  // bireysel avantaj degil, herkese acik kolaylik. Begeni boylece
+  // trivia'nin adaletini bozmadan oyuna giriyor.
+  TT.on('like', (ev) => {
+    if (durum !== 'soru') return;
+    begeniSayaci += (ev.likes || 1);
+    const kalanYanlis = [0, 1, 2, 3].filter((k) => k !== soru.d && !elenen.has(k));
+    if (kalanYanlis.length <= 1) { ipucuDurumEl.textContent = 'ipucu bitti'; return; }
+    const oran = Math.min(1, begeniSayaci / IPUCU);
+    ipucuDoluEl.style.width = (oran * 100).toFixed(0) + '%';
+    if (oran >= 1) {
+      begeniSayaci = 0;
+      ipucuDoluEl.style.width = '0';
+      const ele = kalanYanlis[Math.floor(Math.random() * kalanYanlis.length)];
+      elenen.add(ele);
+      const el = siklarEl.querySelector(`.sik[data-k="${ele}"]`);
+      if (el) el.classList.add('elendi');
+      Spiker.soyle(`❤️ İpucu açıldı — <b>${HARFLER[ele]}</b> şıkkı elendi!`, { oncelik: 2 });
+    }
+  });
+
+  // Hediye: o soru icin PUAN KATLAYICI. Dogru cevabi satin almaz —
+  // yine bilmen ve hizli olman gerekir, sadece odulu buyur.
+  TT.on('gift', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid) return;
+    const c = cevaplar.get(kid);
+    if (c) {
+      c.kat = Math.min(3, (c.kat || 1) + 1);
+      Spiker.soyle(`🎁 <span class="kim">${c.ad}</span> puanını katladı — x${c.kat}`, { oncelik: 2 });
+    }
+  });
+
+  // ---- demo (cazibe modu) --------------------------------------------------
+  // Bos odada botlar cevap verir; ekran olu kalmaz, gelen izleyici formati
+  // anlar. Botlar kalici tabloya YAZILMAZ (yukarida botMu kontrolu).
+  setInterval(() => {
+    if (durum !== 'soru' || kalanSn > SORU_SN * 0.7) return;
+    const gercekVar = [...cevaplar.keys()].some((k) => !Kimlik.botMu(k));
+    if (gercekVar || cevaplar.size >= 4) return;
+    const b = Kimlik.bot(Math.floor(Math.random() * 8));
+    if (cevaplar.has(b.kid)) return;
+    // Botlar cogunlukla dogru bilir ama her zaman degil — sahte his olmasin
+    const sik = Math.random() < 0.6 ? soru.d : Math.floor(Math.random() * 4);
+    if (elenen.has(sik)) return;
+    cevaplar.set(b.kid, { ad: b.ad, sik, sira: cevaplar.size, kat: 1 });
+    sayacCiz();
+  }, 1800);
+
+  // ---- basla ---------------------------------------------------------------
+  yeniSoru();
+  tabloCiz();
+
+  TT.uyanis({
+    baslik: 'BİLGİ YARIŞMASI',
+    komutlar: ['A', 'B', 'C', 'D'],
+    aciklama: 'Soruyu oku, şıkkı sohbete yaz · ilk doğru en çok puan · ❤️ beğeni ipucu açar · 🎁 hediye puanı katlar',
+    cagri: 'şıkkı yaz, en hızlı sen ol',
+  });
+})();
+</script>
+</body>
+</html>
