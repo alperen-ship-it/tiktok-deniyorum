@@ -176,6 +176,16 @@
   <div class="status" id="statsBox" style="display:none">
     <span id="stats"></span>
   </div>
+
+  <!-- Kumanda: terminale donmeden yayina baglan / durdur -->
+  <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+    <input id="kullanici" placeholder="tiktok kullanıcı adın"
+           style="font:inherit;font-size:14px;padding:7px 12px;border-radius:9px;
+                  border:1px solid var(--line);background:#0d1018;color:var(--ink);width:190px">
+    <button id="baglan">Bağlan</button>
+    <button id="mockBtn">Sahte veri</button>
+    <button id="durdur" style="border-color:#5a2030;color:#ff8fa3">Durdur</button>
+  </div>
 </header>
 
 <main>
@@ -287,6 +297,13 @@
       desc: 'Sohbet tek karakteri birlikte sürer. Her turda üç aday platform gösterilir, SOL/ZIPLA/SAĞ yazarak oy verilir, çoğunluk kazanır. Yanlış yön = düşüş. Beğeni mega zıplama barını doldurur, hediye roket olur.',
       opts: '<code>?tur=4</code> oylama süresi (sn) · <code>?guc=90</code> mega barı · <code>?karakter=🐸</code> karakter emojisi',
     },
+    {
+      oyun: true,
+      file: 'labirent.html',
+      name: '🐹 Sohbet Labirenti',
+      desc: '4 yön. Sohbet SOL/SAĞ/YUKARI/AŞAĞI yazarak karakteri labirentte gezdirir. Hazine topla, hayaletlerden kaç, çıkışa ulaş, bir üst kata geç. Duvara dayalı yönler ✕ ile işaretli.',
+      opts: '<code>?tur=4</code> oylama süresi · <code>?karakter=🐹&canavar=👻</code> · <code>?chiz=2</code> canavar kaç turda bir hareket eder',
+    },
   ];
 
   // Bu sayfa iki adresten birden servis ediliyor:
@@ -386,6 +403,42 @@
       .then((d) => flash(`${type} → ${d.sentTo} katmana gönderildi`))
       .catch(() => flash('Köprü kapalı — sadece önizlemeler çalışıyor'));
   }
+
+  // ---- kumanda: bağlan / sahte veri / durdur -------------------------------
+  const kullaniciEl = document.getElementById('kullanici');
+
+  function baglan(ad) {
+    fetch('/api/baglan?user=' + encodeURIComponent(ad || ''))
+      .then((r) => r.json())
+      .then((d) => {
+        flash(d.mode === 'live' ? `@${d.user} bağlanıyor…` : 'sahte veriye geçildi');
+        setTimeout(poll, 800);
+      })
+      .catch(() => flash('köprüye ulaşılamadı'));
+  }
+
+  document.getElementById('baglan').addEventListener('click', () => {
+    const ad = kullaniciEl.value.trim().replace(/^@/, '');
+    if (!ad) { flash('kullanıcı adı yaz'); return; }
+    baglan(ad);
+  });
+  kullaniciEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('baglan').click();
+  });
+  document.getElementById('mockBtn').addEventListener('click', () => baglan(''));
+
+  document.getElementById('durdur').addEventListener('click', () => {
+    // Yayin sirasinda yanlislikla basilirsa overlay'ler aninda olur — onay iste
+    if (!confirm('Köprü kapatılacak. Yayındaki tüm overlay\'ler duracak. Emin misin?')) return;
+    fetch('/api/kapat').catch(() => {});
+    flash('kapatılıyor…');
+    setTimeout(() => {
+      document.body.innerHTML =
+        '<div style="display:grid;place-content:center;height:100vh;text-align:center;' +
+        'font:600 20px system-ui;color:#8b93aa">Köprü kapatıldı.<br>' +
+        '<span style="font-size:15px;font-weight:400">Yeniden başlatmak için Baslat.bat</span></div>';
+    }, 600);
+  });
 
   // ---- durum --------------------------------------------------------------
   const dot = document.getElementById('dot');

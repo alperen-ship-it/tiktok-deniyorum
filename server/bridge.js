@@ -110,6 +110,38 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- kontrol panelinden yayina baglanma / baglantiyi degistirme ---
+  // Terminale donup surec yeniden baslatmak zorunda kalmamak icin.
+  if (urlPath === '/api/baglan') {
+    const q = new URL(req.url, 'http://localhost').searchParams;
+    const kullanici = String(q.get('user') || '').replace(/^@/, '').trim();
+    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
+
+    if (!kullanici) {
+      args.user = null;
+      kopar();
+      startMock();
+      res.end(JSON.stringify({ ok: true, mode: 'mock' }));
+      return;
+    }
+
+    args.user = kullanici;
+    kopar();
+    startLive(kullanici).catch((e) => log('!! baglanti hatasi:', e?.message || e));
+    res.end(JSON.stringify({ ok: true, mode: 'live', user: kullanici }));
+    return;
+  }
+
+  // --- uygulamayi kapat (panelin "Durdur" dugmesi) ---
+  if (urlPath === '/api/kapat') {
+    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
+    res.end(JSON.stringify({ ok: true }));
+    log('kapatma istegi alindi, cikiliyor.');
+    // Cevabin gitmesine firsat ver
+    setTimeout(() => process.exit(0), 250);
+    return;
+  }
+
   if (urlPath === '/api/status') {
     res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
     res.end(
@@ -165,6 +197,24 @@ const wss = attach(server, {
 // Durum + log
 // ---------------------------------------------------------------------------
 const state = { mode: 'idle', connected: false, eventCount: 0 };
+
+// Acik olan canli baglantiyi / mock zamanlayicilarini durdur.
+// Panelden kullanici adi degistirilince eskisinin arkada calismaya devam
+// etmemesi icin gerekli.
+let canliBaglanti = null;
+const mockZamanlayicilar = [];
+
+function kopar() {
+  if (canliBaglanti) {
+    try { canliBaglanti.disconnect(); } catch { /* zaten kapali */ }
+    canliBaglanti = null;
+  }
+  // Node'da setTimeout ve setInterval ayni Timeout nesnesini donduruyor,
+  // ikisini de clearTimeout ile iptal edebiliyoruz.
+  while (mockZamanlayicilar.length) clearTimeout(mockZamanlayicilar.pop());
+  state.connected = false;
+  state.mode = 'idle';
+}
 
 function log(...a) {
   console.log('[kopru]', ...a);
@@ -413,12 +463,13 @@ function startMock() {
   log('MOCK modu: sahte olaylar uretiliyor (TikTok baglantisi yok)');
 
   const tick = () => {
+    if (state.mode !== 'mock') return;          // kopar() cagrildiysa dur
     emit(makeMockEvent());
-    setTimeout(tick, (250 + Math.random() * 1400) / Math.max(0.1, args.rate));
+    mockZamanlayicilar.push(setTimeout(tick, (250 + Math.random() * 1400) / Math.max(0.1, args.rate)));
   };
   tick();
 
-  setInterval(() => emit(makeMockEvent('viewers')), 5000);
+  mockZamanlayicilar.push(setInterval(() => emit(makeMockEvent('viewers')), 5000));
 }
 
 // ---------------------------------------------------------------------------
@@ -510,6 +561,8 @@ async function startLive(username) {
     setTimeout(() => conn.connect().catch(() => {}), 10000);
   });
   conn.on('error', (e) => log('hata:', e?.message || e));
+
+  canliBaglanti = conn;
 
   log(`@${username} yayinina baglaniliyor...`);
   try {
