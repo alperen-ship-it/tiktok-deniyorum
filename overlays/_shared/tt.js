@@ -173,8 +173,20 @@
     for (const t of types) handlers.get(t)?.delete(fn);
   }
 
+  /** Kullanici metinlerini HTML'e zararsizlastir. Oyunlar takma adlari
+   *  innerHTML ile basiyor; TikTok takma adi serbest metin — "<img onerror=…>"
+   *  iceren bir ad overlay'de kod calistirirdi. Tek noktada, olay daha
+   *  işleyicilere ulasmadan temizliyoruz. */
+  function zararsiz(v) {
+    return String(v).replace(/[<>&"']/g, '');
+  }
+
   function dispatch(ev) {
     if (!ev || !ev.type) return;
+    if (ev.user) {
+      if (ev.user.nickname != null) ev.user.nickname = zararsiz(ev.user.nickname);
+      if (ev.user.uniqueId != null) ev.user.uniqueId = zararsiz(ev.user.uniqueId);
+    }
     if (cfg.debug) console.log('[TT]', ev.type, ev);
     for (const fn of handlers.get(ev.type) || []) {
       try { fn(ev); } catch (e) { console.error('[TT] handler hatasi', e); }
@@ -794,6 +806,10 @@
     /** Kopru sohbet botuna mesaj birak (kazanan kutlamasi). Sessiz basarisiz:
      *  kopru yoksa ya da bot kapaliysa oyun etkilenmez. */
     soyle(metin) {
+      // ?mock=1 sayfa ici sahte moddur (panel ONIZLEMELERI dahil) — panel
+      // acikken her onizleme iframe'i kendi yarisini kosturuyor; botu
+      // kazanan duyurulariyla spamlamasinlar.
+      if (cfg.mock) return;
       try { fetch('/api/soyle?text=' + encodeURIComponent(metin)).catch(() => {}); }
       catch { /* file:// vb. */ }
     },

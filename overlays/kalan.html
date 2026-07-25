@@ -235,8 +235,11 @@
 
   /** Jetonu acisina/uzakligina gore halkaya yerlestir. */
   function konumla(o) {
-    const r = arenaEl.getBoundingClientRect();
-    const cx = r.width / 2, cy = r.height / 2;
+    // clientWidth/Height: YERLESIM pikseli. getBoundingClientRect kullanmak
+    // hataydi — o, #kok'un scale()'inden GECMIS olcuyu verir; transform ise
+    // yerel uzayda calisir. Kucuk pencerede (LIVE Studio onizlemesi) jetonlar
+    // sol uste yigiliyordu.
+    const cx = arenaEl.clientWidth / 2, cy = arenaEl.clientHeight / 2;
     const jetonPay = arenaEl.classList.contains('duello') ? 60 : 34;
     const yaricap = Math.max(20, HALKA_R * halkaOlcek - jetonPay);
     const x = cx + Math.cos(o.aci) * o.uzak * yaricap;
