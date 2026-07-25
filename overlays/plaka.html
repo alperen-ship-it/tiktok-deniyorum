@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Plaka Savaşı — sohbet illeri fethediyor</title>
+<link rel="stylesheet" href="_shared/base.css">
+<style>
+  /* ==========================================================================
+     TEMA — "Stream Chat Games" havasi: doygun gradyan zemin, kalin yuvarlak
+     paneller, koyu dis cizgi, iri okunakli rakam. Telefonda kucucuk goruneceği
+     icin her sey bir beden buyuk ve kontrast yuksek.
+     ========================================================================== */
+  :root {
+    --cizgi: #17123a;          /* her panelin koyu dis cizgisi */
+    --panel: #2b2170;
+    --panel2: #3a2a95;
+    --altin: #ffd23f;
+    --pembe: #ff4d9d;
+    --mor: #8b5cf6;
+  }
+
+  /* Arka plan: TikTok'ta seffaflik yok, zaten dolu bir zemin istiyoruz */
+  #zemin {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(1200px 800px at 50% 12%, #5b3fd6 0%, transparent 60%),
+      radial-gradient(900px 700px at 15% 85%, #d6317f 0%, transparent 55%),
+      linear-gradient(170deg, #2a1b6b 0%, #1a1145 55%, #120c33 100%);
+  }
+  /* Hafif izgara — bos zemin "ucuz" durmasin */
+  #zemin::after {
+    content: ''; position: absolute; inset: 0; opacity: .07;
+    background-image: linear-gradient(#fff 1px, transparent 1px),
+                      linear-gradient(90deg, #fff 1px, transparent 1px);
+    background-size: 54px 54px;
+  }
+
+  #kok {
+    position: fixed;
+    top: var(--dz2-ust); bottom: var(--dz2-alt);
+    left: var(--dz2-sol); right: var(--dz2-sag);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  /* ---- ortak panel govdesi ---- */
+  .kutu {
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border: 4px solid var(--cizgi);
+    border-radius: 22px;
+    box-shadow: 0 6px 0 var(--cizgi), 0 12px 22px rgba(0,0,0,.45);
+  }
+
+  /* ---- ust baslik ---- */
+  #ust { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+  #rozet {
+    flex: none; font-size: 34px; line-height: 1;
+    filter: drop-shadow(0 3px 0 var(--cizgi));
+  }
+  #baslikSar { flex: 1; min-width: 0; }
+  #baslik {
+    font-size: 34px; font-weight: 900; letter-spacing: -.5px; line-height: 1;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #fff 40%, var(--altin));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    -webkit-text-stroke: 0;
+  }
+  #cagri {
+    margin-top: 4px; font-size: 16px; font-weight: 800; color: #cbc0ff;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  #sayac {
+    flex: none; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  #sayacBuyuk { font-size: 30px; font-weight: 900; color: var(--altin); line-height: 1; }
+  #sayacKucuk { font-size: 12px; font-weight: 700; color: #a89ce0; text-transform: uppercase; }
+
+  /* ---- harita ----
+     Turkiye 1008x444, yani 2.27:1 — cok genis. Panele kare gibi davranirsak
+     ustte altta kocaman bosluk kaliyor ve harita minicik goruntuleniyor.
+     Panelin kendisine haritanin oranini veriyoruz: harita kutuyu tam dolduruyor,
+     artan dikey yer siralamaya gidiyor. */
+  #haritaKutu {
+    flex: none; width: 100%; aspect-ratio: 1008 / 444;
+    position: relative; padding: 6px;
+  }
+  #harita { width: 100%; height: 100%; display: block; overflow: visible; }
+  #harita path {
+    stroke: #140f33;
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    /* Fetih aninda rengin akmasi — tek tek path animasyonu pahali degil,
+       cunku sadece renk degisiyor, geometri degil. */
+    transition: fill .45s ease;
+  }
+  html.tt-lite #harita path { transition: none; }
+
+  /* Il uzerindeki plaka yazisi — sadece buyuk imparatorluklarda goster,
+     81 tane rakam ekrani cop eder. */
+  #harita text {
+    font-size: 22px; font-weight: 900; fill: #fff;
+    paint-order: stroke; stroke: #140f33; stroke-width: 4px;
+    text-anchor: middle; dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  /* Fethedilen il bir an parlasin */
+  @keyframes patla { 0% { opacity: .95; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
+  .patlama { animation: patla .55s ease-out forwards; transform-origin: center; }
+  html.tt-lite .patlama { display: none; }
+
+  /* ---- siralama ---- */
+  #siralama { flex: none; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; }
+  .sira {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,.26); border-radius: 13px; padding: 7px 11px;
+  }
+  .sira .rozet {
+    flex: none; width: 30px; height: 30px; border-radius: 9px;
+    display: grid; place-items: center;
+    font-size: 15px; font-weight: 900; color: #1a1145;
+    border: 3px solid var(--cizgi);
+  }
+  .sira .bayrak { flex: none; width: 17px; height: 17px; border-radius: 5px; border: 2px solid var(--cizgi); }
+  .sira .ad { flex: 1; min-width: 0; font-size: 19px; font-weight: 900; text-transform: uppercase;
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -.3px; }
+  .sira .plaka { flex: none; font-size: 13px; font-weight: 900; color: #a89ce0; font-variant-numeric: tabular-nums; }
+  .sira .adet { flex: none; font-size: 22px; font-weight: 900; color: var(--altin);
+                font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+  .sira.bos { justify-content: center; color: #8a7fc4; font-weight: 800; font-size: 15px; padding: 13px; }
+
+  /* ---- son olaylar seridi ---- */
+  #akis { flex: none; height: 30px; overflow: hidden; position: relative; }
+  .satir {
+    position: absolute; inset: 0; display: flex; align-items: center; gap: 8px;
+    font-size: 16px; font-weight: 800;
+    animation: kay 3.4s ease-out forwards;
+  }
+  @keyframes kay {
+    0%   { transform: translateY(30px); opacity: 0; }
+    12%  { transform: translateY(0);    opacity: 1; }
+    82%  { transform: translateY(0);    opacity: 1; }
+    100% { transform: translateY(-30px); opacity: 0; }
+  }
+  html.tt-lite .satir { animation-duration: 2.6s; }
+  .satir .kim { color: var(--altin); }
+  .satir .ok { color: var(--pembe); }
+
+  /* Dikeyde sag sutun diye bir sey yok, icindekiler dogrudan aksin */
+  html.tt-vertical #sagSutun { display: contents; }
+
+  /* ==========================================================================
+     YATAY — LIVE Studio'nun Landscape sahnesi.
+     Dikeydeki "tek sutun" duzeni burada ise yaramiyor: harita zaten genis,
+     alt alta dizince ekranin yarisi bosa gidiyor. Izgaraya geciyoruz:
+     baslik ustte tam genislik, altinda solda harita + sagda siralama.
+     ========================================================================== */
+  html.tt-yatay #kok {
+    display: grid;
+    grid-template-columns: 1fr minmax(280px, 24%);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "ust    ust"
+      "harita sag";
+    gap: 14px;
+  }
+  html.tt-yatay #ust { grid-area: ust; }
+  html.tt-yatay #haritaKutu {
+    grid-area: harita;
+    /* Izgara hucresini doldur — dikeydeki oran kilidi burada gerekmiyor,
+       SVG preserveAspectRatio zaten ortalayip sigdiriyor. */
+    aspect-ratio: auto; width: auto; height: auto; min-height: 0;
+  }
+  html.tt-yatay #sagSutun {
+    grid-area: sag;
+    display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0;
+  }
+  html.tt-yatay #siralama { flex: 1; min-height: 0; overflow: hidden; justify-content: flex-start; }
+  html.tt-yatay #baslik { font-size: 30px; }
+  html.tt-yatay .sira .ad { font-size: 17px; }
+  html.tt-yatay .sira .adet { font-size: 20px; }
+</style>
+</head>
+<body>
+<div id="zemin"></div>
+
+<div id="kok" class="tt-oyun">
+
+  <div id="ust" class="kutu">
+    <div id="rozet">🗺️</div>
+    <div id="baslikSar">
+      <div id="baslik">Plaka Savaşı</div>
+      <div id="cagri">plakanı yaz · ilini büyüt</div>
+    </div>
+    <div id="sayac">
+      <div id="sayacBuyuk">0</div>
+      <div id="sayacKucuk">savaşçı</div>
+    </div>
+  </div>
+
+  <div id="haritaKutu" class="kutu">
+    <svg id="harita" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+
+  <div id="sagSutun">
+    <div id="siralama" class="kutu"></div>
+    <div id="akis"></div>
+  </div>
+
+</div>
+
+<script src="_shared/iller.js"></script>
+<script src="_shared/tt.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
+
+  // ---- ayarlar (URL'den degistirilebilir) ---------------------------------
+  const TUR_MS      = num('tur', 1800);   // kac ms'de bir savas turu
+  const YORUM_GUC   = num('guc', 1);      // bir yorum kac guc
+  const HEDIYE_GUC  = num('hguc', 12);    // bir hediye kac guc
+  const BEGENI_GUC  = num('bguc', 0.15);  // bir begeni kac guc
+  const SALDIRI_BEDEL= num('bedel', 3);   // saldiri kac guc harcar
+  const ZAFER_ORAN  = num('zafer', 0.55); // haritanin yuzde kaci = zafer
+
+  const VERI = window.TR_ILLER;
+  const ILLER = VERI.iller;                       // [{p,a,d,m,k}]
+  const plakaSira = new Map();                    // plaka -> dizi indeksi
+  ILLER.forEach((il, i) => plakaSira.set(il.p, i));
+
+  // ---- durum ---------------------------------------------------------------
+  // sahip[i] = bu ili tutan TAKIM (takim = plaka no).  0 = NOTR, sahipsiz.
+  //
+  // Bastan her il kendi takimi olsaydi 81 ayri renk cikardi ve harita
+  // karmakarisik gorunurdu. Notr baslatinca yayin acildiginda harita sakin
+  // duruyor, sohbet katildikca renkleniyor — izleyici kendi etkisini goruyor.
+  let sahip = [];
+  let guc = new Map();          // plaka -> saldiri gucu
+  let savascilar = new Map();   // plaka -> destekci kimlikleri (Set)
+  let takimRenk = new Map();    // plaka -> palet rengi (katilim sirasina gore)
+  let toplamSavasci = 0;
+
+  const NOTR = '#4a4470';       // sahipsiz il
+  const NOTR_CIZGI = '#2a2550';
+
+  // Koyu mor zeminde birbirinden ayirt edilebilen, doygun renkler.
+  // Rastgele HSL yerine elle secilmis palet: yan yana dusen iki il
+  // birbirine benzemesin diye sira da karisik.
+  const PALET = [
+    '#ff4d4d', '#3fb9ff', '#ffd23f', '#7ed957', '#ff5fc8', '#ffa62b',
+    '#a86bff', '#21d1a1', '#5b7fff', '#b6e02b', '#e05cff', '#00c2c7',
+    '#ff7a5c', '#8ee36b',
+  ];
+
+  /** Takimin rengi. Ilk katilan ilk rengi alir; palet dolarsa koyulastirip
+   *  bastan doner, yine de ayirt edilebilir kalir. */
+  function renk(plaka) {
+    if (!plaka) return NOTR;
+    let r = takimRenk.get(plaka);
+    if (!r) {
+      const n = takimRenk.size;
+      r = PALET[n % PALET.length];
+      if (n >= PALET.length) {
+        // ikinci tur: ayni rengi koyulastir
+        r = r.replace(/^#(..)(..)(..)$/, (m, a, b, c) =>
+          '#' + [a, b, c].map(h => Math.round(parseInt(h, 16) * 0.62)
+            .toString(16).padStart(2, '0')).join(''));
+      }
+      takimRenk.set(plaka, r);
+    }
+    return r;
+  }
+
+  function sifirla() {
+    sahip = ILLER.map(() => 0);        // hepsi notr
+    guc = new Map();
+    savascilar = new Map();
+    takimRenk = new Map();
+    toplamSavasci = 0;
+    ILLER.forEach((il) => { guc.set(il.p, 0); savascilar.set(il.p, new Set()); });
+  }
+
+  /** Bir takimin elindeki il sayisi. */
+  function toprak(plaka) {
+    let n = 0;
+    for (const s of sahip) if (s === plaka) n++;
+    return n;
+  }
+
+  // ---- SVG haritayi bir kez kur -------------------------------------------
+  const svg = document.getElementById('harita');
+  svg.setAttribute('viewBox', VERI.kutu.join(' '));
+  const yollar = [];
+  const katmanIl = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const katmanYazi = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const katmanEfekt = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  svg.append(katmanIl, katmanYazi, katmanEfekt);
+
+  ILLER.forEach((il, i) => {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', il.d);
+    katmanIl.appendChild(p);
+    yollar.push(p);
+  });
+
+  // Plaka yazilari — sadece 3+ il tutan takimlarin merkezinde gorunecek
+  const yazilar = ILLER.map((il) => {
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', il.m[0]);
+    t.setAttribute('y', il.m[1]);
+    katmanYazi.appendChild(t);
+    return t;
+  });
+
+  /** Haritayi mevcut duruma gore boya. */
+  function boya() {
+    const sayim = new Map();
+    for (const s of sahip) if (s) sayim.set(s, (sayim.get(s) || 0) + 1);
+
+    // Plaka yazisi sadece 2+ il tutan takimin BASKENTINDE (kendi ilinde)
+    // gorunsun; 81 rakam ekrani doldurup haritayi okunmaz yapiyor.
+    const buyukler = new Set();
+    for (const [p, n] of sayim) if (n >= 2) buyukler.add(p);
+
+    ILLER.forEach((il, i) => {
+      const t = sahip[i];
+      yollar[i].setAttribute('fill', t ? renk(t) : NOTR);
+      yollar[i].setAttribute('stroke', t ? '#140f33' : NOTR_CIZGI);
+      yazilar[i].textContent = (t && buyukler.has(t) && t === il.p) ? String(t) : '';
+    });
+  }
+
+  /** Fetih aninda kucuk bir parlama. */
+  function patlama(i) {
+    if (document.documentElement.classList.contains('tt-lite')) return;
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', ILLER[i].m[0]);
+    c.setAttribute('cy', ILLER[i].m[1]);
+    c.setAttribute('r', 9);
+    c.setAttribute('fill', '#fff');
+    c.setAttribute('class', 'patlama');
+    katmanEfekt.appendChild(c);
+    setTimeout(() => c.remove(), 600);
+  }
+
+  // ---- akis seridi ---------------------------------------------------------
+  const akisEl = document.getElementById('akis');
+  function akis(parcalar) {
+    const d = document.createElement('div');
+    d.className = 'satir';
+    d.innerHTML = parcalar;
+    akisEl.innerHTML = '';
+    akisEl.appendChild(d);
+    setTimeout(() => { if (d.parentNode) d.remove(); }, 3600);
+  }
+
+  // ---- siralama ------------------------------------------------------------
+  const sirEl = document.getElementById('siralama');
+  const ROZETLER = ['🥇', '🥈', '🥉'];
+  function siralamaCiz() {
+    const sayim = new Map();
+    for (const s of sahip) if (s) sayim.set(s, (sayim.get(s) || 0) + 1);
+    const list = [...sayim.entries()]
+      .map(([p, n]) => ({ p, n, d: (savascilar.get(p) || new Set()).size }))
+      // Once toprak, esitse destekci sayisi
+      .sort((a, b) => b.n - a.n || b.d - a.d)
+      .slice(0, 6);
+
+    if (!toplamSavasci) {
+      sirEl.innerHTML = '<div class="sira bos">plakanı yaz, ilin savaşa girsin</div>';
+      return;
+    }
+
+    sirEl.innerHTML = list.map((o, i) => {
+      const il = ILLER[plakaSira.get(o.p)];
+      const rz = ROZETLER[i] || (i + 1);
+      const rzStil = i < 3 ? `background:${['#ffd23f','#d8dbe6','#e29a5a'][i]}` : 'background:#6b5fb8;color:#fff';
+      return `<div class="sira">
+        <div class="rozet" style="${rzStil}">${rz}</div>
+        <div class="bayrak" style="background:${renk(o.p)}"></div>
+        <div class="ad">${il ? il.a : o.p}</div>
+        <div class="plaka">${String(o.p).padStart(2, '0')}</div>
+        <div class="adet">${o.n}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function sayacCiz() {
+    document.getElementById('sayacBuyuk').textContent = toplamSavasci;
+  }
+
+  // ---- yorumdan plaka cikar ------------------------------------------------
+  // "34", "34 istanbul", "plaka 34", "#34", "06" ... hepsi tutsun.
+  // Il ADI da kabul: "istanbul" yazan da katilsin, herkes plakasini bilmiyor.
+  const adTablo = new Map();
+  ILLER.forEach((il) => {
+    const sade = il.a.toLocaleLowerCase('tr')
+      .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z]/g, '');
+    adTablo.set(sade, il.p);
+  });
+
+  function plakaBul(metin) {
+    if (!metin) return 0;
+    const m = String(metin).match(/\b(\d{1,2})\b/);
+    if (m) {
+      const n = Number(m[1]);
+      if (n >= 1 && n <= 81) return n;
+    }
+    const sade = String(metin).toLocaleLowerCase('tr')
+      .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z]/g, '');
+    if (sade.length >= 4 && adTablo.has(sade)) return adTablo.get(sade);
+    return 0;
+  }
+
+  // ---- katilim -------------------------------------------------------------
+  // Kopru olaylari:  chat {user, comment} · gift {user, gift:{count,value}}
+  //                  like {user, likes}
+  // user = {id, uniqueId, nickname, avatar}
+  const sonPlaka = new Map();   // kullanici id -> son yazdigi plaka
+
+  /** Kullaniciyi tekille: id varsa o, yoksa uniqueId. Ekranda nickname. */
+  const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
+  const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
+
+  function katil(u, plaka, ekGuc) {
+    const set = savascilar.get(plaka);
+    if (!set) return;
+    const kid = kimlik(u);
+    const i = plakaSira.get(plaka);
+    const il = ILLER[i];
+
+    // Takimin ilk destekcisi geldiginde kendi ilini notrden alir — izleyici
+    // yazar yazmaz haritada bir sey degistigini GORUYOR, bekleme yok.
+    if (sahip[i] === 0) {
+      sahip[i] = plaka;
+      patlama(i);
+      boya();
+      akis(`<b style="color:${renk(plaka)}">${il.a}</b> <span class="ok">▸</span> savaşa girdi`);
+    } else if (kid && !set.has(kid)) {
+      akis(`<span class="kim">${isim(u)}</span> <span class="ok">▸</span> <b>${il.a}</b> saflarında`);
+    }
+
+    if (kid && !set.has(kid)) { set.add(kid); toplamSavasci++; }
+    guc.set(plaka, (guc.get(plaka) || 0) + ekGuc);
+    if (kid) sonPlaka.set(kid, plaka);
+  }
+
+  TT.on('chat', (ev) => {
+    const p = plakaBul(ev.comment);
+    if (!p) return;
+    katil(ev.user, p, YORUM_GUC);
+    sayacCiz();
+  });
+
+  TT.on('gift', (ev) => {
+    const p = sonPlaka.get(kimlik(ev.user));
+    if (!p) return;                       // once plakasini yazsin
+    // Elmas degeri varsa onu kullan; buyuk hediye buyuk etki yapsin
+    const adet = (ev.gift && (ev.gift.count || 1)) || 1;
+    const elmas = (ev.gift && ev.gift.value) || 0;
+    const ek = HEDIYE_GUC * adet + elmas * 0.4;
+    guc.set(p, (guc.get(p) || 0) + ek);
+    const il = ILLER[plakaSira.get(p)];
+    akis(`🎁 <span class="kim">${isim(ev.user)}</span> <span class="ok">▸</span> <b>${il.a}</b> +${Math.round(ek)} güç`);
+  });
+
+  TT.on('like', (ev) => {
+    const p = sonPlaka.get(kimlik(ev.user));
+    if (!p) return;
+    guc.set(p, (guc.get(p) || 0) + BEGENI_GUC * (ev.likes || 1));
+  });
+
+  // ---- savas turu ----------------------------------------------------------
+  /** Bir takimin saldirabilecegi (kendine ait olmayan komsu) illeri bul. */
+  function hedefler(plaka) {
+    const cikti = [];
+    ILLER.forEach((il, i) => {
+      if (sahip[i] !== plaka) return;
+      for (const kp of il.k) {
+        const j = plakaSira.get(kp);
+        if (j == null || sahip[j] === plaka) continue;
+        cikti.push(j);
+      }
+    });
+    return cikti;
+  }
+
+  let bitti = false;
+
+  function tur() {
+    if (bitti) return;
+
+    // Gucu olan takimlar, guclusu once oynasin
+    const oyuncular = [...guc.entries()]
+      .filter(([, g]) => g >= SALDIRI_BEDEL)
+      .sort((a, b) => b[1] - a[1]);
+
+    for (const [plaka, g] of oyuncular) {
+      const kendi = toprak(plaka);
+
+      // Toprak kaybettiyse once kendi ilini geri almaya calissin —
+      // "elendin, artik yazma" demek yerine geri donus yolu birakiyoruz.
+      if (kendi === 0) {
+        const evi = plakaSira.get(plaka);
+        if (evi != null && g >= SALDIRI_BEDEL * 4) {
+          const eskiSahip = sahip[evi];
+          sahip[evi] = plaka;
+          guc.set(plaka, g - SALDIRI_BEDEL * 4);
+          patlama(evi);
+          const il = ILLER[evi];
+          akis(`🔥 <b>${il.a}</b> <span class="ok">▸</span> evine geri döndü!`);
+        }
+        continue;
+      }
+
+      const hedef = hedefler(plaka);
+      if (!hedef.length) continue;
+
+      // Notr illeri once al: genisleme kolay olsun, asil kapisma takimlar
+      // birbirine dayaninca baslasin. Notru "toprak(0)" ile olcemeyiz —
+      // basta 81 notr il var, savunma gucu tavana vurur ve hicbir yer alinamaz.
+      const bosHedef = hedef.filter((j) => sahip[j] === 0);
+      const j = bosHedef.length
+        ? bosHedef[Math.floor(Math.random() * bosHedef.length)]
+        : hedef[Math.floor(Math.random() * hedef.length)];
+
+      const savunan = sahip[j];
+      const savunmaGucu = savunan === 0
+        ? 2 + Math.random() * 3                                    // notr: zayif
+        : toprak(savunan) * 1.5 + (guc.get(savunan) || 0) * 0.25;  // takim: gercek direnc
+      const saldiriGucu = g * 0.5 + Math.random() * 6;
+
+      guc.set(plaka, g - SALDIRI_BEDEL);
+      if (saldiriGucu <= savunmaGucu) continue;   // saldiri kirildi
+
+      sahip[j] = plaka;
+      patlama(j);
+      const alan = ILLER[plakaSira.get(plaka)];
+      const alinan = ILLER[j];
+      akis(`<b style="color:${renk(plaka)}">${alan.a}</b> <span class="ok">▸</span> ${alinan.a} <b>aldı</b>`);
+    }
+
+    boya();
+    siralamaCiz();
+    zaferKontrol();
+  }
+
+  function zaferKontrol() {
+    const sayim = new Map();
+    for (const s of sahip) if (s) sayim.set(s, (sayim.get(s) || 0) + 1);
+    let enIyi = 0, enCok = 0;
+    for (const [p, n] of sayim) if (n > enCok) { enCok = n; enIyi = p; }
+
+    if (enCok >= Math.floor(81 * ZAFER_ORAN)) {
+      bitti = true;
+      const il = ILLER[plakaSira.get(enIyi)];
+      akis(`👑 <b style="color:${renk(enIyi)}">${il.a}</b> TÜRKİYE'Yİ FETHETTİ`);
+      document.getElementById('cagri').textContent = il.a + ' kazandı · yeni tur başlıyor';
+      setTimeout(() => {
+        sifirla(); bitti = false;
+        boya(); siralamaCiz(); sayacCiz();
+        document.getElementById('cagri').textContent = 'plakanı yaz · ilini büyüt';
+        akis('🗺️ <b>YENİ SAVAŞ BAŞLADI</b> — plakanı yaz');
+      }, 6000);
+    }
+  }
+
+  // ---- basla ---------------------------------------------------------------
+  sifirla();
+  boya();
+  siralamaCiz();
+  sayacCiz();
+  setInterval(tur, TUR_MS);
+
+  TT.uyanis({
+    baslik: 'PLAKA SAVAŞI',
+    komutlar: ['34', '06', '35'],
+    aciklama: 'Plakanı yaz, ilin komşularını fethetsin · 🎁 hediye ilini güçlendirir',
+    cagri: 'plakanı yaz, ilini haritada büyüt',
+  });
+})();
+</script>
+</body>
+</html>

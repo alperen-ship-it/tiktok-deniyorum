@@ -224,86 +224,16 @@
   'use strict';
 
   const OVERLAYS = [
+    // ---- OYUN ----------------------------------------------------------
     {
-      file: 'alerts.html',
-      name: '🔔 Uyarılar',
-      desc: 'Hediye, takip, paylaşım ve abone bildirimleri. Büyük hediyelerde konfeti patlar.',
-      opts: '<code>?bg=green</code> yeşil zemin · <code>?scale=1.3</code> büyüt',
-    },
-    {
-      file: 'chat.html',
-      name: '💬 Sohbet Duvarı',
-      desc: 'Yorumları ekranda gösterir. Mod/abone rozetleri, hediye satırları, isme özel renk.',
-      opts: '<code>?limit=20</code> mesaj sayısı · <code>?ttl=30</code> 30 sn sonra sil · <code>?joins=1</code> katılanları da göster',
-    },
-    {
-      file: 'gift-rain.html',
-      name: '🌧️ Hediye Yağmuru',
-      desc: 'Gelen hediyeler ekrandan yağar, beğeniler kalp balonu olarak yükselir. Elmas kombo sayacı.',
-      opts: '<code>?max=600</code> parçacık sınırı',
-    },
-    {
-      file: 'like-goal.html',
-      name: '🎯 Hedef Çubuğu',
-      desc: 'Beğeni / elmas / takipçi hedefi. Dolunca kutlama, isteğe bağlı otomatik yeni hedef.',
-      opts: '<code>?mode=diamonds&goal=5000</code> · <code>?next=1</code> hedefi katla · <code>?label=YAZI</code>',
-    },
-    {
-      file: 'battle.html',
-      name: '⚔️ Takım Savaşı',
-      desc: 'İzleyiciler sohbete yazarak oy verir, hediye gönderen takımını güçlendirir. Geri sayımlı.',
-      opts: '<code>?a=Kediler&b=Köpekler&ka=kedi&kb=köpek</code> · <code>?dur=180</code> süre · <code>?perdiamond=1</code>',
-    },
-    {
-      file: 'race.html',
-      name: '🏁 Sohbet Yarışı',
-      desc: 'Her yorum yazan bir yarışçı olur. Yorum ilerletir, hediye fırlatır. İlk bitiren kazanır.',
-      opts: '<code>?lanes=10</code> · <code>?step=3&boost=40</code> · <code>?auto=1</code> otomatik yeniden başlat · <code>?decay=1</code> geri kayma',
+      oyun: true,
+      file: 'plaka.html',
+      name: '🗺️ Plaka Savaşı',
+      desc: 'Türkiye haritası, Risk gibi. İzleyici plakasını yazar (34, 06, 35...) ya da ilinin adını, ili savaşa girer ve komşularını fethetmeye başlar. Hediye ilin gücünü artırır. Haritanın yarısını alan kazanır, yeni tur başlar.',
+      opts: '<code>?tur=1800</code> savaş turu (ms) · <code>?guc=1</code> yorum gücü · <code>?hguc=12</code> hediye gücü · <code>?zafer=0.55</code> zafer için gereken harita oranı',
     },
 
-    // ---- OYUNLAR: yorum = temel hamle, beğeni = kombo, hediye = ULTİ ----
-    {
-      oyun: true,
-      file: 'boss.html',
-      name: '🐉 Boss Dövüşü',
-      desc: 'Tüm sohbet tek canavara karşı birleşir. Yorum vurur, beğeni sohbet gücünü doldurur, hediye ULTİ tetikler. Boss düşünce bir sonrakine geçer.',
-      opts: '<code>?hp=4000</code> ilk can · <code>?buyume=1.6</code> her bossta katlanma · <code>?vurus=10</code> yorum hasarı · <code>?kombo=150</code>',
-    },
-    {
-      oyun: true,
-      file: 'plinko.html',
-      name: '🎯 Plinko',
-      desc: 'Yorum yazanın topu düşer, çivilere çarpa çarpa puan kovasına iner. Ulti kademesine göre 3 / 8 / 18 top, bonus çarpan, kenara nişanlı atış.',
-      opts: '<code>?satir=12</code> çivi satırı · <code>?maxtop=90</code> · <code>?kombo=120</code>',
-    },
-    {
-      oyun: true,
-      file: 'ordu.html',
-      name: '⚔️ Chat Ordusu',
-      desc: 'İki taraf. Her yorum bir asker doğurur, hediye kahraman çağırır. Ordular şeritlerde kendiliğinden çarpışır, üssü düşen kaybeder.',
-      opts: '<code>?a=Kediler&b=Köpekler&ka=kedi&kb=köpek</code> · <code>?us=1200</code> üs canı · <code>?serit=7</code> · <code>?max=160</code>',
-    },
-    {
-      oyun: true,
-      file: 'bolge.html',
-      name: '🗺️ Bölge Savaşı',
-      desc: 'Harita ızgarası. Takımını yazınca bölgen organik leke gibi büyür, hediye ulti kademesine göre şerit/patlama/çeyrek harita alır.',
-      opts: '<code>?a=MAVİ&b=KIRMIZI</code> · <code>?sutun=26</code> · <code>?sure=300</code> geri sayım · <code>?ra=#25f4ee&rb=#fe2c55</code> renkler',
-    },
-    {
-      oyun: true,
-      file: 'tirmanis.html',
-      name: '🧗 Sohbet Tırmanışı',
-      desc: 'Sohbet tek karakteri birlikte sürer. Her turda üç aday platform gösterilir, SOL/ZIPLA/SAĞ yazarak oy verilir, çoğunluk kazanır. Yanlış yön = düşüş. Beğeni mega zıplama barını doldurur, hediye roket olur.',
-      opts: '<code>?tur=4</code> oylama süresi (sn) · <code>?guc=90</code> mega barı · <code>?karakter=🐸</code> karakter emojisi',
-    },
-    {
-      oyun: true,
-      file: 'labirent.html',
-      name: '🐹 Sohbet Labirenti',
-      desc: '4 yön. Sohbet SOL/SAĞ/YUKARI/AŞAĞI yazarak karakteri labirentte gezdirir. Hazine topla, hayaletlerden kaç, çıkışa ulaş, bir üst kata geç. Duvara dayalı yönler ✕ ile işaretli.',
-      opts: '<code>?tur=4</code> oylama süresi · <code>?karakter=🐹&canavar=👻</code> · <code>?chiz=2</code> canavar kaç turda bir hareket eder',
-    },
+    // ---- WIDGET --------------------------------------------------------
     {
       file: 'durum.html',
       name: '📊 Durum Kartı',
@@ -335,7 +265,7 @@
 
   // Ust bilgideki ornegi de gercek porta gore yaz
   const ltm = document.getElementById('ltm');
-  if (ltm) ltm.innerHTML = '<br>Örnek: <code>' + ttlsUrl('alerts.html') + '</code>';
+  if (ltm) ltm.innerHTML = '<br>Örnek: <code>' + ttlsUrl('plaka.html') + '</code>';
 
   const grid = document.getElementById('grid');
 

@@ -747,23 +747,19 @@ server.listen(args.port, '0.0.0.0', async () => {
    >> LIVE Studio'ya nasil eklenir (Kaynak ekle > Link) <<
       "localhost" YAZMA, LIVE Studio kabul etmiyor. Bunu kullan:
 
-     ${tls}/overlays/labirent.html?lite=1
+     ${tls}/overlays/plaka.html?lite=1
 
       AYNI adresi HEM "Portrait" HEM "Landscape" bolumune ekle.
       Sayfa kendi en-boy oranini olcup yerlesimini kendi degistiriyor;
       iki sahne icin iki ayri adrese ihtiyacin yok.
 
-   >> Izleyicinin sohbetten oynadigi oyunlar <<
-     labirent.html   yon yaz (sol/sag/yukari/asagi), cikisi bulun
-     tirmanis.html   sol/sag oyla, yukari tirman
-     boss.html       hep birlikte boss'a vur
-     plinko.html     hediye at, top dussun
-     ordu.html       takim sec, ordu buyusun
-     bolge.html      bolge kap
+   >> PLAKA SAVASI — izleyici sohbetten oynuyor <<
+      Izleyici plakasini yazar (34, 06, 35...) ya da ilinin adini.
+      Ili haritada savasa girer, komsularini fethetmeye baslar.
+      Hediye ilin gucunu artirir. Haritanin yarisini alan kazanir.
 
-   >> Klasik uyarilar <<
-     alerts.html  chat.html  gift-rain.html  like-goal.html
-     battle.html  race.html  durum.html
+   >> Yan gosterge <<
+     durum.html      disaridan cektigin veri (Valorant rank, hava, muzik)
 
      (?lite=1  -> LIVE Studio'nun gomulu tarayicisinda GPU yok,
                   blur/golge kapaniyor, akici kaliyor. HEP KULLAN.)
