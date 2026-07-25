@@ -391,6 +391,10 @@
     });
     document.getElementById('cagri').textContent = ad + ' kazandı';
     Spiker.soyle(`👑 <span class="kim">${ad}</span> SON AYAKTA KALAN`, { oncelik: 3, sure: 4500 });
+    if (o) {
+      const kid = [...oyuncular.entries()].find(([, v]) => v === o)[0];
+      TT.soyle(`💀 @${uidler.get(kid) || ad} son ayakta kalan! ${baslangicSayisi} kişiyi devirdi 👑`);
+    }
   }
 
   function katilimaDon() {
@@ -436,9 +440,12 @@
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
   const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
 
+  const uidler = new Map();   // kid -> uniqueId (@etiket icin)
+
   TT.on('chat', (ev) => {
     const kid = kimlik(ev.user);
     if (!kid) return;
+    if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
     if (ANAHTAR && !String(ev.comment || '').toLowerCase().includes(ANAHTAR)) return;
     if (durum === 'katilim') oyuncuEkle(kid, isim(ev.user));
     else if (!oyuncular.has(kid)) kuyruk.set(kid, isim(ev.user));

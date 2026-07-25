@@ -41,6 +41,8 @@ function parseArgs(argv) {
     else if (a === '--key' || a === '-k') out.key = String(argv[++i] || '');
     else if (a === '--gifts') out.gifts = true;
     else if (a === '--no-80') out.no80 = true;
+    else if (a === '--oturum') out.oturum = String(argv[++i] || '');
+    else if (a === '--idc') out.idc = String(argv[++i] || '');
     else if (a === '--help' || a === '-h') out.help = true;
   }
   return out;
@@ -62,6 +64,11 @@ TikTok LIVE koprusu
   --gifts            Hediye katalogunu da cek (ikon URL'leri icin) — UCRETLI uc,
                      varsayilan kapali. Kapaliyken hediye adi/elmas degeri yine gelir.
   --no-80            Port 80'i da dinleme (varsayilan: dener)
+  --oturum <sid>     Sohbet botu icin TikTok sessionid cerezi (bir kez ver,
+                     ayarlara kaydedilir). GERCEK sohbete yazmak ayrica
+                     EulerStream'in ucretli planini gerektirir; yoksa bot
+                     mesajlari sadece ekranda/konsolda gorunur.
+  --idc <bolge>      tt-target-idc cerezi (varsayilan: useast1a)
   --verbose, -v      Her olayi konsola bas
 `);
   process.exit(0);
@@ -97,6 +104,15 @@ const server = http.createServer((req, res) => {
     const n = wss.broadcast(ev);
     res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
     res.end(JSON.stringify({ ok: true, sentTo: n, event: ev }));
+    return;
+  }
+
+  // --- oyunlarin kazanan duyurusu (sohbet botu) ---
+  if (urlPath === '/api/soyle') {
+    const q = new URL(req.url, 'http://localhost').searchParams;
+    const sonuc = botSoyle(q.get('text') || '');
+    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
+    res.end(JSON.stringify(sonuc));
     return;
   }
 
@@ -211,6 +227,60 @@ const state = { mode: 'idle', connected: false, eventCount: 0 };
 // Panelden kullanici adi degistirilince eskisinin arkada calismaya devam
 // etmemesi icin gerekli.
 let canliBaglanti = null;
+
+// ---------------------------------------------------------------------------
+// Sohbet botu — oyunlar kazananlari kutlamak icin /api/soyle cagirir.
+//
+// Iki katman:
+//   1) HER ZAMAN: mesaj 'bot' olayi olarak overlay'lere yayinlanir ve konsola
+//      yazilir (ekran botu).
+//   2) MUMKUNSE: gercek TikTok sohbetine yazilir. Bunun icin yayincinin
+//      sessionid cerezi (--oturum) VE EulerStream'in ucretli plani gerekir —
+//      kutuphanenin sendMessage'i Euler bulutundan geciyor ve yetkisizse
+//      401/403 "paid plan" hatasi donuyor. O durumda canli gonderim kapanir,
+//      ekran botu calismaya devam eder.
+//
+// Kurallar: mesajlar 150 karaktere kirpilir, iki gonderim arasi en az 5sn,
+// kuyrukta en fazla 3 mesaj (fazlasi dusurulur) — bot spam yapamaz.
+const bot = { kuyruk: [], son: 0, zamanlayici: null, canliKapali: false };
+
+function botSoyle(metin) {
+  metin = String(metin || '').trim().slice(0, 150);
+  if (!metin) return { ok: false, sebep: 'bos' };
+  if (bot.kuyruk.length >= 3) return { ok: false, sebep: 'kuyruk dolu' };
+  bot.kuyruk.push(metin);
+  botPompala();
+  return { ok: true, kuyruk: bot.kuyruk.length };
+}
+
+function botPompala() {
+  if (bot.zamanlayici) return;
+  const bekle = Math.max(0, 5000 - (Date.now() - bot.son));
+  bot.zamanlayici = setTimeout(async () => {
+    bot.zamanlayici = null;
+    const metin = bot.kuyruk.shift();
+    if (!metin) return;
+    bot.son = Date.now();
+
+    wss.broadcast({ type: 'bot', text: metin, ts: Date.now() });
+
+    const oturum = args.oturum || ayar.oturumOku()?.sessionId;
+    if (state.mode === 'live' && canliBaglanti && oturum && !bot.canliKapali) {
+      try {
+        await canliBaglanti.sendMessage(metin);
+        log('bot >> (sohbete yazildi)', metin);
+      } catch (e) {
+        bot.canliKapali = true;
+        log('!! bot sohbete yazamadi:', e?.message || e);
+        log('   Gercek sohbete yazmak sessionid + EulerStream UCRETLI plani ister.');
+        log('   Bot bundan sonra sadece ekranda calisacak.');
+      }
+    } else {
+      log('bot (ekran):', metin);
+    }
+    if (bot.kuyruk.length) botPompala();
+  }, bekle);
+}
 let veriCekici = null;
 const mockZamanlayicilar = [];
 
@@ -613,6 +683,21 @@ async function startLive(username) {
     try { canliBaglanti.disconnect(); } catch { /* zaten kapali */ }
   }
   canliBaglanti = conn;
+
+  // Sohbet botu icin oturum cerezi: --oturum verildiyse kaydet, yoksa
+  // ayarlardan oku. Cerez baglantinin cookie kavanozuna islenir ki
+  // sendMessage kimligimizle ciksin.
+  try {
+    if (args.oturum) ayar.oturumKaydet(args.oturum, args.idc);
+    const oturum = args.oturum ? { sessionId: args.oturum, idc: args.idc } : ayar.oturumOku();
+    if (oturum?.sessionId && conn.webClient?.cookieJar?.setSessionBundle) {
+      conn.webClient.cookieJar.setSessionBundle({
+        type: 'cookie',
+        value: { sessionId: oturum.sessionId, ttTargetIdc: oturum.idc || 'useast1a' },
+      });
+      log('bot: oturum cerezi islendi (sohbete yazma denenir).');
+    }
+  } catch (e) { log('bot: oturum islenemedi:', e?.message || e); }
 
   if (!state.bekliyor) log(`@${username} yayinina baglaniliyor...`);
   try {

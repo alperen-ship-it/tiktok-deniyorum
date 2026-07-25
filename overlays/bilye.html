@@ -664,6 +664,8 @@
     });
     document.getElementById('cagri').textContent = b.ad + ' kazandı';
     akis(`🏆 <span class="kim">${b.ad}</span> BİRİNCİ`, { oncelik: 3, sure: 4500 });
+    // Sohbet botu: kazanani etiketle (kopru gonderebiliyorsa gercek sohbete)
+    TT.soyle(`🏁 @${uidler.get(b.kid) || b.ad} bilye yarışını kazandı! Tebrikler 🎉`);
   }
 
   function katilimaDon() {
@@ -706,9 +708,12 @@
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
   const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
 
+  const uidler = new Map();   // kid -> uniqueId (@etiket icin)
+
   TT.on('chat', (ev) => {
     const kid = kimlik(ev.user);
     if (!kid) return;
+    if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
     if (ANAHTAR && !String(ev.comment || '').toLowerCase().includes(ANAHTAR)) return;
 
     if (durum === 'katilim') {

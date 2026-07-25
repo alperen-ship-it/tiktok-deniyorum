@@ -791,6 +791,12 @@
     uyanis,
     /** Gorsel varsa gorsel, yoksa emoji ile cizen sprite yardimcisi. */
     sprite, spriteCiz,
+    /** Kopru sohbet botuna mesaj birak (kazanan kutlamasi). Sessiz basarisiz:
+     *  kopru yoksa ya da bot kapaliysa oyun etkilenmez. */
+    soyle(metin) {
+      try { fetch('/api/soyle?text=' + encodeURIComponent(metin)).catch(() => {}); }
+      catch { /* file:// vb. */ }
+    },
     /** Elle olay tetikle (test / oyun ici). */
     fire: dispatch,
     mockEvent,

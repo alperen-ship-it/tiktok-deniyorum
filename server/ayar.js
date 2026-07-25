@@ -110,4 +110,14 @@ function kullaniciKaydet(ad) {
   yaz(k);
 }
 
-module.exports = { oku, yaz, kullaniciAdi, kullaniciKaydet, DOSYA };
+/** Sohbet botu icin TikTok oturum bilgisi (sessionid cerezi). */
+function oturumKaydet(sessionId, idc) {
+  const a = oku();
+  a.oturum = { sessionId, idc: idc || a.oturum?.idc || '' };
+  yaz(a);
+}
+function oturumOku() {
+  return oku().oturum || null;
+}
+
+module.exports = { oku, yaz, kullaniciAdi, kullaniciKaydet, oturumKaydet, oturumOku, DOSYA };

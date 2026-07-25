@@ -60,6 +60,14 @@
     font-size: 46px; line-height: 1; display: inline-block;
     transform: translateY(-50%) scaleX(-1);   /* emoji sola bakiyor; yaris saga */
   }
+  /* Tezahurat cubugu — kulvarin altinda, atin renginde dolar.
+     Takim yaris sirasinda yazip begendikce buyur, sessizlesince soner. */
+  .kTez {
+    position: absolute; left: 292px; bottom: 0; height: 7px; width: 0;
+    border-radius: 4px 4px 0 0; opacity: .85; z-index: 1;
+    transition: width .25s linear;
+  }
+
   /* Dortnal sallantisi: transform-only, GPU'suz renderda da ucuz */
   #sahaKutu.kosuyor .kAt .govde { animation: dortnal .36s ease-in-out infinite alternate; }
   @keyframes dortnal {
@@ -180,6 +188,20 @@
   catch { galibiyet = []; }
   while (galibiyet.length < ATLAR.length) galibiyet.push(0);
 
+  // Atlarin "karakteri": gizli guc katsayisi (0.94-1.06) her kosuda hafif
+  // kayar; son 5 varis kulvarda GORUNUR. Boylece bahis yazi-tura olmaktan
+  // cikip form okumaya donusur — ve pari-mutuel bunu kendisi dengeler:
+  // formda olan ata herkes oynar, orani duser, kazandirdigi azalir.
+  let veriAt;
+  try { veriAt = JSON.parse(localStorage.getItem('tt-at-veri')) || {}; }
+  catch { veriAt = {}; }
+  if (!Array.isArray(veriAt.guc) || veriAt.guc.length !== ATLAR.length) {
+    veriAt.guc = ATLAR.map(() => 0.97 + Math.random() * 0.06);
+  }
+  if (!Array.isArray(veriAt.son) || veriAt.son.length !== ATLAR.length) {
+    veriAt.son = ATLAR.map(() => []);
+  }
+
   // Formalari bir kez pisir
   ATLAR.forEach((a) => {
     a.formaURL = Kimlik.formaPisir(a.renk, a.ikincil, a.desen).toDataURL();
@@ -197,6 +219,10 @@
   let hiz = ATLAR.map(() => 1);
   let fotoFinisDendi = false, sonDuzlukDendi = false;
   let sonLider = -1;
+  let varis = [];                       // bitis cizgisini gecis sirasi
+  let kazananIlan = false, kazananZaman = 0, sonDagitilan = [];
+  let tezahurat = ATLAR.map(() => 0);   // decay'li tezahurat enerjisi
+  const uidler = new Map();             // kid -> uniqueId (@etiket icin)
 
   try {
     for (const [kid, o] of JSON.parse(localStorage.getItem('tt-at-puan') || '[]')) puanlar.set(kid, o);
@@ -210,7 +236,7 @@
   Spiker.kur(document.getElementById('akis'));
 
   // ---- kulvarlar -----------------------------------------------------------
-  const atEl = [];
+  const atEl = [], tezEl = [], formEl = [];
   ATLAR.forEach((a, i) => {
     const k = document.createElement('div');
     k.className = 'kulvar';
@@ -223,10 +249,21 @@
           <div class="kGalibiyet">🏆 ${galibiyet[i]}</div>
         </div>
       </div>
+      <div class="kTez" style="background:${a.renk}"></div>
       <div class="kAt"><span class="govde">🏇</span></div>`;
     sahaEl.insertBefore(k, kazananEl);
     atEl.push(k.querySelector('.kAt'));
+    tezEl.push(k.querySelector('.kTez'));
+    formEl.push(k.querySelector('.kGalibiyet'));
   });
+
+  function formYaz() {
+    ATLAR.forEach((a, i) => {
+      const son = veriAt.son[i];
+      formEl[i].textContent = '🏆 ' + galibiyet[i] + (son.length ? ' · ' + son.join('-') : '');
+    });
+  }
+  formYaz();
 
   const BASLA = 304, BITIS_PAY = 34;
   function atlariYerlestir() {
@@ -281,16 +318,18 @@
     ).join('');
   }
 
-  function rayOdeme(kazananAt, dagitilan) {
-    fazBaslikEl.textContent = 'ÖDEMELER';
-    if (!dagitilan.length) {
-      fazIcEl.innerHTML = fSatir(kazananAt, 'kazandı') +
-        '<div class="fSatir bos">kimse bilemedi — puanlar yandı</div>';
-      return;
-    }
-    fazIcEl.innerHTML = fSatir(kazananAt, 'kazandı') + dagitilan.slice(0, 7).map((d) =>
-      `<div class="fSatir">${Kimlik.cip(d.kid, 30)}<div class="fAd">${d.ad}</div><div class="fSag">+${d.kazanc}</div></div>`
-    ).join('');
+  function rayOdeme(kazananAt, dagitilan, sira) {
+    fazBaslikEl.textContent = 'SONUÇ & ÖDEMELER';
+    // Podyum: tam siralama geldiyse ilk 3, gelmediyse sadece kazanan
+    const MADALYA = ['🥇', '🥈', '🥉'];
+    const podyum = (sira || [kazananAt]).slice(0, 3)
+      .map((atIdx, p) => fSatir(atIdx, MADALYA[p] || '')).join('');
+    const odeme = dagitilan.length
+      ? dagitilan.slice(0, 5).map((d) =>
+          `<div class="fSatir">${Kimlik.cip(d.kid, 30)}<div class="fAd">${d.ad}</div><div class="fSag">+${d.kazanc}</div></div>`
+        ).join('')
+      : '<div class="fSatir bos">kimse bilemedi — puanlar yandı</div>';
+    fazIcEl.innerHTML = podyum + odeme;
   }
 
   function liderlikCiz() {
@@ -319,10 +358,14 @@
     if (!bahisler.size) { sayacSn = BAHIS_SN; return; }
     durum = 'yaris';
     ilerleme = ATLAR.map(() => 0);
-    hiz = ATLAR.map(() => 0.85 + Math.random() * 0.3);
+    // Temel hiz x gizli guc: formdaki at hafif avantajli — form gorunur
+    // oldugu icin bu hile degil, okunabilir bilgi.
+    hiz = ATLAR.map((a, i) => (0.85 + Math.random() * 0.3) * veriAt.guc[i]);
     fotoFinisDendi = false; sonDuzlukDendi = false; sonLider = -1;
+    varis = []; kazananIlan = false; kazananZaman = 0; sonDagitilan = [];
+    tezahurat = ATLAR.map(() => 0);
     sahaEl.classList.add('kosuyor');
-    document.getElementById('cagri').textContent = 'koşu sürüyor!';
+    document.getElementById('cagri').textContent = 'koşu sürüyor — yaz & beğen, atına güç ver!';
     Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> — ${bahisler.size} bahis`, { oncelik: 3 });
   }
 
@@ -338,16 +381,35 @@
 
     let birinci = -1, enIleri = -1;
     for (let i = 0; i < ATLAR.length; i++) {
+      if (ilerleme[i] >= 1) { if (1 > enIleri) { enIleri = 1; if (birinci < 0) birinci = i; } continue; }
       hiz[i] += (Math.random() - 0.5) * 1.6 * dt;
       hiz[i] = Math.max(0.55, Math.min(1.5, hiz[i]));
-      ilerleme[i] += (hiz[i] / YARIS_SN) * dt;
+
+      // Tezahurat: destekcilerin yaris sirasindaki mesaj/begenileri.
+      // TAVANLI (+%12) ve hizla sonumleniyor (yarilanma ~1.5sn) — sonucu
+      // sohbet degil hala guc + sans belirliyor; tezahurat "itis" hissi.
+      tezahurat[i] *= Math.pow(0.5, dt / 1.5);
+      const itis = Math.min(0.12, tezahurat[i] * 0.012);
+
+      ilerleme[i] += (hiz[i] * (1 + itis) / YARIS_SN) * dt;
       if (ilerleme[i] > enIleri) { enIleri = ilerleme[i]; birinci = i; }
-      if (ilerleme[i] >= 1 && durum === 'yaris') { ilerleme[i] = 1; bitir(i); }
+      if (ilerleme[i] >= 1) {
+        ilerleme[i] = 1;
+        varis.push(i);
+        if (!kazananIlan) { kazananIlan = true; kazananZaman = t; kazananIslemleri(i); }
+      }
     }
     atlariYerlestir();
 
+    // Kazanan ilan edildi ama kosu bitmedi: digerleri cizgiye kadar kossun.
+    // Hepsi vardiginda ya da 2.6sn sonra kapat, kalanlari konumuna gore siraya yaz.
+    if (kazananIlan && (varis.length === ATLAR.length || t - kazananZaman > 2600)) {
+      finalize();
+      return;
+    }
+
     // Spiker olaylari
-    if (durum === 'yaris') {
+    if (durum === 'yaris' && !kazananIlan) {
       if (birinci !== sonLider && sonLider >= 0 && enIleri > 0.15 && enIleri < 0.88) {
         Spiker.soyle('⚡ ' + Spiker.sec(
           ['<b>%s</b> öne geçiyor!', '<b>%s</b> başı aldı!', '<b>%s</b> dışarıdan geliyor!', '<b>%s</b> temposunu artırdı!'],
@@ -369,14 +431,37 @@
           Spiker.soyle('🎬 <b>FOTO FİNİŞ!</b>', { oncelik: 3 });
         }
       }
-      if ((t - rayZaman) > 250) { rayZaman = t; rayPozisyon(); }
+      if ((t - rayZaman) > 250) { rayZaman = t; rayPozisyon(); tezCiz(); }
     }
   }
 
-  function bitir(i) {
+  /** Bitis sirasi: varanlar + kalanlar mevcut konuma gore. */
+  function tamSiralama() {
+    const kalan = ATLAR.map((a, i) => i).filter((i) => !varis.includes(i))
+      .sort((x, y) => ilerleme[y] - ilerleme[x]);
+    return varis.concat(kalan);
+  }
+
+  function finalize() {
     durum = 'bitti';
     sayacSn = KUTLAMA_SN;
     sahaEl.classList.remove('kosuyor');
+
+    // Form guncelle: varis pozisyonu son-5 listesine girer, gizli guc kayar
+    const sira = tamSiralama();
+    sira.forEach((atIdx, poz) => {
+      veriAt.son[atIdx].unshift(poz + 1);
+      if (veriAt.son[atIdx].length > 5) veriAt.son[atIdx].pop();
+      veriAt.guc[atIdx] = Math.max(0.94, Math.min(1.06,
+        veriAt.guc[atIdx] + (Math.random() - 0.5) * 0.024));
+    });
+    localStorage.setItem('tt-at-veri', JSON.stringify(veriAt));
+    formYaz();
+    rayOdeme(sira[0], sonDagitilan, sira);   // podyumla yeniden ciz
+    tezEl.forEach((e) => { e.style.width = '0'; });
+  }
+
+  function kazananIslemleri(i) {
     const at = ATLAR[i];
 
     galibiyet[i]++;
@@ -396,7 +481,18 @@
       dagitilan.push({ kid, ad: b.ad, kazanc });
     }
     dagitilan.sort((a, b) => b.kazanc - a.kazanc);
+    sonDagitilan = dagitilan;
     localStorage.setItem('tt-at-puan', JSON.stringify([...puanlar.entries()].slice(0, 100)));
+
+    // Kazanan bahiscileri SOHBETTE etiketle (kopru botu; yoksa sessiz).
+    if (dagitilan.length) {
+      const etiketler = dagitilan.slice(0, 3)
+        .map((d) => '@' + (uidler.get(d.kid) || d.ad)).join(' ');
+      const fazla = dagitilan.length > 3 ? ` +${dagitilan.length - 3} kişi` : '';
+      TT.soyle(`🏇 ${at.ad} kazandı! Tebrikler ${etiketler}${fazla} 🎉`);
+    } else {
+      TT.soyle(`🏇 ${at.ad} kazandı — kimse görmedi! Sıradaki koşuda şansını dene 🎯`);
+    }
 
     Finis.kart(kazananEl, {
       url: at.formaBuyukURL,
@@ -444,10 +540,31 @@
     [a.ad.toLocaleLowerCase('tr').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
       .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c'), i]));
 
+  function tezVer(kid, miktar) {
+    const b = bahisler.get(kid);
+    if (!b) return;
+    tezahurat[b.at] = Math.min(14, tezahurat[b.at] + miktar);
+    // Esik asilinca spiker coskusu (at basina 4sn kilit)
+    if (tezahurat[b.at] > 7) {
+      Spiker.soyle(`📣 <b style="color:${ATLAR[b.at].renk}">${ATLAR[b.at].ad}</b> tribünü coştu!`,
+        { oncelik: 1, anahtar: 'tez' + b.at });
+    }
+  }
+
+  function tezCiz() {
+    for (let i = 0; i < ATLAR.length; i++) {
+      tezEl[i].style.width = Math.min(100, tezahurat[i] * 8).toFixed(0) + '%';
+    }
+  }
+
   TT.on('chat', (ev) => {
-    if (durum !== 'bahis') return;
     const kid = kimlik(ev.user);
     if (!kid) return;
+    if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
+
+    // Yaris sirasinda: mesaj = kendi atina tezahurat
+    if (durum === 'yaris') { tezVer(kid, 1); return; }
+    if (durum !== 'bahis') return;
     const metin = String(ev.comment || '');
     let at = -1;
     const m = metin.match(/\b([1-8])\b/);
@@ -470,11 +587,19 @@
     }
   });
 
-  // Hediye: bahsi katlar (x5'e kadar). Yarisi HIZLANDIRMAZ — para verenin
-  // ati one gecseydi izleyici bunu anlar, oyun sahtelesirdi.
+  // Begeni: yaris sirasinda kucuk tezahurat (seri geldigi icin bolunmus)
+  TT.on('like', (ev) => {
+    if (durum !== 'yaris') return;
+    tezVer(kimlik(ev.user), Math.min(2.5, (ev.likes || 1) * 0.12));
+  });
+
+  // Hediye: bahsi katlar (x5'e kadar) + tribun fisegi (buyuk tezahurat).
+  // Yarisin SONUCUNU hala hizlandirmiyor sayilir: tezahurat tavanli.
   TT.on('gift', (ev) => {
-    const b = bahisler.get(kimlik(ev.user));
+    const kid = kimlik(ev.user);
+    const b = bahisler.get(kid);
     if (!b) return;
+    if (durum === 'yaris') { tezVer(kid, 5); return; }
     b.kat = Math.min(5, (b.kat || 1) + 1);
     Spiker.soyle(`🎁 <span class="kim">${b.ad}</span> bahsini katladı — x${b.kat}`, { oncelik: 2 });
   });
@@ -488,7 +613,7 @@
   TT.uyanis({
     baslik: 'AT YARIŞI',
     komutlar: ['1', '5', 'şimşek'],
-    aciklama: 'Atının numarasını (1-8) ya da adını yaz · az oynanan at çok öder · 🎁 hediye bahsi katlar',
+    aciklama: 'Atının numarasını (1-8) ya da adını yaz · az oynanan at çok öder · koşuda yaz & beğen: tezahürat atını iter',
     cagri: 'bahsini oyna, koşu başlasın',
   });
 })();
