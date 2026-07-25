@@ -319,6 +319,54 @@
   const tuval = document.getElementById('tuval');
   const ctx = tuval.getContext('2d');
 
+  // ---- pist katmani: statik geometri tek tuvalde ----
+  let pistTuval = null, pistSb = 1;   // sb = dunya birimi basina piksel
+
+  function pistPisir() {
+    if (!pistBoy || !olcek) return;
+    let sb = olcek * dprSec();
+    // Bellek tavani: ~11M piksel (RGBA ~44MB). Asarsa olcegi dusur —
+    // arka plan hafif yumusar, kimse fark etmez.
+    let w = Math.ceil(EN * sb), h = Math.ceil(pistBoy * sb);
+    const TAVAN = 11e6;
+    if (w * h > TAVAN) {
+      sb *= Math.sqrt(TAVAN / (w * h));
+      w = Math.ceil(EN * sb); h = Math.ceil(pistBoy * sb);
+    }
+    pistTuval = document.createElement('canvas');
+    pistTuval.width = w; pistTuval.height = h;
+    pistSb = sb;
+    const x = pistTuval.getContext('2d');
+    x.scale(sb, sb);
+
+    // duvarlar: iki katman
+    x.lineCap = 'round';
+    x.strokeStyle = '#241b5e'; x.lineWidth = 13;
+    x.beginPath();
+    for (const d of duvarlar) { x.moveTo(d.x1, d.y1); x.lineTo(d.x2, d.y2); }
+    x.stroke();
+    x.strokeStyle = '#7d6ce0'; x.lineWidth = 7;
+    x.beginPath();
+    for (const d of duvarlar) { x.moveTo(d.x1, d.y1); x.lineTo(d.x2, d.y2); }
+    x.stroke();
+
+    // civiler: golge + sprite
+    for (const p of pegler) {
+      x.globalAlpha = .3; x.fillStyle = '#000';
+      x.beginPath(); x.arc(p.x + 2, p.y + 3, p.r, 0, 6.2832); x.fill();
+      x.globalAlpha = 1;
+      x.drawImage(civiSprite, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    }
+
+    // bitis cizgisi
+    for (let bx = 0; bx < EN; bx += 40) {
+      for (let k = 0; k < 2; k++) {
+        x.fillStyle = ((bx / 40 + k) % 2) ? '#17123a' : '#fff';
+        x.fillRect(bx, bitis + k * 11, 40, 11);
+      }
+    }
+  }
+
   // Civi kuresi bir kez pisirilir; cizimde drawImage ile olceklenir
   const civiSprite = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 64;
@@ -331,16 +379,22 @@
   })();
   let W = 0, H = 0, olcek = 1, kamera = 0;
 
+  function dprSec() {
+    if (document.documentElement.classList.contains('tt-lite')) return 1;
+    return Math.min(1.5, window.devicePixelRatio || 1);
+  }
+
   function boyutla() {
     const r = tuval.getBoundingClientRect();
     if (!r.width || !r.height) return;              // henuz yerlesmedi
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = dprSec();
     W = Math.max(1, Math.round(r.width));
     H = Math.max(1, Math.round(r.height));
     tuval.width = Math.round(W * dpr);
     tuval.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     olcek = W / EN;
+    pistPisir();
   }
   // Tek seferlik olcum yetmiyor: sayfa ilk acildiginda yerlesim daha
   // oturmamis oluyor, tuvalin arka tamponu yanlis oranda kaliyor ve
@@ -362,11 +416,13 @@
   /** Bilyeyi KURE gibi ciz: duz daire "ucuz" duruyor.
    *  Isik sol ustten: radyal gradyan + parlama noktasi + koyu kenar + golge. */
   function bilyeCiz(b) {
-    // yere dusen golge
-    ctx.globalAlpha = 0.28;
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(b.x + 3, b.y + R * 0.85, R * 0.85, R * 0.32, 0, 0, 6.2832); ctx.fill();
-    ctx.globalAlpha = 1;
+    // yere dusen golge (kalite dusunce ilk kisilan sey)
+    if (kalite === 0) {
+      ctx.globalAlpha = 0.28;
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.ellipse(b.x + 3, b.y + R * 0.85, R * 0.85, R * 0.32, 0, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
     // Kure onceden pisirildi (kimlik.js): karede sadece drawImage.
     // Onceki kod her bilye icin her karede createRadialGradient cagiriyordu —
     // GPU'suz renderda en pahali satir oydu.
@@ -386,6 +442,17 @@
     kamera += (hedef - kamera) * 0.12;
     kamera = Math.max(0, Math.min(kamera, pistBoy * olcek - H));
 
+    // Statik pist: tek kopyalama. (Onceden burada duvar konturlari,
+    // ~60 civi ve bitis cizgisi her karede yeniden ciziliyordu.)
+    if (pistTuval) {
+      const kaynakY = (kamera / olcek) * pistSb;
+      const kaynakH = Math.min(pistTuval.height - kaynakY, (H / olcek) * pistSb);
+      if (kaynakH > 0) {
+        ctx.drawImage(pistTuval, 0, kaynakY, pistTuval.width, kaynakH,
+                      0, 0, W, kaynakH / pistSb * olcek);
+      }
+    }
+
     ctx.save();
     ctx.translate(0, -kamera);
     ctx.scale(olcek, olcek);
@@ -393,46 +460,9 @@
     const ustSinir = kamera / olcek - 60;
     const altSinir = (kamera + H) / olcek + 60;
 
-    // --- duvarlar: iki katmanli, kalinlik hissi versin ---
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#241b5e';
-    ctx.lineWidth = 13;
-    ctx.beginPath();
-    for (const d of duvarlar) {
-      if (Math.max(d.y1, d.y2) < ustSinir || Math.min(d.y1, d.y2) > altSinir) continue;
-      ctx.moveTo(d.x1, d.y1); ctx.lineTo(d.x2, d.y2);
-    }
-    ctx.stroke();
-    ctx.strokeStyle = '#7d6ce0';
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    for (const d of duvarlar) {
-      if (Math.max(d.y1, d.y2) < ustSinir || Math.min(d.y1, d.y2) > altSinir) continue;
-      ctx.moveTo(d.x1, d.y1); ctx.lineTo(d.x2, d.y2);
-    }
-    ctx.stroke();
-
-    // --- civiler: pisirilmis sprite (karede gradyan uretimi yok) ---
-    for (const p of pegler) {
-      if (p.y < ustSinir || p.y > altSinir) continue;
-      ctx.globalAlpha = .3; ctx.fillStyle = '#000';
-      ctx.beginPath(); ctx.arc(p.x + 2, p.y + 3, p.r, 0, 6.2832); ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.drawImage(civiSprite, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
-    }
-
-    // --- bitis cizgisi ---
-    if (bitis > ustSinir && bitis < altSinir) {
-      for (let x = 0; x < EN; x += 40) {
-        for (let k = 0; k < 2; k++) {
-          ctx.fillStyle = ((x / 40 + k) % 2) ? '#17123a' : '#fff';
-          ctx.fillRect(x, bitis + k * 11, 40, 11);
-        }
-      }
-    }
-
     // --- iz (motion trail): hiz hissi duz daireyle gelmiyor ---
     for (const b of bilyeler) {
+      if (kalite > 0) break;
       if (b.bitti || !b.iz) continue;
       for (let i = 0; i < b.iz.length; i++) {
         const p = b.iz[i];
@@ -506,12 +536,32 @@
     }
   }
 
+  // ---- otomatik kalite: makine yetisemiyorsa susu kis ----
+  // 0 = tam (iz + golge) · 1 = iz ve golge yok · 2 = ustune kare atlama.
+  // Karar gercek kare suresinin kayan ortalamasiyla veriliyor; toparlanirsa
+  // kalite geri acilir. Lite modda 1'den baslar.
+  let kalite = document.documentElement.classList.contains('tt-lite') ? 1 : 0;
+  let karemsOrt = 16, agir = 0, hafif = 0, cizAtla = false;
+
+  function kaliteGuncelle(ms) {
+    karemsOrt = karemsOrt * 0.95 + ms * 0.05;
+    if (karemsOrt > 30) {
+      if (++agir > 60 && kalite < 2) { kalite++; agir = 0; karemsOrt = 20; }
+      hafif = 0;
+    } else if (karemsOrt < 19) {
+      if (++hafif > 300 && kalite > 0) { kalite--; hafif = 0; }
+      agir = 0;
+    } else { agir = 0; hafif = 0; }
+  }
+
   let sonZaman = 0, izSayac = 0;
   function dongu(t) {
     requestAnimationFrame(dongu);
     if (!sonZaman) sonZaman = t;
-    let dt = (t - sonZaman) / 1000;
+    const hamMs = t - sonZaman;
+    let dt = hamMs / 1000;
     sonZaman = t;
+    kaliteGuncelle(hamMs);
     if (dt > 0.05) dt = 0.05;          // sekme olursa fizigi patlatma
     dt *= Finis.carpan;                // son duzlukte agir cekim
 
@@ -520,17 +570,19 @@
       for (let i = 0; i < 3; i++) adim(dt / 3);
       // Iz noktalari — hiz hissi icin
       izSayac += dt;
-      if (izSayac > 0.045) {
+      if (kalite === 0 && izSayac > 0.045) {
         izSayac = 0;
         for (const b of bilyeler) {
           if (b.bitti) continue;
           b.iz.push({ x: b.x, y: b.y });
-          if (b.iz.length > 7) b.iz.shift();
+          if (b.iz.length > 5) b.iz.shift();
         }
       }
       spikerKontrol();
     }
-    ciz();
+    // kalite 2: cizimi kare asiri atla (fizik tam hizda surer)
+    cizAtla = !cizAtla;
+    if (kalite < 2 || cizAtla) ciz();
   }
 
   // ---- akis / siralama -----------------------------------------------------
@@ -629,6 +681,7 @@
     bilyeler = []; bitirenler = [];
     sonLider = null; sonDuzlukDendi = false; oncekiSira = new Map();
     pistUret();
+    pistPisir();
     kamera = 0;
     sayacCiz(); kuyrukCiz(); siralamaCiz();
     akis('🏁 <b>YENİ YARIŞ</b> — sohbete yaz, katıl');
@@ -681,6 +734,7 @@
   // ---- basla ---------------------------------------------------------------
   boyutla();
   pistUret();
+  pistPisir();
   sayacCiz(); kuyrukCiz(); siralamaCiz();
   requestAnimationFrame(dongu);
 
