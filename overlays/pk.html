@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>PK Savaşı — tarafını yaz, kazandır</title>
+<link rel="stylesheet" href="_shared/base.css">
+<link rel="stylesheet" href="_shared/oyun-tema.css">
+<style>
+  /* TikTok'un KENDI formati (PK Battle) + tartisma "bait"i.
+     Iki taraf bir konuda kapisir; izleyici tarafinin adini yazar ve HER
+     MESAJ tarafini ileri iter. Bait'in isi: kimse kararsiz kalmaz —
+     "kedi mi kopek mi" gorunce yazmadan duramazsin. Yorum motoru budur. */
+  #orta { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ---- konu bandi ---- */
+  #konuKutu { flex: none; padding: 14px 24px; text-align: center; }
+  #konuUst { font-size: 20px; font-weight: 900; letter-spacing: 3px; color: var(--soluk); }
+  #konu {
+    margin-top: 4px; font-size: var(--tip-vurgu); font-weight: 900;
+    color: var(--murekkep); line-height: 1;
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+  }
+  #konu .vs { font-size: 34px; color: var(--soluk); font-weight: 900; }
+
+  /* ---- halat / metre: oyunun kahramani ---- */
+  #metreKutu { flex: none; padding: 16px; }
+  #metre {
+    position: relative; height: 132px; border-radius: 18px; overflow: hidden;
+    border: 2px solid var(--cizgi); background: #191434;
+  }
+  .yan {
+    position: absolute; top: 0; bottom: 0;
+    display: flex; align-items: center; gap: 14px; padding: 0 22px;
+    transition: width .45s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden; white-space: nowrap;
+  }
+  #yanA { left: 0; justify-content: flex-start; }
+  #yanB { right: 0; justify-content: flex-end; }
+  .yan .ikon { font-size: 62px; line-height: 1; }
+  .yan .bilgi { display: flex; flex-direction: column; }
+  .yan .ad { font-size: 40px; font-weight: 900; color: #191434; line-height: 1; }
+  .yan .say { font-size: var(--tip-kucuk); font-weight: 900; color: rgba(25, 20, 52, .72); }
+  /* Ortadaki sinir cizgisi */
+  #sinir {
+    position: absolute; top: -6px; bottom: -6px; width: 6px;
+    background: var(--murekkep); border-radius: 3px;
+    transform: translateX(-50%);
+    transition: left .45s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 0 3px var(--cizgi);
+  }
+
+  /* ---- alt: iki takimin en cok katki verenleri ---- */
+  #mvpler { flex: 1; min-height: 0; display: flex; gap: 14px; }
+  .mvpKutu { flex: 1; min-width: 0; padding: 8px 6px; overflow: hidden; }
+  .mvpBaslik {
+    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    padding: 4px 12px 6px; display: flex; justify-content: space-between;
+  }
+
+  /* ---- durum rozetleri ---- */
+  #durumSar { display: flex; align-items: center; gap: 10px; }
+  #speed {
+    display: none; align-items: center; gap: 8px;
+    background: var(--mercan); color: #191434;
+    border: 2px solid var(--cizgi); border-radius: 14px; padding: 6px 16px;
+    font-size: 30px; font-weight: 900; letter-spacing: 1px;
+  }
+  #speed.acik { display: inline-flex; animation: speedNabiz .6s ease-in-out infinite alternate; }
+  @keyframes speedNabiz { from { transform: scale(1); } to { transform: scale(1.06); } }
+  html.tt-lite #speed.acik { animation: none; }
+</style>
+</head>
+<body>
+<div id="zemin"></div>
+
+<div id="kok" class="tt-oyun">
+
+  <div id="ust" class="kutu">
+    <div id="rozet">⚔️</div>
+    <div id="baslikSar">
+      <div id="baslik">PK Savaşı</div>
+      <div id="cagri">tarafını yaz — her mesaj takımını ileri iter</div>
+    </div>
+    <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">—</span></div>
+    <div id="durumSar">
+      <div id="speed">🔥 SPEED x2</div>
+      <div class="rozetBuyuk" id="geriSayim">⏳ <span id="sure">3:00</span></div>
+    </div>
+    <div id="sayac">
+      <div id="sayacBuyuk">0</div>
+      <div id="sayacKucuk">savaşçı</div>
+    </div>
+  </div>
+
+  <div id="orta">
+    <div id="konuKutu" class="kutu">
+      <div id="konuUst">HANGİSİ?</div>
+      <div id="konu">—</div>
+    </div>
+
+    <div id="metreKutu" class="kutu">
+      <div id="metre">
+        <div class="yan" id="yanA"></div>
+        <div class="yan" id="yanB"></div>
+        <div id="sinir"></div>
+      </div>
+    </div>
+
+    <div id="mvpler">
+      <div class="mvpKutu kutu"><div class="mvpBaslik" id="mvpBasA"></div><div id="mvpA"></div></div>
+      <div class="mvpKutu kutu"><div class="mvpBaslik" id="mvpBasB"></div><div id="mvpB"></div></div>
+    </div>
+
+    <div id="kazanan"></div>
+  </div>
+
+  <div id="akis"></div>
+
+</div>
+
+<script src="_shared/tt.js"></script>
+<script src="_shared/kimlik.js"></script>
+<script src="_shared/spiker.js"></script>
+<script src="_shared/finis.js"></script>
+<script src="_shared/juice.js"></script>
+<script src="_shared/kapismalar.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const q = new URLSearchParams(location.search);
+  const num = (k, d) => (q.has(k) ? Number(q.get(k)) || d : d);
+
+  // TikTok PK'nin kendi olculeri: 3 dakikalik savas, sonda "speed" bolumu
+  const TUR_SN     = num('sure', 180);
+  const SPEED_SN   = num('speed', 30);    // son N saniye: hediye 2x
+  const KUTLAMA_SN = num('kutlama', 10);
+  const MESAJ      = num('mesaj', 1);     // bir mesajin itisi
+  const LIKE       = num('like', 0.12);   // begeni basina
+  const HEDIYE     = num('hediye', 14);   // hediyenin KARSI tarafi geri itisi
+
+  // ---- durum ---------------------------------------------------------------
+  let kap = null;                 // {a, b, baslik}
+  let puanA = 0, puanB = 0;
+  let taraf = new Map();          // kid -> 'a' | 'b'
+  let katki = new Map();          // kid -> {ad, yan, puan}
+  let kalanSn = TUR_SN;
+  let durum = 'savas';            // savas | bitti
+  let sonKap = [];
+
+  // Kalici: kisi basi kazanilan savas sayisi
+  let tablo = new Map();
+  try {
+    for (const [k, v] of JSON.parse(localStorage.getItem('tt-pk-tablo') || '[]')) tablo.set(k, v);
+  } catch { /* sifirdan */ }
+
+  const konuEl = document.getElementById('konu');
+  const konuUstEl = document.getElementById('konuUst');
+  const yanAEl = document.getElementById('yanA');
+  const yanBEl = document.getElementById('yanB');
+  const sinirEl = document.getElementById('sinir');
+  const speedEl = document.getElementById('speed');
+  const kazananEl = document.getElementById('kazanan');
+  const uidler = new Map();
+
+  Spiker.kur(document.getElementById('akis'));
+  Juice.sarsHedef(document.getElementById('kok'));
+
+  /** Turkce karakterleri sadelestir — "çay" ve "cay" ayni eslessin. */
+  function sade(t) {
+    return String(t || '').toLocaleLowerCase('tr')
+      .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c');
+  }
+
+  // ---- tur ------------------------------------------------------------------
+  function yeniTur() {
+    durum = 'savas';
+    kalanSn = TUR_SN;
+    puanA = 0; puanB = 0;
+    taraf = new Map(); katki = new Map();
+    speedEl.classList.remove('acik');
+    Finis.kapat(kazananEl);
+
+    let i;
+    do { i = Math.floor(Math.random() * KAPISMALAR.length); }
+    while (KAPISMALAR.length > 6 && sonKap.includes(i));
+    sonKap.push(i);
+    if (sonKap.length > 5) sonKap.shift();
+    kap = KAPISMALAR[i];
+
+    konuUstEl.textContent = kap.baslik || 'HANGİSİ?';
+    konuEl.innerHTML =
+      `<span style="color:${kap.a.renk}">${kap.a.emoji} ${kap.a.ad}</span>` +
+      `<span class="vs">VS</span>` +
+      `<span style="color:${kap.b.renk}">${kap.b.ad} ${kap.b.emoji}</span>`;
+
+    document.getElementById('mvpBasA').innerHTML =
+      `<span style="color:${kap.a.renk}">${kap.a.emoji} ${kap.a.ad}</span><span style="color:var(--soluk)">EN ÇOK KATKI</span>`;
+    document.getElementById('mvpBasB').innerHTML =
+      `<span style="color:${kap.b.renk}">${kap.b.emoji} ${kap.b.ad}</span><span style="color:var(--soluk)">EN ÇOK KATKI</span>`;
+
+    document.getElementById('cagri').textContent =
+      'her mesaj takımını ileri iter · 🎁 karşı tarafı geri iter';
+    // Komut cipi konuya gore: izleyici tam olarak NE yazacagini gorur
+    document.getElementById('komutMetin').textContent = kap.a.ad + ' / ' + kap.b.ad;
+    ciz();
+    Spiker.soyle(`⚔️ <b>${kap.a.ad} vs ${kap.b.ad}</b> — tarafını yaz!`, { oncelik: 3, sure: 4200 });
+    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
+  }
+
+  // ---- cizim ----------------------------------------------------------------
+  function ciz() {
+    // Yumusatilmis oran: ham pay (puanA/toplam) kullanilinca 1-0 skorunda
+    // bar %100'e firliyor ve tur daha baslamadan bitmis gibi gorunuyordu.
+    // K sabiti erken skorlari ortaya cekiyor; fark buyudukce etkisi azaliyor.
+    //   1-0   -> %52   (ortada, savas yeni basladi)
+    //   100-20 -> %79  (net ustunluk gorunuyor)
+    const K = 20;
+    const fark = puanA - puanB;
+    const oranA = 0.5 + 0.5 * (fark / (puanA + puanB + K));
+    // Alt sinir %18: kaybeden tarafin adi ve ikonu okunabilir kalsin
+    const yuzdeA = Math.max(18, Math.min(82, oranA * 100));
+
+    yanAEl.style.width = yuzdeA + '%';
+    yanBEl.style.width = (100 - yuzdeA) + '%';
+    yanAEl.style.background = kap.a.renk;
+    yanBEl.style.background = kap.b.renk;
+    sinirEl.style.left = yuzdeA + '%';
+
+    const sayA = [...taraf.values()].filter((v) => v === 'a').length;
+    const sayB = [...taraf.values()].filter((v) => v === 'b').length;
+    yanAEl.innerHTML =
+      `<div class="ikon">${kap.a.emoji}</div>
+       <div class="bilgi"><div class="ad">${kap.a.ad}</div>
+       <div class="say">${Math.round(puanA)} puan · ${sayA} kişi</div></div>`;
+    yanBEl.innerHTML =
+      `<div class="bilgi" style="align-items:flex-end"><div class="ad">${kap.b.ad}</div>
+       <div class="say">${Math.round(puanB)} puan · ${sayB} kişi</div></div>
+       <div class="ikon">${kap.b.emoji}</div>`;
+
+    document.getElementById('sayacBuyuk').textContent = taraf.size;
+    mvpCiz();
+  }
+
+  function mvpCiz() {
+    for (const yan of ['a', 'b']) {
+      const list = [...katki.entries()].filter(([, k]) => k.yan === yan)
+        .sort((x, y) => y[1].puan - x[1].puan).slice(0, 5);
+      const hedef = document.getElementById(yan === 'a' ? 'mvpA' : 'mvpB');
+      hedef.innerHTML = list.length
+        ? list.map(([kid, k], i) => `<div class="sira${i === 0 ? ' lider' : ''}">
+            <div class="rozet" style="background:${i === 0 ? 'var(--altin)' : '#6b5fb8'};color:${i === 0 ? '#191434' : '#fff'}">${i + 1}</div>
+            ${Kimlik.cip(kid, 30)}
+            <div class="ad">${k.ad}</div>
+            <div class="adet">${Math.round(k.puan)}</div>
+          </div>`).join('')
+        : '<div class="sira bos">bu tarafta henüz kimse yok</div>';
+    }
+  }
+
+  // ---- itis -----------------------------------------------------------------
+  function it(kid, ad, yan, miktar) {
+    if (durum !== 'savas') return;
+    if (yan === 'a') puanA += miktar; else puanB += miktar;
+    const k = katki.get(kid) || { ad, yan, puan: 0 };
+    k.ad = ad; k.yan = yan; k.puan += miktar;
+    katki.set(kid, k);
+  }
+
+  /** Yorumdan taraf cikar. Once kelime listesi, sonra 1/2. */
+  function tarafBul(metin) {
+    const t = sade(metin);
+    for (const kel of kap.a.kelimeler) if (t.includes(sade(kel))) return 'a';
+    for (const kel of kap.b.kelimeler) if (t.includes(sade(kel))) return 'b';
+    if (/(^|\s)1(\s|$)/.test(t)) return 'a';
+    if (/(^|\s)2(\s|$)/.test(t)) return 'b';
+    return null;
+  }
+
+  // ---- saat -----------------------------------------------------------------
+  setInterval(() => {
+    if (durum === 'bitti') {
+      kalanSn -= 0.25;
+      if (kalanSn <= 0) yeniTur();
+      return;
+    }
+    kalanSn -= 0.25;
+    const dk = Math.floor(Math.max(0, kalanSn) / 60);
+    const sn = Math.floor(Math.max(0, kalanSn) % 60);
+    document.getElementById('sure').textContent = dk + ':' + String(sn).padStart(2, '0');
+
+    // TikTok PK'nin "speed" bolumu: son saniyelerde hediye 2 katina cikar
+    const speedMi = kalanSn <= SPEED_SN;
+    if (speedMi && !speedEl.classList.contains('acik')) {
+      speedEl.classList.add('acik');
+      Spiker.soyle('🔥 <b>SPEED BÖLÜMÜ!</b> Hediyeler 2 KAT — son şans!', { oncelik: 3, sure: 4000 });
+      Juice.sars(0.3);
+    }
+    if (kalanSn <= 0) bitir();
+  }, 250);
+
+  function bitir() {
+    durum = 'bitti';
+    kalanSn = KUTLAMA_SN;
+    speedEl.classList.remove('acik');
+
+    const beraber = Math.abs(puanA - puanB) < 0.5;
+    const kazYan = beraber ? null : (puanA > puanB ? 'a' : 'b');
+    const kaz = kazYan ? kap[kazYan] : null;
+
+    // Kazanan tarafin MVP'si
+    const mvp = kazYan
+      ? [...katki.entries()].filter(([, k]) => k.yan === kazYan)
+          .sort((x, y) => y[1].puan - x[1].puan)[0]
+      : null;
+
+    if (kaz) {
+      Juice.sars(0.5);
+      Finis.kart(kazananEl, {
+        kupa: kaz.emoji,
+        isim: kaz.ad,
+        alt: mvp
+          ? `${Math.round(kazYan === 'a' ? puanA : puanB)} puanla kazandı · MVP: ${mvp[1].ad}`
+          : `${Math.round(kazYan === 'a' ? puanA : puanB)} puanla kazandı`,
+      });
+      document.getElementById('cagri').textContent = kaz.ad + ' kazandı!';
+      Spiker.soyle(`🏆 <b>${kaz.emoji} ${kaz.ad}</b> KAZANDI!` +
+        (mvp ? ` MVP: <span class="kim">${mvp[1].ad}</span>` : ''), { oncelik: 3, sure: 4500 });
+
+      // Kalici tablo: kazanan taraftaki herkese galibiyet
+      for (const [kid, k] of katki) {
+        if (k.yan !== kazYan || Kimlik.botMu(kid)) continue;
+        const t = tablo.get(kid) || { ad: k.ad, galibiyet: 0, puan: 0 };
+        t.ad = k.ad; t.galibiyet += 1; t.puan += Math.round(k.puan);
+        tablo.set(kid, t);
+      }
+      localStorage.setItem('tt-pk-tablo',
+        JSON.stringify([...tablo.entries()].sort((a, b) => b[1].puan - a[1].puan).slice(0, 150)));
+
+      if (mvp && !Kimlik.botMu(mvp[0])) {
+        TT.soyle(`⚔️ ${kaz.emoji} ${kaz.ad} kazandı! MVP: @${uidler.get(mvp[0]) || mvp[1].ad} 🏆`);
+      }
+    } else {
+      Finis.kart(kazananEl, { kupa: '🤝', isim: 'BERABERE', alt: 'kimse geri adım atmadı' });
+      Spiker.soyle('🤝 <b>BERABERE!</b>', { oncelik: 3, sure: 4000 });
+    }
+  }
+
+  // ---- olaylar --------------------------------------------------------------
+  const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
+  const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
+
+  TT.on('chat', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid || durum !== 'savas') return;
+    if (ev.user && ev.user.uniqueId) uidler.set(kid, ev.user.uniqueId);
+
+    let yan = taraf.get(kid);
+    if (!yan) {
+      // Henuz taraf secmemis: yorumdan cikar
+      yan = tarafBul(ev.comment);
+      if (!yan) return;                       // alakasiz yorum sayilmaz
+      taraf.set(kid, yan);
+      // Botlari temizle: gercek oyuncu geldiginde sahne onlarindir
+      for (const [bk] of [...taraf.entries()]) {
+        if (Kimlik.botMu(bk)) { taraf.delete(bk); katki.delete(bk); }
+      }
+    }
+    // Taraf secilmisse HER mesaj iter — "yazdikca one gecsin"
+    it(kid, isim(ev.user), yan, MESAJ);
+    ciz();
+  });
+
+  TT.on('like', (ev) => {
+    const kid = kimlik(ev.user);
+    const yan = taraf.get(kid);
+    if (!yan || durum !== 'savas') return;
+    it(kid, isim(ev.user), yan, Math.min(3, (ev.likes || 1) * LIKE));
+    ciz();
+  });
+
+  // Hediye: KARSI tarafi geri iter (kullanicinin istedigi "birbirini geri
+  // cekme"). Speed bolumunde 2 kat — TikTok PK'nin kendi mekanigi.
+  TT.on('gift', (ev) => {
+    const kid = kimlik(ev.user);
+    const yan = taraf.get(kid);
+    if (!yan || durum !== 'savas') return;
+    const elmas = (ev.gift && ev.gift.value) || 0;
+    const speedMi = kalanSn <= SPEED_SN;
+    const ham = (HEDIYE + Math.min(40, elmas * 0.25)) * (speedMi ? 2 : 1);
+
+    // DENGE: geri itme, karsi tarafin puaninin en fazla %30'u kadar olabilir.
+    // Sabit degerle birakinca turun basinda (puanlar dusukken) tek hediye
+    // karsi tarafi siliyordu ve yazmak anlamsizlasiyordu. Oransal tavan
+    // sayesinde hediye her zaman HISSEDILIR ama asla yok edici degil;
+    // buyuk hediye buyuk savasta buyuk etki yapar — dogru olan bu.
+    const karsiPuan = yan === 'a' ? puanB : puanA;
+    const guc = Math.max(2, Math.min(ham, karsiPuan * 0.3));
+
+    if (yan === 'a') puanB = Math.max(0, puanB - guc);
+    else puanA = Math.max(0, puanA - guc);
+    // Atan kisiye de katki yazilir (MVP yarisi icin)
+    it(kid, isim(ev.user), yan, guc * 0.5);
+
+    Spiker.soyle(`💥 <span class="kim">${isim(ev.user)}</span> ▸ ` +
+      `<b>${kap[yan === 'a' ? 'b' : 'a'].ad}</b> tarafını geri itti!` +
+      (speedMi ? ' <b>x2</b>' : ''), { oncelik: 2 });
+    Juice.sars(0.35);
+    ciz();
+  });
+
+  // ---- demo (cazibe modu) ---------------------------------------------------
+  // Bos odada botlar iki tarafa dagilip kapisir; gercek oyuncu yazinca
+  // botlar sahneden silinir (chat isleyicisinde).
+  setInterval(() => {
+    if (durum !== 'savas') return;
+    const gercekVar = [...taraf.keys()].some((k) => !Kimlik.botMu(k));
+    if (gercekVar) return;
+    const b = Kimlik.bot(Math.floor(Math.random() * 8));
+    const yan = Math.random() < 0.5 ? 'a' : 'b';
+    if (!taraf.has(b.kid)) taraf.set(b.kid, yan);
+    it(b.kid, b.ad, taraf.get(b.kid), MESAJ);
+    ciz();
+  }, 1400);
+
+  // ---- basla ----------------------------------------------------------------
+  yeniTur();
+
+  TT.uyanis({
+    baslik: 'PK SAVAŞI',
+    komutlar: ['KEDİ', 'VS', 'KÖPEK'],
+    aciklama: 'Tarafını sohbete yaz · her mesaj takımını ileri iter · ❤️ beğeni de sayılır · 🎁 hediye KARŞI tarafı geri iter',
+    cagri: 'tarafını seç, takımını kazandır',
+  });
+})();
+</script>
+</body>
+</html>

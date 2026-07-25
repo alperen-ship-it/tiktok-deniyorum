@@ -845,6 +845,7 @@ server.listen(args.port, '0.0.0.0', async () => {
    >> Oyunlar — sohbet oynuyor, sen hicbir sey yapmiyorsun <<
      bilye.html   yazana OZEL bilye (kalici renk+desen), pist asagi yaris
      bilgi.html   soru cikar, A/B/C/D yaz — ILK dogru en cok puani alir
+     pk.html      iki taraf kapisir (kedi vs kopek...), tarafini yaz, ittir
      at.html      8 sabit at, 1-8 yaz bahis oyna, oranlar havuzdan
 
       Ucu de kendi kendine donuyor: katilim penceresi acilir, oyun

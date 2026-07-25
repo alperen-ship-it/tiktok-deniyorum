@@ -119,6 +119,29 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
 #sayacBuyuk { font-size: var(--tip-vurgu); font-weight: 900; color: var(--altin); line-height: 1; }
 #sayacKucuk { font-size: 18px; font-weight: 700; color: var(--soluk); letter-spacing: 1.5px; text-transform: uppercase; }
 
+/* ---- KOMUT CIPI ----
+   "Random biri gelip bakip 'bu ne ya' demesin" testinin cevabi. Yeni gelen
+   izleyicinin 3 saniyede ogrenmesi gereken TEK sey: NE YAZACAGI. Baslik
+   altindaki kucuk yazi bunu tasimiyordu; artik altin, iri ve nabiz atan bir
+   cip olarak baslikta duruyor. Oyun degisse bile bu cip hep ayni yerde —
+   izleyici nereye bakacagini ogreniyor. */
+#komut {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  background: var(--altin); color: #191434;
+  border: 2px solid var(--cizgi); border-radius: 16px;
+  padding: 9px 20px;
+  font-size: 34px; font-weight: 900; letter-spacing: -.3px;
+  white-space: nowrap;
+  box-shadow: 0 4px 0 rgba(12, 8, 34, .55);
+  animation: komutNabiz 2.4s ease-in-out infinite;
+}
+@keyframes komutNabiz {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
+}
+html.tt-lite #komut { animation: none; }
+#komut .yazEt { font-size: 20px; font-weight: 900; opacity: .62; letter-spacing: 1px; }
+
 /* ---- siralama listesi ----
    Satirlar KUTU DEGIL: kutu icinde kutu sablon kokusu veriyor. Satirlar
    ince ayiricilarla ayrilir; sadece lider satiri hafif dolgu alir. */

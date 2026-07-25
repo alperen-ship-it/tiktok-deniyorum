@@ -4,7 +4,7 @@
 
 **İzleyicinin sohbete yazarak oynadığı oyunlar. Aç, bırak, karışma.**
 
-Üç oyun bir arada döner: bilye yarışı · bilgi yarışması · at yarışı bahsi.
+Dört oyun bir arada döner: bilye yarışı · bilgi yarışması · PK savaşı · at yarışı.
 Yayıncı hiçbir şeye dokunmaz — oyunlar kendi kendine tur atar, kazananları
 kutlar, oda boşken demo oynar, izleyici geldiğinde gerçek oyuna geçer.
 
@@ -54,6 +54,15 @@ yaklaştırır, beğeni küçük adım, **hediye öndeki rakibi geri iter** (sal
 tur anında başlar. Üst üste taç = seri çarpanı. Taç ve puan tablosu **kalıcı** —
 düzenli izleyiciyi geri getiren tablo bu.
 
+### ⚔️ PK Savaşı
+TikTok'un **kendi formatının** (PK Battle) uyarlaması + tartışma yemi. İki taraf
+bir konuda kapışır — *🐱 kedi vs 🐶 köpek*, *menemen soğanlı mı soğansız mı*,
+*ananaslı pizza olur mu* — kimse kararsız kalamaz, yorum yazmadan duramaz.
+İzleyici tarafının adını yazar; **her mesaj takımını ileri iter**, beğeni de
+sayılır. 🎁 **Hediye karşı tarafı geri iter.** Son 30 saniye **SPEED** — hediyeler
+2 kat (TikTok PK'nın gerçek mekaniği). 30 konu döner, galibiyet tablosu kalıcı.
+Konular: `overlays/_shared/kapismalar.js`
+
 ### 🏇 At Yarışı
 8 sabit at — kalıcı isim, forma, koşudan koşuya galibiyet + son 5 koşu formu
 (bahis yazı-tura değil, form okuma). İzleyici `1-8` ya da at adı yazıp bahis oynar;
@@ -66,7 +75,7 @@ beğeni kendi atına tezahürat gücü verir.** Foto finişte ağır çekim, son
 
 | Durum | Ne olur |
 |---|---|
-| **Tek link** | `oyun.html` üç oyunu sırayla döndürür (varsayılan 6'şar dk). Geçişler **tur arasında** olur — yarış ortasında ekran değişmez. |
+| **Tek link** | `oyun.html` dört oyunu sırayla döndürür (varsayılan 6'şar dk). Geçişler **tur arasında** olur — yarış ortasında ekran değişmez. |
 | **Oda boş** | Turlar 🤖 demo botlarıyla döner. Gelen izleyici oyunu izleyerek anlar; yazdığı an sıradaki tur gerçek olur. |
 | **Kazanan çıktı** | Sohbet botu kazananı `@etiketler` (aşağıda). Puanlar ve at galibiyetleri kalıcı (localStorage). |
 
@@ -92,7 +101,7 @@ Hepsi `oyun.html`'e eklenir, oyunlara aktarılır. Örnek:
 | `?sag=24&alt=24` | Kenar paylarını daralt, sahneyi büyüt (piksel) |
 | `?ust= ?sol=` | Diğer kenarlar — TikTok arayüzünün kapattığı alana göre |
 
-Tek tek oyun eklemek istersen: `bilye.html`, `bilgi.html`, `at.html` (hepsi
+Tek tek oyun eklemek istersen: `bilye.html`, `bilgi.html`, `pk.html`, `at.html` (hepsi
 `?lite=1` ile). Her birinin kendi parametreleri kontrol panelinde yazılı.
 
 ---
@@ -151,7 +160,7 @@ Test için `?mock=1` — sunucu olmadan sahte olaylarla çalışır. Ayrıntı:
 ```
 overlays/
   oyun.html          ← TEK LİNK: oyunları döndüren merkez
-  bilye.html  bilgi.html  at.html   (tepe.html, kalan.html: rotasyon dışı)
+  bilye.html  bilgi.html  pk.html  at.html   (tepe.html, kalan.html: rotasyon dışı)
   index.html         ← kontrol paneli (adresleri kopyala, test olayı gönder)
   _shared/           tt.js · kimlik.js · spiker.js · finis.js · juice.js
                      oyun-tema.css · base.css · font/ (Outfit, OFL)

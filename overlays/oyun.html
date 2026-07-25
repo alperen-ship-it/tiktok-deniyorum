@@ -53,6 +53,7 @@
   const OYUNLAR = {
     bilye: { dosya: 'bilye.html', ad: 'Bilye Yarışı', ikon: '🏁' },
     bilgi: { dosya: 'bilgi.html', ad: 'Bilgi Yarışması', ikon: '🧠' },
+    pk:    { dosya: 'pk.html',    ad: 'PK Savaşı',    ikon: '⚔️' },
     at:    { dosya: 'at.html',    ad: 'At Yarışı',    ikon: '🏇' },
     // Rotasyon disi ama duruyor (?oyunlar= ile acilir):
     //   tepe  — kendi tasarimim, kanitlanmis format degil
@@ -60,9 +61,9 @@
     tepe:  { dosya: 'tepe.html',  ad: 'Tepe Savaşı',  ikon: '👑' },
     kalan: { dosya: 'kalan.html', ad: 'Son Ayakta Kalan', ikon: '💀' },
   };
-  const SIRA = (q.get('oyunlar') || 'bilye,bilgi,at')
+  const SIRA = (q.get('oyunlar') || 'bilye,bilgi,pk,at')
     .split(',').map((s) => s.trim()).filter((s) => OYUNLAR[s]);
-  if (!SIRA.length) SIRA.push('bilye', 'bilgi', 'at');
+  if (!SIRA.length) SIRA.push('bilye', 'bilgi', 'pk', 'at');
 
   const SURE_MS = q.has('sn')
     ? (Number(q.get('sn')) || 90) * 1000
