@@ -163,6 +163,7 @@
 
 <script src="_shared/tt.js"></script>
 <script src="_shared/kimlik.js"></script>
+<script src="_shared/profil.js"></script>
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
 <script src="_shared/juice.js"></script>
@@ -507,6 +508,7 @@
       // Botlar odeme listesinde gorunur (demo canli dursun) ama KALICI
       // puan tablosuna girmez — EN IYI BAHISCILER gercek izleyicilerin.
       if (!Kimlik.botMu(kid)) {
+        Profil.ekle(kid, b.ad, { atBahis: 1, atKazanc: kazanc, xp: 10 + Math.round(kazanc / 8) });
         const m = puanlar.get(kid) || { ad: b.ad, puan: 0 };
         m.ad = b.ad; m.puan += kazanc;
         puanlar.set(kid, m);
@@ -515,7 +517,11 @@
     }
     dagitilan.sort((a, b) => b.kazanc - a.kazanc);
     sonDagitilan = dagitilan;
-    localStorage.setItem('tt-at-puan', JSON.stringify([...puanlar.entries()].slice(0, 100)));
+    // SIRALA, sonra kes. Siralamadan slice(0,100) JavaScript'te EN ONCE
+    // EKLENENI tutar — yani 100 farkli bahisciden sonra gelen herkesin
+    // puani her yazmada sessizce cope gidiyordu.
+    localStorage.setItem('tt-at-puan', JSON.stringify(
+      [...puanlar.entries()].sort((a, b) => (b[1].puan || 0) - (a[1].puan || 0)).slice(0, 100)));
 
     // Kazanan bahiscileri SOHBETTE etiketle (kopru botu; yoksa sessiz).
     const gercekKazanan = dagitilan.filter((d) => !Kimlik.botMu(d.kid));
@@ -568,6 +574,19 @@
     }
     document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
   }, 250);
+
+  const DURUM_METNI = () => durum === 'bahis' ? '— bahsin geçerli' : '— sıradaki koşuda bahsin geçer';
+  /* ILK TEMAS — oyun hangi durumda olursa olsun yazana karsilik ver.
+     Olculen kusur: dongunun buyuk kismi "olu pencere"ydi; o aralikta
+     yazan kisi ekranda hicbir sey gormuyordu. */
+  TT.on('ilktemas', (e) => {
+    const p = Profil.ekle(e.kid, isim(e.user), { mesaj: 1, xp: 2 });
+    const oz = Profil.ozet(e.kid);
+    Spiker.soyle(`${Kimlik.cip(e.kid, 26)} <span class="kim">${isim(e.user)}</span> ${DURUM_METNI()}` +
+         (oz ? ` <span class="ok">·</span> ${oz}` : ' <span class="ok">·</span> <b>İLK KEZ</b>'),
+         { oncelik: 2, anahtar: 'temas' });
+    if (window.Ses) Ses.cal('katil', 150);
+  });
 
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';

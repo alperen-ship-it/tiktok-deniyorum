@@ -143,6 +143,7 @@
 
 <script src="_shared/tt.js"></script>
 <script src="_shared/kimlik.js"></script>
+<script src="_shared/profil.js"></script>
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
 <script src="_shared/juice.js"></script>
@@ -309,6 +310,7 @@
       t.puan += kazanc;
       t.dogru += 1;
       if (!Kimlik.botMu(kid)) {
+        Profil.ekle(kid, c.ad, { bilgiDogru: 1, xp: Math.round(kazanc / 4) });
         tablo.set(kid, t);
         // Tur tablosu: ekranda gosterilen, tur sonunda sifirlanan puan
         const tt = turTablo.get(kid) || { ad: c.ad, puan: 0, dogru: 0 };
@@ -420,6 +422,19 @@
       yeniSoru();
     }
   }, 250);
+
+  const DURUM_METNI = () => durum === 'soru' ? '— cevabını yaz' : '— sıradaki soruda yarışıyorsun';
+  /* ILK TEMAS — oyun hangi durumda olursa olsun yazana karsilik ver.
+     Olculen kusur: dongunun buyuk kismi "olu pencere"ydi; o aralikta
+     yazan kisi ekranda hicbir sey gormuyordu. */
+  TT.on('ilktemas', (e) => {
+    const p = Profil.ekle(e.kid, isim(e.user), { mesaj: 1, xp: 2 });
+    const oz = Profil.ozet(e.kid);
+    Spiker.soyle(`${Kimlik.cip(e.kid, 26)} <span class="kim">${isim(e.user)}</span> ${DURUM_METNI()}` +
+         (oz ? ` <span class="ok">·</span> ${oz}` : ' <span class="ok">·</span> <b>İLK KEZ</b>'),
+         { oncelik: 2, anahtar: 'temas' });
+    if (window.Ses) Ses.cal('katil', 150);
+  });
 
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';

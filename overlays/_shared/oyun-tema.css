@@ -144,6 +144,13 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
 #katilCagri .kcIzleyici { font-size: 26px; font-weight: 900; color: var(--soluk);
                           letter-spacing: 1px; }
 #katilCagri .kcIzleyici span:first-child { color: var(--murekkep); font-size: 34px; }
+/* Son yazan: "burada yaziliyor" kaniti + yazana kendi adini gosterme */
+#katilCagri .kcSonYazan {
+  margin-top: 4px; padding-top: 12px; border-top: 3px solid var(--cizgi);
+}
+#katilCagri .kcsAd  { display: block; font-size: 30px; font-weight: 900; color: var(--oyun-renk);
+                      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#katilCagri .kcsAlt { display: block; font-size: 24px; font-weight: 800; color: var(--soluk); margin-top: 2px; }
 html.tt-kcyok #katilCagri { display: none; }
 
 /* ---- ortak panel govdesi ---- */

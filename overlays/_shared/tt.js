@@ -883,7 +883,8 @@
       '<div class="kcNe">ne yazacaksın</div>' +
       '<div class="kcKomut" id="kcKomut">—</div>' +
       '<div class="kcAyrac"></div>' +
-      '<div class="kcIzleyici" id="kcIzleyici"><span id="kcIzSay">—</span> <span>İZLEYİCİ</span></div>';
+      '<div class="kcIzleyici" id="kcIzleyici"><span id="kcIzSay">—</span> <span>İZLEYİCİ</span></div>' +
+      '<div class="kcSonYazan" id="kcSonYazan" style="display:none"></div>';
     kok.appendChild(el);
     kcTazele();
     izleyiciIzle();
@@ -940,6 +941,51 @@
   }
 
   // -------------------------------------------------------------------------
+  // ILK TEMAS — yazan herkese, oyunun HANGI durumda oldugundan bagimsiz
+  // -------------------------------------------------------------------------
+  /*
+   * Olculen kusur: dort oyunun da bir "olu penceresi" var — misket yarisirken
+   * (dongunun %56'si), at kosarken (%55), bilgi cevabi acikken (%26), PK'de
+   * taraf adi gecmeyen her mesaj. O aralikta yazan biri ekranda HICBIR
+   * karsilik gormuyor. Yazdigi mesajin ulasip ulasmadigini bile bilemiyor —
+   * ki kullandigimiz kutuphanenin bilinen bir "mesaj dusurme" hatasi da var,
+   * yani sessizlik gercekten belirsiz.
+   *
+   * Bu yuzden ilk temas OYUNDAN BAGIMSIZ olarak burada yakalaniyor ve
+   * oyunlara 'ilktemas' olarak veriliyor. Oyun ne durumda olursa olsun
+   * ekranda bir karsilik cikiyor.
+   *
+   * Oturum icinde kisi basi BIR kez — her mesaja tepki vermek akisi bogar.
+   */
+  const temasEdilen = new Set();
+
+  function ilkTemasKur() {
+    on('chat', (ev) => {
+      const kid = (ev && ev.user && (ev.user.id || ev.user.uniqueId)) || '';
+      if (!kid || temasEdilen.has(kid)) return;
+      temasEdilen.add(kid);
+      if (temasEdilen.size > 4000) {          // sinirsiz buyumesin
+        temasEdilen.delete(temasEdilen.values().next().value);
+      }
+      dispatch({ type: 'ilktemas', user: ev.user, kid, ilk: !!ev.ilk, ts: Date.now() });
+      sonYazanGoster(ev.user, kid);
+    });
+  }
+
+  /* Katilim sutununda SON YAZANI goster. Iki isi birden yapiyor:
+     (1) yeni gelen, birinin az once yazdigini goruyor — "burada yaziliyor"
+         sinyali, ki sessiz bir oda tam tersini soyluyordu;
+     (2) yazan kisi kendi adini iri puntoda goruyor. */
+  function sonYazanGoster(user, kid) {
+    const el = document.getElementById('kcSonYazan');
+    if (!el) return;
+    const ad = (user && (user.nickname || user.uniqueId)) || 'birisi';
+    const oz = global.Profil ? Profil.ozet(kid) : '';
+    el.innerHTML = `<span class="kcsAd">${ad}</span>` + (oz ? `<span class="kcsAlt">${oz}</span>` : '');
+    el.style.display = '';
+  }
+
+  // -------------------------------------------------------------------------
   // Nabiz — merkeze "hala calisiyorum" de
   // -------------------------------------------------------------------------
   /*
@@ -968,6 +1014,7 @@
     katilimSutunu();
     komutIzle();
     karsilamaKur();
+    ilkTemasKur();
     nabizGonder();
 
     // Baska sayfalardan olay enjeksiyonu (kontrol paneli onizlemesi bunu kullanir)

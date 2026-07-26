@@ -125,6 +125,7 @@
 
 <script src="_shared/tt.js"></script>
 <script src="_shared/kimlik.js"></script>
+<script src="_shared/profil.js"></script>
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
 <script src="_shared/juice.js"></script>
@@ -341,7 +342,13 @@
       // Kalici tablo: kazanan taraftaki herkese galibiyet
       for (const [kid, k] of katki) {
         if (k.yan !== kazYan || Kimlik.botMu(kid)) continue;
-        const t = tablo.get(kid) || { ad: k.ad, galibiyet: 0, puan: 0 };
+        // Kaybeden taraf da katkisinin karsiligini alsin: 3 dakika yazip
+      // hicbir sey biriktirmemek, o yarim izleyiciyi bir daha getirmez.
+      Profil.ekle(kid, k.ad, {
+        pkTur: 1, pkGalip: k.yan === kazYan ? 1 : 0,
+        xp: Math.round(k.puan * (k.yan === kazYan ? 1 : 0.4)) + 5,
+      });
+      const t = tablo.get(kid) || { ad: k.ad, galibiyet: 0, puan: 0 };
         t.ad = k.ad; t.galibiyet += 1; t.puan += Math.round(k.puan);
         tablo.set(kid, t);
       }
@@ -356,6 +363,19 @@
       Spiker.soyle('🤝 <b>BERABERE!</b>', { oncelik: 3, sure: 4000 });
     }
   }
+
+  const DURUM_METNI = () => 'savaşa katıldı';
+  /* ILK TEMAS — oyun hangi durumda olursa olsun yazana karsilik ver.
+     Olculen kusur: dongunun buyuk kismi "olu pencere"ydi; o aralikta
+     yazan kisi ekranda hicbir sey gormuyordu. */
+  TT.on('ilktemas', (e) => {
+    const p = Profil.ekle(e.kid, isim(e.user), { mesaj: 1, xp: 2 });
+    const oz = Profil.ozet(e.kid);
+    Spiker.soyle(`${Kimlik.cip(e.kid, 26)} <span class="kim">${isim(e.user)}</span> ${DURUM_METNI()}` +
+         (oz ? ` <span class="ok">·</span> ${oz}` : ' <span class="ok">·</span> <b>İLK KEZ</b>'),
+         { oncelik: 2, anahtar: 'temas' });
+    if (window.Ses) Ses.cal('katil', 150);
+  });
 
   // ---- olaylar --------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';

@@ -251,7 +251,8 @@
       const t = tablo.get(kid) || { ad: o.ad, tac: 0, puan: 0 };
       t.ad = o.ad; t.tac += 1; t.puan += kazanc;
       tablo.set(kid, t);
-      localStorage.setItem('tt-tepe-tablo', JSON.stringify([...tablo.entries()].slice(0, 200)));
+      localStorage.setItem('tt-tepe-tablo', JSON.stringify(
+        [...tablo.entries()].sort((a, b) => (b[1].puan || 0) - (a[1].puan || 0)).slice(0, 200)));
       TT.soyle(`👑 @${uidler.get(kid) || o.ad} tahtı aldı!` +
         (seri > 1 ? ` ${seri}. taç üst üste — x${seri} puan!` : ' Tebrikler!'));
     }
