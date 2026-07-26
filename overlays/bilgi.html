@@ -299,7 +299,13 @@
       .sort((a, b) => a[1].sira - b[1].sira);
 
     dogrular.forEach(([kid, c], sira) => {
-      const taban = Math.max(30, 100 - sira * 8);
+      /* Siraya gore normalize: taban HER ZAMAN tepenin yarisi.
+         Eskiden sabit 8 puan dusuyordu ve 30'da tabana vuruyordu —
+         yani 9. siradan sonra 200 kisi de ayni puani aliyordu, oyun
+         onlari ayirt etmeyi birakiyordu. */
+      const taban = dogrular.length <= 1
+        ? 100
+        : Math.round(100 - (sira / (dogrular.length - 1)) * 50);
       const t = tablo.get(kid) || { ad: c.ad, puan: 0, dogru: 0, seri: 0, enIyiSeri: 0 };
       t.ad = c.ad;
       t.seri = (t.seri || 0) + 1;

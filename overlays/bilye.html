@@ -824,7 +824,8 @@
       // Omurluk profil: katilan herkes kazanir, kazanan daha cok.
       // Sadece kazanani odullendirmek, kaybeden yarisini bos gecirtiyor.
       Profil.ekle(kid, katilanlar.get(kid), {
-        misketYaris: 1, misketGalip: kazandi ? 1 : 0, xp: kazandi ? 30 : 8,
+        misketYaris: 1, misketGalip: kazandi ? 1 : 0,
+        xp: Math.round((kazandi ? 30 : 8) * kademe().carpan),
       });
     }
     kayitYaz();
@@ -848,6 +849,7 @@
   }
 
   function katilimaDon() {
+    sonKademe = '';
     document.getElementById('etapHud')?.classList.remove('acik');
     sonEtap = -1;
     durum = 'katilim';
@@ -931,6 +933,34 @@
     if (window.Ses) Ses.cal('katil', 150);
   });
 
+  const KADEME_SAYI = () => katilanlar.size;
+  /* ---- KADEME: kalabalik odulu buyutur ----
+     Tek basina yazan biri "bunun ne anlami var" hissediyordu. Kademe
+     sistemi katilimi KOLEKTIF bir sey haline getiriyor: kisi sayisi
+     artinca odul carpani goruniyor bicimde buyuyor.
+     Onemli ayrinti: duyuru SADECE kademe DEGISINCE yapiliyor. 500 kisi
+     katilsa bile ~5 duyuru cikar, her katilimda bir satir degil. */
+  const KADEMELER = [
+    { esik: 3,   ad: 'MAHALLE',    carpan: 1.0 },
+    { esik: 8,   ad: 'ŞEHİR KUPASI', carpan: 1.4 },
+    { esik: 18,  ad: 'BÜYÜK PRİ',  carpan: 1.8 },
+    { esik: 35,  ad: 'ŞAMPİYONA',  carpan: 2.4 },
+    { esik: 1e9, ad: 'EFSANE TUR', carpan: 3.0 },
+  ];
+  let sonKademe = '';
+  function kademe() { return KADEMELER.find((k) => KADEME_SAYI() <= k.esik); }
+  function kademeKontrol() {
+    const k = kademe();
+    if (k.ad === sonKademe) return;
+    const ilk = sonKademe === '';
+    sonKademe = k.ad;
+    if (ilk) return;                       // acilista duyurma
+    akis(`⬆️ <b>${k.ad}</b> — ${KADEME_SAYI()} kişi · ödül x${k.carpan}`,
+         { oncelik: 3, sure: 3600, anahtar: 'kademe' });
+    if (window.Juice) Juice.sars(0.18);
+    if (window.Ses) Ses.cal('etap');
+  }
+
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
   const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
@@ -948,6 +978,7 @@
       if (katilanlar.size >= MAX) { kuyruk.set(kid, isim(ev.user)); return; }
       katilanlar.set(kid, isim(ev.user));
       Ses.cal('katil', 120);
+      kademeKontrol();
       // Tekrar gelene gecmisini soyle: "sen buraya aitsin" sinyali.
       const k = kayitAl(kid);
       if (k.yaris >= 1) {

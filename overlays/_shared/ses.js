@@ -21,6 +21,13 @@
   const SESSIZ_MOCK = q.get('mock') === '1' && q.get('ses') !== '1';
   const SEVIYE = Math.max(0, Math.min(1, Number(q.get('sesd') || 0.35)));
 
+  /* Ornek yolu: bu betigin bulundugu klasore gore. Sayfa hangi klasorde
+     olursa olsun dogru yeri bulsun diye currentScript'ten turetiliyor. */
+  const KOK_SES = (function () {
+    const sc = document.currentScript && document.currentScript.src;
+    return (sc ? sc.replace(/\/[^/]*$/, '/') : '_shared/') + 'ses/';
+  })();
+
   let ctx = null;
   let ana = null;
   let sonCalma = new Map();
@@ -34,6 +41,7 @@
       ana = ctx.createGain();
       ana.gain.value = SEVIYE;
       ana.connect(ctx.destination);
+      for (const ad in ORNEKLER) ornekYukle(ad);   // onden yukle: ilk calmada takilma olmasin
     } catch { ctx = null; }
     return ctx;
   }
@@ -60,19 +68,54 @@
     osc.stop(t0 + o.sure + 0.02);
   }
 
+  /* ---- GERCEK ORNEKLER (Kenney, CC0 1.0) ----
+     Sentez ucuz ve gecikmesiz ama zafer fanfari gibi anlarda gercek bir
+     ornegin yerini tutmuyor. Karar anlarina — kazanma, dogru cevap, bahis,
+     geri sayim — gercek ses kondu; geri kalan her sey sentezde kaldi.
+     Toplam ~92 KB, exe'de fark etmiyor. CC0: atif zorunlu degil, ticari
+     kullanim serbest, viral degil. Lisans metni _shared/ses/ icinde. */
+  const ORNEKLER = { zafer: 'zafer.ogg', dogru: 'dogru.ogg', bahis: 'bahis.ogg', tik: 'tik.ogg' };
+  const tamponlar = new Map();
+
+  function ornekYukle(ad) {
+    if (!ctx || tamponlar.has(ad)) return;
+    tamponlar.set(ad, null);                       // tekrar istemeyi engelle
+    fetch(KOK_SES + ORNEKLER[ad])
+      .then((r) => r.arrayBuffer())
+      .then((b) => ctx.decodeAudioData(b))
+      .then((buf) => tamponlar.set(ad, buf))
+      .catch(() => tamponlar.delete(ad));          // basarisizsa sentez devreye girer
+  }
+
+  function ornekCal(ad, hacim) {
+    const buf = tamponlar.get(ad);
+    if (!buf) { ornekYukle(ad); return false; }    // bu sefer sentez calsin
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    g.gain.value = hacim == null ? 0.9 : hacim;
+    src.buffer = buf; src.connect(g); g.connect(ana);
+    src.start();
+    return true;
+  }
+
   /* Ses tarifleri. Hepsi kisa — uzun ses yayinin kendi sesini bogar. */
   const TARIFLER = {
     katil:   () => ton({ f: 620, f2: 880, sure: 0.09, tip: 'triangle', hacim: 0.5 }),
-    tik:     () => ton({ f: 1100, sure: 0.035, tip: 'square', hacim: 0.22 }),
+    tik:     () => { if (ornekCal('tik', 0.35)) return;
+                     ton({ f: 1100, sure: 0.035, tip: 'square', hacim: 0.22 }); },
+    bahis:   () => { if (ornekCal('bahis', 0.6)) return;
+                     ton({ f: 880, sure: 0.09, tip: 'sine' }); },
     sonTik:  () => ton({ f: 1500, sure: 0.06, tip: 'square', hacim: 0.4 }),
-    dogru:   () => { ton({ f: 760, sure: 0.1, tip: 'triangle' });
+    dogru:   () => { if (ornekCal('dogru', 0.7)) return;
+                     ton({ f: 760, sure: 0.1, tip: 'triangle' });
                      ton({ f: 1140, sure: 0.16, tip: 'triangle', gecikme: 0.09 }); },
     yanlis:  () => ton({ f: 220, f2: 130, sure: 0.22, tip: 'sawtooth', hacim: 0.34 }),
     start:   () => { ton({ f: 440, sure: 0.1, tip: 'square', hacim: 0.4 });
                      ton({ f: 660, sure: 0.16, tip: 'square', hacim: 0.4, gecikme: 0.1 }); },
     etap:    () => { ton({ f: 520, sure: 0.08, tip: 'triangle', hacim: 0.4 });
                      ton({ f: 780, sure: 0.11, tip: 'triangle', hacim: 0.35, gecikme: 0.07 }); },
-    bitis:   () => { const n = [523, 659, 784, 1047];
+    bitis:   () => { if (ornekCal('zafer', 0.75)) return;
+                     const n = [523, 659, 784, 1047];
                      n.forEach((f, i) => ton({ f, sure: i === 3 ? 0.38 : 0.14,
                                                tip: 'triangle', gecikme: i * 0.1 })); },
     hediye:  () => { ton({ f: 880, sure: 0.09, tip: 'sine' });

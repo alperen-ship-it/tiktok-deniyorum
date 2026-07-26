@@ -110,6 +110,8 @@ const MIME = {
   '.gif': 'image/gif',
   '.webp': 'image/webp',
   '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg',
+  '.wav': 'audio/wav',
   '.woff2': 'font/woff2',
   '.ico': 'image/x-icon',
 };

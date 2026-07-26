@@ -508,7 +508,8 @@
       // Botlar odeme listesinde gorunur (demo canli dursun) ama KALICI
       // puan tablosuna girmez — EN IYI BAHISCILER gercek izleyicilerin.
       if (!Kimlik.botMu(kid)) {
-        Profil.ekle(kid, b.ad, { atBahis: 1, atKazanc: kazanc, xp: 10 + Math.round(kazanc / 8) });
+        Profil.ekle(kid, b.ad, { atBahis: 1, atKazanc: kazanc,
+          xp: Math.round((10 + kazanc / 8) * kademe().carpan) });
         const m = puanlar.get(kid) || { ad: b.ad, puan: 0 };
         m.ad = b.ad; m.puan += kazanc;
         puanlar.set(kid, m);
@@ -587,6 +588,34 @@
          { oncelik: 2, anahtar: 'temas' });
     if (window.Ses) Ses.cal('katil', 150);
   });
+
+  const KADEME_SAYI = () => bahisler.size;
+  /* ---- KADEME: kalabalik odulu buyutur ----
+     Tek basina yazan biri "bunun ne anlami var" hissediyordu. Kademe
+     sistemi katilimi KOLEKTIF bir sey haline getiriyor: kisi sayisi
+     artinca odul carpani goruniyor bicimde buyuyor.
+     Onemli ayrinti: duyuru SADECE kademe DEGISINCE yapiliyor. 500 kisi
+     katilsa bile ~5 duyuru cikar, her katilimda bir satir degil. */
+  const KADEMELER = [
+    { esik: 3,   ad: 'MAHALLE',    carpan: 1.0 },
+    { esik: 8,   ad: 'ŞEHİR KUPASI', carpan: 1.4 },
+    { esik: 18,  ad: 'BÜYÜK PRİ',  carpan: 1.8 },
+    { esik: 35,  ad: 'ŞAMPİYONA',  carpan: 2.4 },
+    { esik: 1e9, ad: 'EFSANE TUR', carpan: 3.0 },
+  ];
+  let sonKademe = '';
+  function kademe() { return KADEMELER.find((k) => KADEME_SAYI() <= k.esik); }
+  function kademeKontrol() {
+    const k = kademe();
+    if (k.ad === sonKademe) return;
+    const ilk = sonKademe === '';
+    sonKademe = k.ad;
+    if (ilk) return;                       // acilista duyurma
+    Spiker.soyle(`⬆️ <b>${k.ad}</b> — ${KADEME_SAYI()} kişi · ödül x${k.carpan}`,
+         { oncelik: 3, sure: 3600, anahtar: 'kademe' });
+    if (window.Juice) Juice.sars(0.18);
+    if (window.Ses) Ses.cal('etap');
+  }
 
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
