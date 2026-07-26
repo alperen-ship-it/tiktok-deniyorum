@@ -146,7 +146,12 @@ html.tt-kcyok #katilCagri { display: none; }
 #cagri {
   margin-top: 6px; font-size: var(--tip-kucuk); font-weight: 800; color: var(--soluk);
   text-transform: uppercase; letter-spacing: .4px;
+  /* TEK SATIR. Uzun bir cagri metni ikinci satira tasinca baslik kutusu
+     buyuyup komut cipinin uzerine biniyordu (PK'de goruldu). Tasarsa
+     kirpiliyor — komut cipi zaten asil mesaji tasiyor. */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+#baslik { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #sayac { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
 #sayacBuyuk { font-size: var(--tip-vurgu); font-weight: 900; color: var(--altin); line-height: 1; }
 #sayacKucuk { font-size: 26px; font-weight: 700; color: var(--soluk); letter-spacing: 1.5px; text-transform: uppercase; }

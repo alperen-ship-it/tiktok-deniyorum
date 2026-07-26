@@ -63,6 +63,11 @@
     align-content: flex-start; gap: 6px; padding: 12px; overflow: hidden;
   }
   #kuyruk.gizli { display: none; }
+  /* Katilanlar sag panelde: iri, okunur, sarilan bir bulut */
+  #fisAlan {
+    display: flex; flex-wrap: wrap; gap: 9px; padding: 10px 6px 4px;
+    align-content: flex-start; overflow: hidden;
+  }
   .fis {
     font-size: 26px; font-weight: 800; padding: 5px 14px; border-radius: 999px;
     border: 3px solid var(--cizgi); color: #1a1145;
@@ -275,6 +280,7 @@
     const hud = document.getElementById('etapHud');
     const e = etaplar[i];
     if (!hud || !e) return;
+    if (durum !== 'yaris') { hud.classList.remove('acik'); return; }
     document.getElementById('etapNo').textContent = (i + 1) + '/' + etaplar.length;
     document.getElementById('etapAd').textContent = e.ikon + ' ' + e.ad;
     hud.classList.add('acik');
@@ -721,8 +727,13 @@
   function siralamaCiz() {
     if (durum === 'katilim') {
       const kalan = Math.max(0, Math.ceil(sayacSn));
+      const g = [...katilanlar.entries()].slice(-18);
       sirEl.innerHTML =
-        `<div class="sira bos">katılım açık · ${kalan} sn</div>` +
+        `<div class="sira bos">katılım açık · <b>${kalan} sn</b></div>` +
+        (g.length
+          ? `<div id="fisAlan">` + g.map(([kid, ad]) =>
+              `<div class="fis" style="background:${Kimlik.al(kid).renk}">${ad}</div>`).join('') + '</div>'
+          : '<div class="sira bos">ilk yazan sen ol — misketin pistte belirsin</div>') +
         (kuyruk.size ? `<div class="sira bos">${kuyruk.size} kişi sıradaki yarışta</div>` : '');
       return;
     }
@@ -763,13 +774,12 @@
   }
 
   const kuyrukEl = document.getElementById('kuyruk');
+  /* Katilanlarin fisleri ESKIDEN pistin ustune biniyordu: hem pisti
+     kapatiyor hem etap gostergesiyle cakisiyordu. Artik sagdaki panelde
+     duruyorlar (katilim sirasinda orasi zaten bombostu). Iki sorun birden
+     cozuluyor: pist gorunur kaliyor, bos panel ise ise yariyor. */
   function kuyrukCiz() {
-    if (durum !== 'katilim') { kuyrukEl.classList.add('gizli'); return; }
-    kuyrukEl.classList.remove('gizli');
-    // Fis rengi = izleyicinin kalici kimlik rengi (bilyesiyle ayni)
-    const g = [...katilanlar.entries()].slice(-24);
-    kuyrukEl.innerHTML = g.map(([kid, ad]) =>
-      `<div class="fis" style="background:${Kimlik.al(kid).renk}">${ad}</div>`).join('');
+    kuyrukEl.classList.add('gizli');
   }
 
   function sayacCiz() {
@@ -801,6 +811,8 @@
   }
 
   function katilimaDon() {
+    document.getElementById('etapHud')?.classList.remove('acik');
+    sonEtap = -1;
     durum = 'katilim';
     // Oyun merkezi (oyun.html) icinde calisiyorsak tur bitisini haber ver —
     // merkez oyun gecisini TUR ARASINDA yapar, yaris ortasinda degil.
