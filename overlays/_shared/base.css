@@ -72,7 +72,7 @@ html.tt-yatay {
 
 /* Yatayda dikey icin kucultulmus yazilar gereksiz yere kucuk kaliyor */
 html.tt-yatay #bossAd { font-size: 30px; }
-html.tt-yatay #talimat { font-size: 19px; }
+html.tt-yatay #talimat { font-size: 28px; }
 
 /* Icerigi guvenli alana hapseden yardimcilar */
 .tt-guvenli {          /* gecici seyler: uyarilar, kisa omurlu bildirimler */
@@ -260,7 +260,7 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
   line-height: 1;
 }
 #tt-uyanis .durum {
-  font-size: 15px;
+  font-size: 26px;
   font-weight: 800;
   letter-spacing: 2.5px;
   text-transform: uppercase;
@@ -274,7 +274,6 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
   width: 9px; height: 9px;
   border-radius: 50%;
   background: #f59e0b;
-  animation: tt-nabiz 1.4s ease-in-out infinite;
 }
 #tt-uyanis[data-durum="canli"] .durum::before { background: #22c55e; }
 #tt-uyanis[data-durum="kopuk"] .durum::before { background: #ef4444; }
@@ -294,12 +293,11 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
   background: rgba(0, 0, 0, .55);
   border: 2px solid rgba(255, 255, 255, .3);
 }
-#tt-uyanis .aciklama { font-size: 19px; font-weight: 700; opacity: .9; max-width: 100%; }
+#tt-uyanis .aciklama { font-size: 30px; font-weight: 700; opacity: .92; max-width: 100%; }
 #tt-uyanis .cagri {
-  font-size: 21px;
+  font-size: 34px;
   font-weight: 900;
   color: var(--tt-cyan);
-  animation: tt-nabiz 1.8s ease-in-out infinite;
 }
 
 @keyframes tt-nabiz {
@@ -326,7 +324,7 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
 }
 #tt-serit.gorunur { opacity: 1; transform: none; }
 #tt-serit .komut {
-  font-size: 17px;
+  font-size: 28px;
   font-weight: 900;
   padding: 4px 12px;
   border-radius: 9px;
@@ -335,8 +333,8 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
 }
 
 html.tt-yatay #tt-uyanis .baslik { font-size: 38px; }
-html.tt-yatay #tt-uyanis .komut { font-size: 21px; }
-html.tt-yatay #tt-uyanis .aciklama { font-size: 17px; }
+html.tt-yatay #tt-uyanis .komut { font-size: 32px; }
+html.tt-yatay #tt-uyanis .aciklama { font-size: 28px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }

@@ -859,9 +859,30 @@
       '<div class="kcOk">💬 ⬇</div>' +
       '<div class="kcAyrac"></div>' +
       '<div class="kcNe">ne yazacaksın</div>' +
-      '<div class="kcKomut" id="kcKomut">—</div>';
+      '<div class="kcKomut" id="kcKomut">—</div>' +
+      '<div class="kcAyrac"></div>' +
+      '<div class="kcIzleyici" id="kcIzleyici"><span id="kcIzSay">—</span> <span>İZLEYİCİ</span></div>';
     kok.appendChild(el);
     kcTazele();
+    izleyiciIzle();
+  }
+
+  /* Canli izleyici sayisi. Kopru 'viewers' olayini zaten yayiyor; sayiyi
+     gostermek bir suslemeden ibaret degil: canli yayin arastirmasinda
+     gorunur izleyici sayaci yorum hacmini olculebilir sekilde artiriyor.
+     Veri gelmiyorsa satir hic gorunmuyor — sifir yazip odayi bos gostermek
+     tam olarak kacinmak istedigimiz sinyal. */
+  function izleyiciIzle() {
+    const kutu = document.getElementById('kcIzleyici');
+    const say = document.getElementById('kcIzSay');
+    if (!kutu || !say) return;
+    kutu.style.display = 'none';
+    on('viewers', (ev) => {
+      const n = Number(ev && (ev.viewers ?? ev.count));
+      if (!Number.isFinite(n) || n <= 0) return;
+      say.textContent = n >= 1000 ? (Math.round(n / 100) / 10) + 'B' : String(n);
+      kutu.style.display = '';
+    });
   }
 
   /** Oyunun komut metnini katilim sutununa aynala. */

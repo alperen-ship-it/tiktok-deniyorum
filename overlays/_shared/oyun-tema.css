@@ -54,6 +54,25 @@
   --tip-baslik: 44px;
   --tip-isim: 34px;
   --tip-kucuk: 26px;
+
+  /* ---- OYUN KIMLIK RENGI ----
+     Dort oyun ayni iskeleti paylasiyor (Valorant yayin arayuzu dersi:
+     izleyici cerceveyi bir kez ogrensin, her turda yeniden ogrenmesin).
+     Ama tamamen ayni gorununce, rotasyonda hangi oyunun ekranda oldugu
+     ancak BASLIK OKUNARAK anlasiliyordu — telefonda baslik zar zor
+     okunuyor ve okumak ~250ms bir sabitlenme istiyor.
+
+     Renk ve silueti ise gorsel sistem ~150ms'de, okumadan kategorize
+     ediyor. O yuzden her oyunun SABIT bir kimlik rengi var; ust bant ve
+     rozet o renkle boyaniyor, geri kalan her sey ayni kaliyor.
+
+     Renk secimi keyfi degil: mavi koyu zeminde WCAG kontrastini
+     gecemiyor (2.44:1) ve kirmizi/mavi 4:2:0 renk altornekleme ile
+     dagiliyor. Bu yuzden dordu de yuksek parlaklikli (sari/yesil/turkuaz/
+     mercan) ailesinden ve %100 doygunlukta degil — yayin sikistirmasi
+     tam doygun rengi ilk bozan sey. */
+  --oyun-renk: #f6c94f;      /* varsayilan: altin */
+  --oyun-bant: #332b6b;      /* ust bandin zemini */
 }
 
 body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
@@ -123,19 +142,41 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
                        color: var(--soluk); text-transform: uppercase; }
 #katilCagri .kcKomut { font-size: 38px; font-weight: 900; color: #fff; line-height: 1.15;
                        word-break: break-word; }
+#katilCagri .kcIzleyici { font-size: 26px; font-weight: 900; color: var(--soluk);
+                          letter-spacing: 1px; }
+#katilCagri .kcIzleyici span:first-child { color: var(--murekkep); font-size: 34px; }
 html.tt-kcyok #katilCagri { display: none; }
 
 /* ---- ortak panel govdesi ---- */
 .kutu {
   background: var(--panel);
-  border: 2px solid var(--cizgi);
+  /* 4px: yayin grafiginde ~4px altindaki cizgiler sikistirmada kirpisip
+     kayboluyor. 2px'lik kenarlik tam boyutta zarif duruyordu ama
+     telefonda hicbir sey ayirmiyordu. */
+  border: 4px solid var(--cizgi);
   border-radius: 20px;
   box-shadow: 0 5px 0 rgba(12, 8, 34, .55);   /* tek yon, sifir blur */
 }
 
 /* ---- ust baslik ---- */
-#ust { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
-#rozet { flex: none; font-size: 48px; line-height: 1; }
+/* Ust bant genis bir alan: kimlik rengini burada tasimak, kucuk bir
+   rozette tasimaktan cok daha uzaktan okunur (cevresel gorusle bile). */
+#ust {
+  flex: none; display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+  background: var(--oyun-bant);
+  border-color: var(--cizgi);
+}
+/* Rozet: yuvarlak KARE cerceve — goz izleme calismalarinda yuvarlak kare
+   ikon cercevesi daireye gore daha hizli taniniyor. Renk + sekil birlikte,
+   tek basina emoji degil. */
+#rozet {
+  flex: none; font-size: 42px; line-height: 1;
+  width: 74px; height: 74px; border-radius: 20px;
+  display: grid; place-items: center;
+  background: var(--oyun-renk);
+  border: 4px solid var(--cizgi);
+  box-shadow: 0 4px 0 rgba(10, 6, 30, .5);
+}
 #baslikSar { flex: 1; min-width: 0; }
 #baslik {
   font-family: 'Outfit', system-ui, sans-serif;

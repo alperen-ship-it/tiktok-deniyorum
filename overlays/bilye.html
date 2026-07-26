@@ -6,6 +6,9 @@
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
+  /* KIMLIK RENGI — Misket: altin — amiral oyun, altin zaten 'lider' rengi.
+     Rotasyonda izleyici bu oyunu BASLIGI OKUMADAN taniyabilsin diye. */
+  :root { --oyun-renk: #f6c94f; --oyun-bant: #3a2f14; }
   /* Bilye yarisinin butun olayi UZUN DIKEY PIST. Siralamayi tema gibi ayri
      bir blok yapinca pist 200 piksele dusuyor ve oyun kayboluyor; onun yerine
      pistin ustune HUD olarak biniyor. Gercek oyunlarda da boyle. */
@@ -84,7 +87,7 @@
     <div id="rozet">🏁</div>
     <div id="baslikSar">
       <div id="baslik">Misket Yarışı</div>
-      <div id="cagri">sohbete yaz · yarışa katıl</div>
+      <div id="cagri">katılım açık</div>
     </div>
     <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">HERHANGİ BİR ŞEY</span></div>
     <div id="sayac">
@@ -856,8 +859,9 @@
     kuyrukCiz();
     sayacCiz();
     if (demoTur) {
-      document.getElementById('cagri').textContent = '🤖 demo — sohbete yaz, sıradaki yarış senin';
-      akis('🤖 <b>DEMO YARIŞ</b> — sohbete bir şey yaz, sen de katıl', { oncelik: 2, sure: 4200 });
+      document.getElementById('cagri').textContent = 'yarış sürüyor — sıradakine sen de gir';
+      akis('👇 <b>BİR ŞEY YAZ</b> — sıradaki yarışta senin misketin de olsun',
+           { oncelik: 2, sure: 4200 });
     } else {
       akis(`🚦 <b>START</b> — ${katilanlar.size} bilye yarışıyor`);
     }

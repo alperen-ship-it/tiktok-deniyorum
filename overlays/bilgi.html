@@ -6,6 +6,9 @@
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
+  /* KIMLIK RENGI — Bilgi: turkuaz — yuksek parlaklik, sikistirmada saglam.
+     Rotasyonda izleyici bu oyunu BASLIGI OKUMADAN taniyabilsin diye. */
+  :root { --oyun-renk: #4fd6c9; --oyun-bant: #123a3a; }
   /* TikTok'un kendi viral formati (TikTok Trivia) uyarlamasi. Yazma
      rekabetini DOGRUDAN kullanir: soru cikar, sohbete A/B/C/D yazilir,
      ILK dogru cevaplayan en cok puani alir. Spam odullendirmez —
@@ -104,7 +107,7 @@
     <div id="rozet">🧠</div>
     <div id="baslikSar">
       <div id="baslik">Bilgi Yarışması</div>
-      <div id="cagri">A · B · C · D yaz — ilk doğru en çok puanı alır</div>
+      <div id="cagri">ilk doğru en çok puanı alır</div>
     </div>
     <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">A · B · C · D</span></div>
     <div class="rozetBuyuk" id="soruNo">SORU <span id="soruSayi">1</span></div>
@@ -255,7 +258,7 @@
 
     cubukEl.classList.remove('az');
     cubukEl.style.width = '100%';
-    document.getElementById('cagri').textContent = 'A · B · C · D yaz — ilk doğru en çok puanı alır';
+    document.getElementById('cagri').textContent = 'ilk doğru en çok puanı alır';
     sayacCiz();
   }
 
