@@ -81,7 +81,7 @@
   let indeks = 0;
   let basladi = 0;               // bu oyunun acilis zamani
   let gecisBekliyor = false;     // sure doldu, tur bitisini bekliyoruz
-  let zorlaZaman = 0;
+  let sonNabiz = 0;              // ic cerceveden gelen son yasam sinyali
 
   function oyunAc(i) {
     indeks = (i + SIRA.length) % SIRA.length;
@@ -95,6 +95,7 @@
       sahne.src = o.dosya + '?' + 'ic=1' + EK;
       sahne.onload = () => sahne.classList.remove('soluk');
       basladi = Date.now();
+      sonNabiz = 0;
       gecisBekliyor = false;
       rozet.classList.remove('acik');
     }, 460);
@@ -105,7 +106,6 @@
   function gecisiIste() {
     if (SIRA.length < 2) return;         // tek oyun donuyorsa gecis yok
     gecisBekliyor = true;
-    zorlaZaman = Date.now() + 90 * 1000; // tur sinyali hic gelmezse emniyet
   }
 
   function gec() {
@@ -124,7 +124,9 @@
   // Oyunlar tur bitiminde parent'a haber veriyor; gecisi TUR ARASINDA
   // yapiyoruz ki yaris/eleme ortasinda ekran degismesin.
   addEventListener('message', (ev) => {
-    if (ev.data && ev.data.tt === 'tur-bitti' && gecisBekliyor) gec();
+    if (!ev.data) return;
+    if (ev.data.tt === 'nabiz') { sonNabiz = Date.now(); return; }
+    if (ev.data.tt === 'tur-bitti' && gecisBekliyor) gec();
   });
 
   setInterval(() => {
@@ -138,8 +140,12 @@
     }
 
     if (!gecisBekliyor && gecen >= SURE_MS) gecisiIste();
-    // Emniyet: oyun tur sinyali gonderemiyorsa (donmus iframe vb.) zorla gec
-    if (gecisBekliyor && Date.now() > zorlaZaman) gec();
+
+    // EMNIYET: sadece DONMUS sayfa icin. Oyun nabiz attigi surece turunu
+    // sonuna kadar oynatiyoruz — 10 etaplik yaris ya da 40 soruluk bilgi
+    // turu ortasindan kesilmesin diye. Nabiz 30 sn kesilirse sayfa
+    // gercekten donmustur, o zaman zorla geciyoruz.
+    if (gecisBekliyor && sonNabiz && Date.now() - sonNabiz > 30000) gec();
   }, 1000);
 
   oyunAc(0);

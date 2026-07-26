@@ -892,6 +892,26 @@
   }
 
   // -------------------------------------------------------------------------
+  // Nabiz — merkeze "hala calisiyorum" de
+  // -------------------------------------------------------------------------
+  /*
+   * Merkez, gecis zamani gelince oyunun "tur bitti" demesini bekliyor.
+   * Eskiden 90 saniyelik sabit bir emniyet vardi ve suresi uzun olan
+   * turlari (10 etaplik misket yarisi, 40 soruluk bilgi turu) ORTASINDAN
+   * kesiyordu. Emniyetin isi yavas turu kesmek degil, DONMUS sayfayi
+   * kurtarmak. O yuzden artik nabiz atiyoruz: nabiz geldigi surece merkez
+   * bekliyor, nabiz kesilirse (gercekten donmus) gecisi zorluyor.
+   */
+  function nabizGonder() {
+    if (parent === window) return;
+    const at = () => {
+      try { parent.postMessage({ tt: 'nabiz' }, '*'); } catch { /* olsun */ }
+    };
+    at();
+    setInterval(at, 4000);
+  }
+
+  // -------------------------------------------------------------------------
   // Baslat
   // -------------------------------------------------------------------------
   function boot() {
@@ -900,6 +920,7 @@
     katilimSutunu();
     komutIzle();
     karsilamaKur();
+    nabizGonder();
 
     // Baska sayfalardan olay enjeksiyonu (kontrol paneli onizlemesi bunu kullanir)
     global.addEventListener('message', (e) => {

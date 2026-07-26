@@ -229,7 +229,19 @@
     const i = deste[destePos];
 
     soruIdx = i;
-    soru = SORULAR[i];
+    /* SIKLARI KARISTIR. Iki sebep:
+       1) Banka elle yazildigi icin dogru cevaplar dengesiz dagilmisti
+          (B %58). Hep "B" yazan biri hicbir sey bilmeden kazanirdi.
+       2) Ayni soru sonraki turda ayni sirayla cikmasin — cevabin YERINI
+          ezberlemek, cevabi bilmek degildir.
+       Karistirma her gosterimde yapiliyor, bankaya dokunmuyoruz. */
+    const ham = SORULAR[i];
+    const sira = [0, 1, 2, 3];
+    for (let a = 3; a > 0; a--) {
+      const bb = Math.floor(Math.random() * (a + 1));
+      [sira[a], sira[bb]] = [sira[bb], sira[a]];
+    }
+    soru = { s: ham.s, k: ham.k, c: sira.map((k) => ham.c[k]), d: sira.indexOf(ham.d) };
     katEl.textContent = soru.k;
     soruEl.textContent = soru.s;
     document.getElementById('soruSayi').textContent = (destePos + 1) + '/' + TUR_SORU;
@@ -321,10 +333,13 @@
     tabloCiz();
     document.getElementById('cagri').textContent = 'doğru cevap: ' + soru.c[soru.d];
 
-    if (destePos >= TUR_SORU) turBitir();
-
-    // Merkeze haber: oyun gecisi soru ARASINDA yapilsin (soru ortasinda degil)
-    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
+    // Merkeze haber SADECE tur bitince gider. Eskiden her sorudan sonra
+    // gonderiliyordu ve 40 soruluk yarisma 5. soruda kesiliyordu — izleyici
+    // icin yarim kalan bir seri, puan tablosunun da anlami kalmiyordu.
+    if (destePos >= TUR_SORU) {
+      turBitir();
+      try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
+    }
   }
 
   /* 40 soru doldu: turun sampiyonu aciklanir, tur tablosu sifirlanir,
