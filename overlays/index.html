@@ -224,6 +224,19 @@
     <button class="primary" id="storm">🌪️ Hediye fırtınası (20×)</button>
   </div>
 
+  <!-- OLCUM: hangi oyun gercekten yazdiriyor. Tahmin yerine sayi. -->
+  <div class="bar" id="olcumBar" style="display:block">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <span class="barlabel">📊 Ölçüm</span>
+      <span id="olcumOzet" style="opacity:.75">yükleniyor…</span>
+    </div>
+    <div id="olcumTablo" style="margin-top:10px;overflow-x:auto"></div>
+    <div style="margin-top:8px;font-size:13px;opacity:.6">
+      Veri sadece bu makinede (<code>tiktok-istatistik.json</code>), hiçbir yere gönderilmiyor.
+      <b>Kişi başı mesaj</b> oyunları karşılaştırmanın en dürüst ölçüsü — çok mesaj az kişiden de gelebilir.
+    </div>
+  </div>
+
   <div class="grid" id="grid"></div>
 </main>
 
@@ -446,6 +459,50 @@
   }
   poll();
   setInterval(poll, 3000);
+
+  // ---- olcum tablosu ------------------------------------------------------
+  const OYUN_ADI = {
+    bilye: '🏁 Misket', bilgi: '🧠 Bilgi', pk: '⚔️ PK', at: '🏇 At',
+    tepe: '👑 Tepe', kalan: '💀 Son Kalan', bilinmiyor: '— tek oyun',
+  };
+  function olcum() {
+    fetch('/api/istatistik').then((r) => r.json()).then((d) => {
+      const s = d.oturum || {};
+      document.getElementById('olcumOzet').textContent =
+        `bu yayın: ${d.oturumKisi || 0} kişi yazdı · ${s.mesaj || 0} mesaj · ` +
+        `${s.ilkKez || 0} ilk kez · ${s.donen || 0} geri dönen · ` +
+        `toplam tanınan: ${d.toplamGorulen || 0}`;
+
+      const satirlar = Object.entries(d.oyunlar || {})
+        .sort((a, b) => b[1].kisi - a[1].kisi);
+      const el = document.getElementById('olcumTablo');
+      if (!satirlar.length) {
+        el.innerHTML = '<div style="opacity:.6">Henüz veri yok — yayın açılınca dolar.</div>';
+        return;
+      }
+      el.innerHTML =
+        '<table style="border-collapse:collapse;font-size:14px;min-width:620px">' +
+        '<tr style="text-align:left;opacity:.6">' +
+        ['Oyun', 'Yazan kişi', 'Mesaj', 'Kişi başı', 'İlk kez', 'Beğeni', 'Hediye', 'Elmas']
+          .map((h) => `<th style="padding:4px 14px 4px 0;font-weight:700">${h}</th>`).join('') +
+        '</tr>' +
+        satirlar.map(([ad, o]) => {
+          const aktif = ad === d.aktifOyun;
+          return `<tr style="${aktif ? 'font-weight:700' : ''}">` +
+            `<td style="padding:3px 14px 3px 0">${OYUN_ADI[ad] || ad}${aktif ? ' ●' : ''}</td>` +
+            `<td style="padding:3px 14px 3px 0">${o.kisi}</td>` +
+            `<td style="padding:3px 14px 3px 0">${o.mesaj}</td>` +
+            `<td style="padding:3px 14px 3px 0">${o.kisiBasi}</td>` +
+            `<td style="padding:3px 14px 3px 0">${o.ilkKez}</td>` +
+            `<td style="padding:3px 14px 3px 0">${o.begeni}</td>` +
+            `<td style="padding:3px 14px 3px 0">${o.hediye}</td>` +
+            `<td style="padding:3px 14px 3px 0">${o.elmas}</td>` +
+          '</tr>';
+        }).join('') + '</table>';
+    }).catch(() => { /* kopru kapali */ });
+  }
+  olcum();
+  setInterval(olcum, 5000);
 })();
 </script>
 </body>

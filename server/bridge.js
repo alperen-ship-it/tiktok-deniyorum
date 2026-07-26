@@ -23,6 +23,7 @@ const { attach } = require('./ws-mini');
 const veri = require('./veri');
 const varlik = require('./varlik');
 const ayar = require('./ayar');
+const istatistik = require('./istatistik');
 
 // ---------------------------------------------------------------------------
 // Argumanlar
@@ -51,6 +52,8 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv);
+
+istatistik.oku();
 
 /* Oyun dosyalari nereden okunacak?
  *   --klasor <yol>  -> acikca verilen klasor
@@ -123,6 +126,22 @@ const server = http.createServer((req, res) => {
     const n = wss.broadcast(ev);
     res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
     res.end(JSON.stringify({ ok: true, sentTo: n, event: ev }));
+    return;
+  }
+
+  // --- merkez hangi oyunun ekranda oldugunu bildiriyor (istatistik icin) ---
+  if (urlPath === '/api/oyun') {
+    const q = new URL(req.url, 'http://localhost').searchParams;
+    const ad = istatistik.oyunAyarla(q.get('ad'));
+    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
+    res.end(JSON.stringify({ ok: true, oyun: ad }));
+    return;
+  }
+
+  // --- olcum ozeti (panel gosteriyor) ---
+  if (urlPath === '/api/istatistik') {
+    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
+    res.end(JSON.stringify(istatistik.ozet()));
     return;
   }
 
@@ -342,6 +361,15 @@ let hediyeUyarisiVerildi = false;
 function emit(ev) {
   ev.ts = ev.ts || Date.now();
   state.eventCount++;
+
+  // Sayim + "bu kisi ilk kez mi yaziyor" isareti. Oyunlar sayfa yenilenince
+  // hafizalarini kaybettigi icin bunu kopru biliyor; oyunlar sadece
+  // ev.ilk / ev.donen bayragina bakip karsilamayi yapiyor.
+  try {
+    const d = istatistik.say(ev);
+    if (d.ilk) ev.ilk = true;
+    else if (d.donen) ev.donen = true;
+  } catch { /* istatistik oyunu bozmasin */ }
 
   // Hediye katalogu kapaliyken hediye adi/elmas degerinin yine de mesajin
   // icinden geldigini varsayiyoruz. Gelmiyorsa overlay'ler "Hediye 0 elmas"

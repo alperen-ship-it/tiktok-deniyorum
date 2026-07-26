@@ -86,6 +86,10 @@
   function oyunAc(i) {
     indeks = (i + SIRA.length) % SIRA.length;
     const o = OYUNLAR[SIRA[indeks]];
+    // Kopruye hangi oyunun ekranda oldugunu bildir: olaylari dogru oyuna
+    // yazsin. Boylece "hangi oyun daha cok yazdiriyor" tahminle degil
+    // sayiyla cevaplaniyor. Kopru yoksa sessizce duser.
+    try { fetch('/api/oyun?ad=' + encodeURIComponent(SIRA[indeks])).catch(() => {}); } catch { /* olsun */ }
     sahne.classList.add('soluk');
     setTimeout(() => {
       sahne.src = o.dosya + '?' + 'ic=1' + EK;

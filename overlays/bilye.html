@@ -33,14 +33,14 @@
   }
   #siralama::before {
     content: 'CANLI SIRALAMA';
-    font-size: 15px; font-weight: 900; letter-spacing: 1.6px;
-    color: #a89ce0; padding: 2px 4px 4px;
+    font-size: 26px; font-weight: 900; letter-spacing: 1.4px;
+    color: #a89ce0; padding: 2px 4px 6px;
   }
   .sira { padding: 8px 12px; gap: 11px; background: rgba(0,0,0,.32); }
-  .sira .rozet { width: 30px; height: 30px; font-size: 15px; }
-  .sira .ad { font-size: 21px; }
-  .sira .adet { font-size: 21px; min-width: 56px; }
-  .sira.bos { font-size: 16px; padding: 12px; }
+  .sira .rozet { width: 40px; height: 40px; font-size: 24px; }
+  .sira .ad { font-size: 34px; }
+  .sira .adet { font-size: 32px; min-width: 84px; }
+  .sira.bos { font-size: 26px; padding: 14px; }
 
 
   /* Etap gostergesi: pistin ust kosesinde, yarisin neresinde oldugumuz.
@@ -53,9 +53,9 @@
     padding: 6px 14px;
   }
   #etapHud.acik { display: inline-flex; }
-  #etapNo { font-size: 22px; font-weight: 900; color: var(--altin);
+  #etapNo { font-size: 30px; font-weight: 900; color: var(--altin);
             font-variant-numeric: tabular-nums; }
-  #etapAd { font-size: 20px; font-weight: 800; color: #d9d2ff; letter-spacing: 1px; }
+  #etapAd { font-size: 28px; font-weight: 800; color: #d9d2ff; letter-spacing: 1px; }
 
   /* Katilim ekrani — yarisa girenlerin baloncuklari */
   #kuyruk {
@@ -64,7 +64,7 @@
   }
   #kuyruk.gizli { display: none; }
   .fis {
-    font-size: 15px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
+    font-size: 26px; font-weight: 800; padding: 5px 14px; border-radius: 999px;
     border: 3px solid var(--cizgi); color: #1a1145;
     max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
@@ -113,6 +113,7 @@
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
 <script src="_shared/juice.js"></script>
+<script src="_shared/ses.js"></script>
 <script>
 (function () {
   'use strict';
@@ -633,6 +634,7 @@
       sonEtap = ei;
       etapYaz(ei);
       if (ei > 0 && etaplar[ei]) {
+        Ses.cal('etap');
         akis(`${etaplar[ei].ikon} <b>${ei + 1}. ETAP</b> · ${etaplar[ei].ad}`,
              { oncelik: 3, anahtar: 'etap' });
         spikerBekle = 60;
@@ -724,10 +726,10 @@
         (kuyruk.size ? `<div class="sira bos">${kuyruk.size} kişi sıradaki yarışta</div>` : '');
       return;
     }
-    const list = bitirenler.slice(0, 8);
+    const list = bitirenler.slice(0, 5);
     if (!list.length) {
       // Yaris suruyor: onde gidenleri goster
-      const onde = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 8);
+      const onde = bilyeler.filter((b) => !b.bitti).sort((a, b) => b.y - a.y).slice(0, 5);
       sirEl.innerHTML = onde.length
         ? onde.map((b, i) => satirHtml(i, b, Math.round(b.y / bitis * 100) + '%')).join('')
         : '<div class="sira bos">yarış başlıyor…</div>';
@@ -746,8 +748,8 @@
     const onc = oncekiSira.get(b.kid);
     let ok = '';
     if (onc != null && onc !== i) {
-      ok = onc > i ? '<span style="color:#7ed957;font-size:12px">▲</span>'
-                   : '<span style="color:#ff6b6b;font-size:12px">▼</span>';
+      ok = onc > i ? '<span style="color:#7ed957;font-size:20px">▲</span>'
+                   : '<span style="color:#ff6b6b;font-size:20px">▼</span>';
     }
     const yuzde = Math.max(0, Math.min(100, Math.round(b.y / bitis * 100)));
     return `<div class="sira${i === 0 ? ' lider' : ''}" style="position:relative;overflow:hidden">
@@ -778,6 +780,7 @@
   const kazananEl = document.getElementById('kazanan');
 
   function yarisBitti(b) {
+    Ses.cal('bitis');
     Juice.sars(0.45);
     kazananAdi = b.ad;
     durum = 'bitti';
@@ -836,6 +839,7 @@
       }
     }
     durum = 'yaris';
+    Ses.cal('start');
     bilyeKur();
     kuyrukCiz();
     sayacCiz();
@@ -870,6 +874,7 @@
       if (katilanlar.has(kid)) return;
       if (katilanlar.size >= MAX) { kuyruk.set(kid, isim(ev.user)); return; }
       katilanlar.set(kid, isim(ev.user));
+      Ses.cal('katil', 120);
       sayacCiz(); kuyrukCiz();
     } else if (!katilanlar.has(kid)) {
       kuyruk.set(kid, isim(ev.user));      // yaris suruyor, sonrakine yaz

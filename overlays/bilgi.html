@@ -16,7 +16,7 @@
   /* ---- soru karti ---- */
   #soruKutu { flex: none; padding: 22px 26px; position: relative; overflow: hidden; }
   #kategori {
-    font-size: 20px; font-weight: 900; letter-spacing: 2px;
+    font-size: 28px; font-weight: 900; letter-spacing: 2px;
     color: var(--soluk); text-transform: uppercase;
   }
   #soru {
@@ -64,7 +64,7 @@
   #ray { flex: none; width: 470px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
   #ipucuKutu { flex: none; padding: 12px 14px; }
   #ipucuBaslik {
-    font-size: 17px; font-weight: 900; letter-spacing: 1.6px; color: var(--soluk);
+    font-size: 26px; font-weight: 900; letter-spacing: 1.2px; color: var(--soluk);
     display: flex; justify-content: space-between; align-items: baseline;
   }
   #ipucuYol {
@@ -76,10 +76,10 @@
   #tabloKutu { flex: 1; min-height: 0; padding: 8px 6px; overflow: hidden; }
   #tabloKutu::before {
     content: '🏆 TUR PUAN TABLOSU'; display: block;
-    font-size: 17px; font-weight: 900; letter-spacing: 1.6px;
+    font-size: 26px; font-weight: 900; letter-spacing: 1.2px;
     color: var(--soluk); padding: 4px 12px 6px;
   }
-  .seri { flex: none; font-size: 20px; font-weight: 900; color: var(--mercan); }
+  .seri { flex: none; font-size: 28px; font-weight: 900; color: var(--mercan); }
 
   /* ---- ilk dogru bilenler seridi ---- */
   #hizli { flex: none; min-height: 46px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -143,6 +143,7 @@
 <script src="_shared/spiker.js"></script>
 <script src="_shared/finis.js"></script>
 <script src="_shared/juice.js"></script>
+<script src="_shared/ses.js"></script>
 <script src="_shared/sorular.js"></script>
 <script>
 (function () {
@@ -213,6 +214,7 @@
 
   // ---- soru akisi ----------------------------------------------------------
   function yeniSoru() {
+    Ses.cal('start');
     durum = 'soru';
     kalanSn = SORU_SN;
     cevaplar = new Map();
@@ -299,6 +301,7 @@
       || '<div class="hizliFis" style="background:rgba(0,0,0,.25)">kimse bilemedi 😶</div>';
 
     if (dogrular.length) {
+      Ses.cal('dogru');
       const [kid, c] = dogrular[0];
       const t = tablo.get(kid);
       Juice.konfeti({ y: 0.42, adet: 26 });
@@ -308,6 +311,7 @@
         TT.soyle(`🧠 Doğru cevap: ${soru.c[soru.d]} — en hızlı @${uidler.get(kid) || c.ad}! 🎉`);
       }
     } else {
+      Ses.cal('yanlis');
       Spiker.soyle(`😶 Kimse bilemedi — doğrusu: <b>${soru.c[soru.d]}</b>`, { oncelik: 2, sure: 4000 });
     }
 

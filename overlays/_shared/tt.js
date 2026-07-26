@@ -790,6 +790,48 @@
   }
 
   // -------------------------------------------------------------------------
+  // Karsilama — ilk kez yazana ve geri donene
+  // -------------------------------------------------------------------------
+  /*
+   * Bu oyunlarin butun odul dongusu TANINMA. Ama simdiye kadar hayatinda
+   * ilk kez yazan biri, aylardir oynayanla ayni muameleyi goruyordu.
+   * Kopru artik olaya ev.ilk / ev.donen bayragi koyuyor (kim daha once
+   * yazmis, kim bu yayinda ilk kez yaziyor). Burada tek yerde karsiliyoruz;
+   * dort oyun da tt.js yukledigi icin hepsinde otomatik calisiyor.
+   *
+   * Sinir: ayni kisiye tekrar tekrar "hos geldin" dememek icin oturum
+   * hafizasi, ve arka arkaya karsilama yigilmasin diye 6 sn aralik.
+   */
+  const karsilanan = new Set();
+  let sonKarsilama = 0;
+
+  function karsilamaKur() {
+    on('chat', (ev) => {
+      if (!ev || (!ev.ilk && !ev.donen)) return;
+      const kid = (ev.user && (ev.user.id || ev.user.uniqueId)) || '';
+      if (!kid || karsilanan.has(kid)) return;
+      const simdi = Date.now();
+      if (simdi - sonKarsilama < 6000) return;      // yigilma olmasin
+      karsilanan.add(kid);
+      sonKarsilama = simdi;
+      if (global.Ses) Ses.cal('hosgeldin');
+
+      const ad = (ev.user && (ev.user.nickname || ev.user.uniqueId)) || 'birisi';
+      if (global.Spiker) {
+        if (ev.ilk) {
+          Spiker.soyle(`👋 <span class="kim">${ad}</span> <b>İLK KEZ KATILDI</b> — hoş geldin!`,
+                       { oncelik: 3, anahtar: 'karsilama', sure: 4600 });
+        } else {
+          Spiker.soyle(`🔁 <span class="kim">${ad}</span> geri döndü — tekrar hoş geldin`,
+                       { oncelik: 2, anahtar: 'karsilama', sure: 4000 });
+        }
+      }
+      // Oyunlar kendi tablolarindan gecmis derece ekleyebilsin diye olay
+      dispatch({ type: 'karsilama', user: ev.user, ilk: !!ev.ilk, donen: !!ev.donen, ts: simdi });
+    });
+  }
+
+  // -------------------------------------------------------------------------
   // Katilim sutunu — sagdaki bos seride "ne yapacagini" yazar
   // -------------------------------------------------------------------------
   /*
@@ -817,8 +859,7 @@
       '<div class="kcOk">💬 ⬇</div>' +
       '<div class="kcAyrac"></div>' +
       '<div class="kcNe">ne yazacaksın</div>' +
-      '<div class="kcKomut" id="kcKomut">—</div>' +
-      '<div class="kcAlt">yazınca oyuna girersin<br>ücretsiz · üyelik yok</div>';
+      '<div class="kcKomut" id="kcKomut">—</div>';
     kok.appendChild(el);
     kcTazele();
   }
@@ -858,6 +899,7 @@
     if (cfg.debug) makeDot();
     katilimSutunu();
     komutIzle();
+    karsilamaKur();
 
     // Baska sayfalardan olay enjeksiyonu (kontrol paneli onizlemesi bunu kullanir)
     global.addEventListener('message', (e) => {
