@@ -8,7 +8,7 @@
 <style>
   /* KIMLIK RENGI — PK: mercan — kapisma/gerilim.
      Rotasyonda izleyici bu oyunu BASLIGI OKUMADAN taniyabilsin diye. */
-  :root { --oyun-renk: #ff7a5e; --oyun-bant: #4a1f1c; }
+  :root { --oyun-renk: #ff8f73; }
   /* TikTok'un KENDI formati (PK Battle) + tartisma "bait"i.
      Iki taraf bir konuda kapisir; izleyici tarafinin adini yazar ve HER
      MESAJ tarafini ileri iter. Bait'in isi: kimse kararsiz kalmaz —
@@ -403,7 +403,13 @@
     // sayesinde hediye her zaman HISSEDILIR ama asla yok edici degil;
     // buyuk hediye buyuk savasta buyuk etki yapar — dogru olan bu.
     const karsiPuan = yan === 'a' ? puanB : puanA;
-    const guc = Math.max(2, Math.min(ham, karsiPuan * 0.3));
+    /* Tavan ORANSAL ama taban hediyenin BUYUKLUGUNE bagli olmali:
+       eskiden tur basinda karsi taraf 5 puandayken tavan 1.5 cikiyor ve
+       Math.max(2, ...) yuzunden 1000 elmaslik hediye ile 1 elmaslik
+       hediye ayni 2 puani yapiyordu. Buyuk hediye goruldugu halde hicbir
+       sey degistirmiyordu — gorunur bir adaletsizlik. */
+    const taban = Math.max(2, Math.min(ham * 0.35, 12));
+    const guc = Math.max(taban, Math.min(ham, karsiPuan * 0.3));
 
     if (yan === 'a') puanB = Math.max(0, puanB - guc);
     else puanA = Math.max(0, puanA - guc);

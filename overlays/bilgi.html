@@ -8,7 +8,7 @@
 <style>
   /* KIMLIK RENGI — Bilgi: turkuaz — yuksek parlaklik, sikistirmada saglam.
      Rotasyonda izleyici bu oyunu BASLIGI OKUMADAN taniyabilsin diye. */
-  :root { --oyun-renk: #4fd6c9; --oyun-bant: #123a3a; }
+  :root { --oyun-renk: #4fd6c9; }
   /* TikTok'un kendi viral formati (TikTok Trivia) uyarlamasi. Yazma
      rekabetini DOGRUDAN kullanir: soru cikar, sohbete A/B/C/D yazilir,
      ILK dogru cevaplayan en cok puani alir. Spam odullendirmez —
@@ -186,6 +186,15 @@
      her soru bagimsiz rastgele seciliyordu ve 40 soruluk bir turda ayni
      soru rahatlikla iki kez cikabiliyordu. */
   let deste = [], destePos = 0;
+  /* Tur ilerlemesi diske yaziliyor: merkez oyun degistirince iframe
+     bastan yukleniyor ve tur 1/40'a donuyordu — 40 soruluk yarisma
+     hicbir zaman bitmiyordu. Artik kaldigi yerden devam ediyor. */
+  try {
+    const kayit = JSON.parse(localStorage.getItem('tt-bilgi-deste') || 'null');
+    if (kayit && Array.isArray(kayit.d) && kayit.d.length && kayit.p < kayit.d.length) {
+      deste = kayit.d; destePos = kayit.p;
+    }
+  } catch { /* sifirdan */ }
   let turNo = Number(localStorage.getItem('tt-bilgi-tur') || 1);
   let turTablo = new Map();     // bu turun puanlari: kid -> {ad, puan, dogru, seri, enIyiSeri}
 
@@ -200,8 +209,13 @@
     while (deste.length < TUR_SORU) deste = deste.concat(idx);
     deste = deste.slice(0, TUR_SORU);
     destePos = 0;
+    desteKaydet();
   }
-  desteKar();
+  function desteKaydet() {
+    try { localStorage.setItem('tt-bilgi-deste', JSON.stringify({ d: deste, p: destePos })); }
+    catch { /* olsun */ }
+  }
+  if (!deste.length) desteKar();
 
   const soruEl = document.getElementById('soru');
   const katEl = document.getElementById('kategori');
@@ -336,13 +350,15 @@
     tabloCiz();
     document.getElementById('cagri').textContent = 'doğru cevap: ' + soru.c[soru.d];
 
-    // Merkeze haber SADECE tur bitince gider. Eskiden her sorudan sonra
-    // gonderiliyordu ve 40 soruluk yarisma 5. soruda kesiliyordu — izleyici
-    // icin yarim kalan bir seri, puan tablosunun da anlami kalmiyordu.
-    if (destePos >= TUR_SORU) {
-      turBitir();
-      try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
-    }
+    if (destePos >= TUR_SORU) turBitir();
+    desteKaydet();
+
+    /* Merkeze haber SORU sinirinda gider. Sorunun ortasinda kesilmek
+       izleyici icin kotu; soru arasi ise temiz bir kesit. Tur (40 soru)
+       kaldigi yerden devam ettigi icin yarisma yarim kalmiyor — sadece
+       arada baska oyunlar oynaniyor. Eskiden turun tamaminin bitmesi
+       bekleniyordu ve trivia yayinin yarisindan fazlasini yiyordu. */
+    try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
   }
 
   /* 40 soru doldu: turun sampiyonu aciklanir, tur tablosu sifirlanir,

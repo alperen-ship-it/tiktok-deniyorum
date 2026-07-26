@@ -804,19 +804,41 @@
    */
   const karsilanan = new Set();
   let sonKarsilama = 0;
+  const karsilamaKuyrugu = [];
 
   function karsilamaKur() {
     on('chat', (ev) => {
       if (!ev || (!ev.ilk && !ev.donen)) return;
       const kid = (ev.user && (ev.user.id || ev.user.uniqueId)) || '';
       if (!kid || karsilanan.has(kid)) return;
-      const simdi = Date.now();
-      if (simdi - sonKarsilama < 6000) return;      // yigilma olmasin
       karsilanan.add(kid);
-      sonKarsilama = simdi;
+      // KUYRUGA AL, ATMA. ev.ilk bayragi kisi basina bir kez geliyor;
+      // yigilma kilidine takilani "gecti gitti" yapmak, ilk kez yazan
+      // birini KALICI olarak karsilamasiz birakiyordu — hem de tam
+      // kalabalik anlarda, yani ozelligin en cok gerektigi yerde.
+      karsilamaKuyrugu.push({ ad: (ev.user && (ev.user.nickname || ev.user.uniqueId)) || 'birisi',
+                              ilk: !!ev.ilk, user: ev.user });
+      if (karsilamaKuyrugu.length > 12) karsilamaKuyrugu.shift();
+    });
+    setInterval(karsilamaBosalt, 1000);
+  }
+
+  function karsilamaBosalt() {
+    if (!karsilamaKuyrugu.length) return;
+    const simdi = Date.now();
+    if (simdi - sonKarsilama < 6000) return;
+    const k = karsilamaKuyrugu.shift();
+    sonKarsilama = simdi;
+    karsila(k);
+  }
+
+  function karsila(k) {
+    {
+      const ev = { ilk: k.ilk, user: k.user };
+      const ad = k.ad;
+      const simdi = Date.now();
       if (global.Ses) Ses.cal('hosgeldin');
 
-      const ad = (ev.user && (ev.user.nickname || ev.user.uniqueId)) || 'birisi';
       if (global.Spiker) {
         if (ev.ilk) {
           Spiker.soyle(`👋 <span class="kim">${ad}</span> <b>İLK KEZ KATILDI</b> — hoş geldin!`,
@@ -827,8 +849,8 @@
         }
       }
       // Oyunlar kendi tablolarindan gecmis derece ekleyebilsin diye olay
-      dispatch({ type: 'karsilama', user: ev.user, ilk: !!ev.ilk, donen: !!ev.donen, ts: simdi });
-    });
+      dispatch({ type: 'karsilama', user: ev.user, ilk: !!ev.ilk, donen: !ev.ilk, ts: simdi });
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -877,9 +899,14 @@
     const say = document.getElementById('kcIzSay');
     if (!kutu || !say) return;
     kutu.style.display = 'none';
+    // Mock modda kopru rastgele izleyici sayisi uretiyor. Onu ekrana
+    // basmak uydurma veriyi gercek gibi gostermek olur — botlari 🤖 ile
+    // isaretlerken burada uydurmak tutarsiz olurdu.
+    if (cfg.mock) return;
     on('viewers', (ev) => {
       const n = Number(ev && (ev.viewers ?? ev.count));
-      if (!Number.isFinite(n) || n <= 0) return;
+      // Tek haneli sayi "oda bos" demenin daha inandirici bir yolu.
+      if (!Number.isFinite(n) || n < 5) return;
       say.textContent = n >= 1000 ? (Math.round(n / 100) / 10) + 'B' : String(n);
       kutu.style.display = '';
     });

@@ -8,7 +8,7 @@
 <style>
   /* KIMLIK RENGI — Misket: altin — amiral oyun, altin zaten 'lider' rengi.
      Rotasyonda izleyici bu oyunu BASLIGI OKUMADAN taniyabilsin diye. */
-  :root { --oyun-renk: #f6c94f; --oyun-bant: #3a2f14; }
+  :root { --oyun-renk: #f6c94f; }
   /* Bilye yarisinin butun olayi UZUN DIKEY PIST. Siralamayi tema gibi ayri
      bir blok yapinca pist 200 piksele dusuyor ve oyun kayboluyor; onun yerine
      pistin ustune HUD olarak biniyor. Gercek oyunlarda da boyle. */
@@ -133,7 +133,7 @@
   const KATILIM_SN = num('katilim', 25);   // katilim penceresi
   const MAX        = num('max', 50);       // ayni anda kac misket (perf siniri)
   const KUTLAMA_SN = num('kutlama', 7);    // kazanan ekrani
-  const ETAP_SAYISI = Math.max(3, Math.min(16, num('etap', 10)));  // pist kac etap
+  const ETAP_SAYISI = Math.max(3, Math.min(16, num('etap', 8)));  // pist kac etap
   const ANAHTAR    = (q.get('kelime') || '').toLowerCase();  // bos = her yorum katar
 
   // ---- dunya ---------------------------------------------------------------
@@ -141,7 +141,7 @@
   // olcekleyerek ciziyor, boylece ekran boyutundan bagimsiz ayni yaris.
   const EN = 1000;
   const R  = 15;            // bilye yaricapi
-  const YERCEKIMI = 1100;
+  const YERCEKIMI = 780;   // 1100'de yaris 23 sn suruyordu; etap anonslari yetismiyordu
   const ESNEKLIK = 0.42;    // carpismada korunan hiz
   const SURTUNME = 0.995;
 
@@ -299,6 +299,22 @@
   let bitirenler = [];
   let katilanlar = new Map();   // kid -> ad  (bu yarisa girenler)
   let kuyruk = new Map();       // sonraki yarisi bekleyenler
+
+  /* KISISEL KAYIT — bu oyunda hicbir sey saklanmiyordu: yaziyorsun,
+     23 saniye bir top koşuyor, sonra oyun seni unutuyordu. Marbles on
+     Stream'i tutan sey yarisin kendisi degil, yarislar USTUNE biriken
+     kayitti. Kucuk ama gercek: kacinci yarisin, kac galibiyetin. */
+  let kayit = new Map();
+  try {
+    for (const [k, v] of JSON.parse(localStorage.getItem('tt-misket-kayit') || '[]')) kayit.set(k, v);
+  } catch { /* sifirdan */ }
+  function kayitAl(kid) { return kayit.get(kid) || { yaris: 0, galip: 0 }; }
+  function kayitYaz() {
+    try {
+      localStorage.setItem('tt-misket-kayit',
+        JSON.stringify([...kayit.entries()].slice(-400)));
+    } catch { /* olsun */ }
+  }
 
   let durum = 'katilim';        // katilim | yaris | bitti
   let sayacSn = KATILIM_SN;
@@ -794,6 +810,15 @@
 
   function yarisBitti(b) {
     Ses.cal('bitis');
+    // Kayitlari isle: katilan herkese +1 yaris, kazanana +1 galibiyet
+    for (const kid of katilanlar.keys()) {
+      if (Kimlik.botMu(kid)) continue;
+      const k = kayitAl(kid);
+      k.yaris++;
+      if (b && kid === b.kid) k.galip++;
+      kayit.set(kid, k);
+    }
+    kayitYaz();
     Juice.sars(0.45);
     kazananAdi = b.ad;
     durum = 'bitti';
@@ -802,7 +827,7 @@
       url: Kimlik.al(b.kid).url,
       isim: b.ad,
       alt: Kimlik.botMu(b.kid)
-        ? 'demo yarış — sohbete yaz, sıradakinde SEN varsın'
+        ? 'sıradaki yarışta senin misketin de olsun'
         : `${bilyeler.length} bilye arasından birinci`,
     });
     document.getElementById('cagri').textContent = b.ad + ' kazandı';
@@ -822,7 +847,7 @@
     try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
     sayacSn = KATILIM_SN;
     Finis.kapat(kazananEl);
-    document.getElementById('cagri').textContent = 'sohbete yaz · yarışa katıl';
+    document.getElementById('cagri').textContent = 'katılım açık';
     katilanlar = new Map();
     // Bekleyenleri yeni yarisa al
     for (const [kid, ad] of kuyruk) {
@@ -846,8 +871,12 @@
     // izleyici oyunu IZLEYEREK anlar; yazdigi an siradaki tur gercek olur.
     const gercek = katilanlar.size;
     demoTur = gercek === 0;
+    /* Tek gercek oyuncu 4 botun arasina atilinca ~%80 kaybediyordu ve
+       bu onun ILK deneyimi oluyordu. Az kisi varsa bot sayisini kis:
+       1 kisi -> 2 bot (kazanma sansi ~%33), 2 kisi -> 1 bot. */
     if (gercek < 5) {
-      const eksik = (gercek === 0 ? 6 : 5) - gercek;
+      const hedef = gercek === 0 ? 6 : (gercek === 1 ? 3 : gercek + 1);
+      const eksik = Math.max(0, hedef - gercek);
       for (let i = 0; i < eksik; i++) {
         const b = Kimlik.bot(i);
         if (!katilanlar.has(b.kid)) katilanlar.set(b.kid, b.ad);
@@ -856,6 +885,11 @@
     durum = 'yaris';
     Ses.cal('start');
     bilyeKur();
+    for (const [kid, adet] of bekleyenItki) {
+      const b = bilyeler.find((x) => x.kid === kid);
+      if (b) b.vy += 420 * Math.min(3, adet);
+    }
+    bekleyenItki.clear();
     kuyrukCiz();
     sayacCiz();
     if (demoTur) {
@@ -891,17 +925,34 @@
       if (katilanlar.size >= MAX) { kuyruk.set(kid, isim(ev.user)); return; }
       katilanlar.set(kid, isim(ev.user));
       Ses.cal('katil', 120);
+      // Tekrar gelene gecmisini soyle: "sen buraya aitsin" sinyali.
+      const k = kayitAl(kid);
+      if (k.yaris >= 1) {
+        akis(`🎽 <span class="kim">${isim(ev.user)}</span> — ${k.yaris + 1}. yarışın` +
+             (k.galip ? ` · <b>${k.galip} galibiyet</b>` : ''), { anahtar: 'gecmis' });
+      }
       sayacCiz(); kuyrukCiz();
     } else if (!katilanlar.has(kid)) {
       kuyruk.set(kid, isim(ev.user));      // yaris suruyor, sonrakine yaz
     }
   });
 
-  // Hediye: sahibinin bilyesine ileri itki — yaris sirasinda ise yariyor
+  // Hediye: sahibinin misketine ileri itki.
+  // Katilim penceresinde bilyeler[] henuz bos oldugu icin hediye
+  // ISE YARAMIYORDU — hem de "simdi katil" heyecaninin en yuksek oldugu
+  // anda. Artik bekleyen itki olarak saklaniyor ve yaris baslayinca
+  // uygulaniyor.
+  const bekleyenItki = new Map();
   TT.on('gift', (ev) => {
     const kid = kimlik(ev.user);
     const b = bilyeler.find((x) => x.kid === kid && !x.bitti);
-    if (!b) return;
+    if (!b) {
+      if (durum === 'katilim' && katilanlar.has(kid)) {
+        bekleyenItki.set(kid, (bekleyenItki.get(kid) || 0) + 1);
+        akis(`🎁 <span class="kim">${isim(ev.user)}</span> <span class="ok">▸</span> misketi güçlü başlayacak`);
+      }
+      return;
+    }
     b.vy += 420;
     b.vx += (Math.random() - 0.5) * 160;
     akis(`🎁 <span class="kim">${isim(ev.user)}</span> <span class="ok">▸</span> misketine itki`);

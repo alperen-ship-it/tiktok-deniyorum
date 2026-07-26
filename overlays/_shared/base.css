@@ -300,9 +300,6 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
   color: var(--tt-cyan);
 }
 
-@keyframes tt-nabiz {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .35; }
 }
 
 /* Oyun başladıktan sonraki hatırlatma şeridi — perdeden çok daha küçük,
@@ -332,9 +329,9 @@ html.tt-chroma, html.tt-chroma body { overflow: hidden; }
   border: 1px solid rgba(255, 255, 255, .25);
 }
 
-html.tt-yatay #tt-uyanis .baslik { font-size: 38px; }
-html.tt-yatay #tt-uyanis .komut { font-size: 32px; }
-html.tt-yatay #tt-uyanis .aciklama { font-size: 28px; }
+html.tt-yatay #tt-uyanis .baslik { font-size: 56px; }
+html.tt-yatay #tt-uyanis .komut { font-size: 40px; }
+html.tt-yatay #tt-uyanis .aciklama { font-size: 32px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }

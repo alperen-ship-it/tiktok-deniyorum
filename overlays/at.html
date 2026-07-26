@@ -8,7 +8,7 @@
 <style>
   /* KIMLIK RENGI — At: cimen yesili — pist cagrisimi, yuksek luma.
      Rotasyonda izleyici bu oyunu BASLIGI OKUMADAN taniyabilsin diye. */
-  :root { --oyun-renk: #9be04f; --oyun-bant: #223a12; }
+  :root { --oyun-renk: #9be04f; }
   /* At yarisinin cekiciligi atlardan degil BAHISTEN gelir. Izleyici
      yarismaci degil bahisci: 8 SABIT at var — kalici isim, kalici forma,
      tur ustu galibiyet sayisi. Sabit kadro zamanla taraftar biriktirir
@@ -379,8 +379,8 @@
       rayOran(); sayacCiz();
     }
     if (demoTur) {
-      document.getElementById('cagri').textContent = '🤖 demo koşu — 1-8 yaz, sıradakinde bahsin geçer';
-      Spiker.soyle('🤖 <b>DEMO KOŞU</b> — atının numarasını yaz, katıl', { oncelik: 2, sure: 4200 });
+      document.getElementById('cagri').textContent = 'koşu başlıyor — sıradakine sen de bahse gir';
+      Spiker.soyle('👇 <b>1 – 8 ARASI YAZ</b> — sıradaki koşuda bahsin geçer', { oncelik: 2, sure: 4200 });
     }
     durum = 'yaris';
     ilerleme = ATLAR.map(() => 0);
@@ -553,7 +553,7 @@
     ilerleme = ATLAR.map(() => 0);
     atlariYerlestir();
     Finis.kapat(kazananEl);
-    document.getElementById('cagri').textContent = 'atının numarasını yaz · bahsini oyna';
+    document.getElementById('cagri').textContent = 'bahis açık';
     rayOran(); sayacCiz();
     Spiker.soyle(`🏇 <b>${turNo}. KOŞU</b> — 1-${ATLAR.length} yaz, bahsini oyna`, { oncelik: 2 });
   }

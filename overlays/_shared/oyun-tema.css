@@ -72,7 +72,6 @@
      mercan) ailesinden ve %100 doygunlukta degil — yayin sikistirmasi
      tam doygun rengi ilk bozan sey. */
   --oyun-renk: #f6c94f;      /* varsayilan: altin */
-  --oyun-bant: #332b6b;      /* ust bandin zemini */
 }
 
 body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
@@ -159,23 +158,40 @@ html.tt-kcyok #katilCagri { display: none; }
 }
 
 /* ---- ust baslik ---- */
-/* Ust bant genis bir alan: kimlik rengini burada tasimak, kucuk bir
-   rozette tasimaktan cok daha uzaktan okunur (cevresel gorusle bile). */
+/* Ust bant DOGRUDAN kimlik renginde — ilk denemede bandi rengin KOYU
+   tonuyla boyamistim ve olctugumde dort bant birbirinden 1.01-1.13
+   kontrast cikti, yani hicbiri digerinden ayirt edilemiyordu; ustelik
+   koyu alanlar sikistirmada en az bit alan yer, tam da renk bilgisinin
+   ilk kayboldugu bolge. Simdi bant parlak renkte ve yazi koyu: genis,
+   parlak, birbirinden acikca ayrilan dort imza. */
 #ust {
-  flex: none; display: flex; align-items: center; gap: 14px; padding: 12px 16px;
-  background: var(--oyun-bant);
+  flex: none; display: flex; align-items: center; gap: 14px; padding: 12px 18px;
+  background: var(--oyun-renk);
   border-color: var(--cizgi);
+  color: #17123a;
 }
+#ust #baslik { color: #17123a; text-shadow: none; }
+#ust #cagri  { color: rgba(23, 18, 58, .72); }
+#ust #sayacBuyuk { color: #17123a; }
+#ust #sayacKucuk { color: rgba(23, 18, 58, .66); }
+/* Komut cipi artik SABIT koyu: aksan bandin isi oldu. Cipin her oyunda
+   ayni gorunmesi dogru — yapilacak is her oyunda ayni: bir sey yaz. */
+#ust #komut {
+  background: #17123a; color: #fff;
+  border-color: rgba(255,255,255,.25);
+  box-shadow: 0 4px 0 rgba(10, 6, 30, .35);
+}
+#ust #komut .yazEt { color: rgba(255,255,255,.66); opacity: 1; }
+#ust .rozetBuyuk { background: rgba(23,18,58,.16); color: #17123a; border-color: rgba(23,18,58,.35); }
 /* Rozet: yuvarlak KARE cerceve — goz izleme calismalarinda yuvarlak kare
    ikon cercevesi daireye gore daha hizli taniniyor. Renk + sekil birlikte,
    tek basina emoji degil. */
 #rozet {
-  flex: none; font-size: 42px; line-height: 1;
-  width: 74px; height: 74px; border-radius: 20px;
+  flex: none; font-size: 52px; line-height: 1;
+  width: 88px; height: 88px; border-radius: 22px;
   display: grid; place-items: center;
-  background: var(--oyun-renk);
-  border: 4px solid var(--cizgi);
-  box-shadow: 0 4px 0 rgba(10, 6, 30, .5);
+  background: #17123a;
+  border: 4px solid rgba(255,255,255,.22);
 }
 #baslikSar { flex: 1; min-width: 0; }
 #baslik {
