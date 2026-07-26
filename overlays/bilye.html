@@ -102,13 +102,10 @@
       <div id="kuyruk"></div>
     </div>
     <div id="siralama"></div>
-    <div id="kazanan">
-      <div>
-        <div class="kupa">🏆</div>
-        <div class="kimAd" id="kazananAd">—</div>
-        <div class="altYazi" id="kazananAlt">birazdan yeni yarış</div>
-      </div>
-    </div>
+    <!-- Icerigi Finis.kart doldurur (asamali acilis). Elle iskelet
+         birakmak yaniltici: hem hemen eziliyor hem .fkIc icermedigi icin
+         CSS'le tutarsiz kaliyordu. -->
+    <div id="kazanan"></div>
   </div>
 
   <div id="akis"></div>
@@ -660,6 +657,9 @@
       etapYaz(ei);
       if (ei > 0 && etaplar[ei]) {
         Ses.cal('etap');
+        // Etaplar bu oyunun iskeleti; gecis su ana kadar sadece DUYULUYORDU.
+        // HUD'a olcek darbesi: oransal, lite modda da calisiyor.
+        Juice.vur(document.getElementById('etapHud'), 0.5);
         akis(`${etaplar[ei].ikon} <b>${ei + 1}. ETAP</b> · ${etaplar[ei].ad}`,
              { oncelik: 3, anahtar: 'etap' });
         spikerBekle = 60;

@@ -313,7 +313,11 @@
 
   function bitir() {
     Ses.muzikDur(0.35);
-    Ses.cal('bitis');
+    // Zafer sesi burada DEGIL: Finis.kart onu ismin 2 kare ARKASINDAN calar.
+    // (Hem galip hem berabere dali Finis.kart'a ulasiyor, ses her iki
+    //  durumda da caliyor.) Burada birakilsaydi ses HEM cift calardi HEM de
+    //  goruntunun onune gecerdi.
+
     durum = 'bitti';
     kalanSn = KUTLAMA_SN;
     speedEl.classList.remove('acik');
@@ -461,7 +465,14 @@
     Spiker.soyle(`${k.emoji} <span class="kim">${isim(ev.user)}</span> ▸ ` +
       `<b>${kap[yan].ad}</b> 15 sn boyunca <b>x${kat.toFixed(2)}</b>` +
       (speedMi ? ' <b>SPEED</b>' : ''), { oncelik: 3, sure: 4200 });
-    Juice.sars(0.3);
+    // sars() lite modda (yani uretimde) calismiyor; hediye bu urunun
+    // para kazandigi an, orada hicbir sey hissettirmemek kotu. vur() olcek
+    // darbesi: oransal oldugu icin telefonda da goruluyor.
+    // Hedef: yanin IKONU. Bar'in kendisi olmaz — #metre overflow:hidden,
+    // olcek darbesi kirpilir. Ikon barin icinde ve 62px, buyudugunde
+    // tasmadan goruluyor.
+    const ikonEl = document.querySelector(`#${yan === 'a' ? 'yanA' : 'yanB'} .ikon`);
+    Juice.vur(ikonEl, 0.6);
     if (window.Ses) Ses.cal('hediye');
     ciz();
   });
