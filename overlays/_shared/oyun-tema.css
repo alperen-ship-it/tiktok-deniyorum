@@ -322,21 +322,59 @@ html.tt-lite .satir { animation-duration: 2.6s; }
 #alan { flex: 1; min-height: 0; position: relative; padding: 6px; }
 #alan canvas { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); }
 
-/* ---- kazanan perdesi ---- */
+/* ---- kazanan perdesi ----
+   AŞAMALI acilis. Sirasi ve gerekcesi finis.js'te; buradaki is sadece
+   "gelmeden once nerede duruyor"u tarif etmek. Kural: SADECE transform ve
+   opacity. html.tt-lite * kurali filter/box-shadow/text-shadow'u !important
+   ile eziyor ve !important yazar bildirimi animasyon kaynagini da yendigi
+   icin, o ozellikleri canlandiran her sey URETIMDE sessizce olu kalirdi. */
 #kazanan {
   position: absolute; inset: 0; display: none;
   place-items: center; text-align: center;
   background: rgba(12,8,40,.82); border-radius: 18px;
   z-index: 5;
 }
-#kazanan.acik { display: grid; }
+#kazanan.acik { display: grid; animation: perdeGel .18s ease-out both; }
+@keyframes perdeGel { from { opacity: 0; } to { opacity: 1; } }
+
+/* Ic kutu perdenin TAM genisligini kaplamali. Aksi halde grid'in
+   place-items:center'i onu icerige gore daraltiyor ve .kimAd'in
+   max-width:%90'i kendi metninin tanimladigi bir kutuya gore cozuluyor —
+   yani isim her boyutta "tasiyor" gorunup bosuna kuculuyordu. */
+#kazanan .fkIc { width: 100%; padding: 0 24px; }
 #kazanan .kupa { font-size: 96px; line-height: 1; }
+#kazanan .fkGorsel {
+  width: 220px; height: 220px; margin: 0 auto 10px;
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+}
 #kazanan .kimAd {
   font-size: 88px; font-weight: 900; color: var(--altin);
   text-transform: uppercase; letter-spacing: -1px;
   max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* Isim gelene kadar YER TUTAR ama gorunmez: perde acilirken satirin
+     yuksekligi ziplamasin diye display degil opacity ile gizleniyor. */
+  opacity: 0;
 }
-#kazanan .altYazi { font-size: 34px; font-weight: 800; color: var(--soluk); margin-top: 4px; }
+#kazanan .altYazi {
+  font-size: 34px; font-weight: 800; color: var(--soluk); margin-top: 4px;
+  min-height: 1.2em; opacity: 0;
+}
+
+/* Isim: asagidan ve %88'den gelir. Ussel ease-out (quint) — girisi hizli,
+   otursu yumusak. Zipla/yayla YOK: kurumsal degil ama ucuz duruyor ve
+   1920 tuvali telefonda 4.92x kuculdugunde titreme gibi okunuyor. */
+#kazanan .kimAd.gel {
+  animation: adGel .42s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes adGel {
+  from { opacity: 0; transform: translateY(26px) scale(.88); }
+  to   { opacity: 1; transform: none; }
+}
+#kazanan .altYazi.gel { animation: altGel .34s cubic-bezier(.22,1,.36,1) both; }
+@keyframes altGel {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* Sag sutun: sabit kabukta dogrudan ana sutunda akiyor.
    (Eski dikey/yatay izgara dallari silindi — tek yonelim kaldi.) */

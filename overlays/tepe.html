@@ -384,10 +384,12 @@
     if (hedef) {
       hedef.uzak = Math.min(1, hedef.uzak + guc);   // GERI it
       konumla(hedef);
-      // sarsinti + geri itilenin uzerinde kisa bir "carpma" hissi
-      hedef.el.animate(
-        [{ filter: 'brightness(2.2)' }, { filter: 'brightness(1)' }],
-        { duration: 360, easing: 'ease-out' });
+      // Geri itilenin uzerinde kisa bir "carpma" hissi.
+      // Eskiden filter: brightness() idi — html.tt-lite * kurali filter'i
+      // !important ile eziyor, yani URETIMDE bu hicbir zaman calismadi.
+      // parla() opacity kullaniyor: yasak listesinde degil ve jetonun
+      // surekli guncellenen transform'uyla catismiyor.
+      Juice.parla(hedef.el);
       Spiker.soyle(`💥 <span class="kim">${ben.ad}</span> ▸ <b>${hedef.ad}</b> geri itti!`,
         { oncelik: 2 });
       Juice.sars(0.35);

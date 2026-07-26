@@ -32,8 +32,11 @@
     background: repeating-linear-gradient(180deg, #fff 0 9px, #17123a 9px 18px);
     opacity: .85;
   }
+  /* Genislik 292 -> 336: --tip-isim 34'ten 46'ya cikinca 8 at adindan 5'i
+     kesiliyordu (en uzunu "Karayel" 211px istiyor, 173px vardi). Sabit kadro
+     bu oyunun kimligi — adin yarisini gostermek o kimligi bozar. */
   .kInfo {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 292px;
+    position: absolute; left: 0; top: 0; bottom: 0; width: 336px;
     display: flex; align-items: center; gap: 9px; padding: 0 10px;
     background: rgba(10, 6, 30, .45);
     border-right: 3px solid var(--cizgi);
@@ -56,7 +59,7 @@
   .kGalibiyet { font-size: 26px; font-weight: 800; color: var(--altin); margin-top: 2px; }
 
   .kAt {
-    position: absolute; left: 304px; top: 50%;
+    position: absolute; left: 348px; top: 50%;
     z-index: 3; will-change: transform;
   }
   .kAt .govde {
@@ -66,7 +69,7 @@
   /* Tezahurat cubugu — kulvarin altinda, atin renginde dolar.
      Takim yaris sirasinda yazip begendikce buyur, sessizlesince soner. */
   .kTez {
-    position: absolute; left: 292px; bottom: 0; height: 7px; width: 0;
+    position: absolute; left: 336px; bottom: 0; height: 7px; width: 0;
     border-radius: 4px 4px 0 0; opacity: .85; z-index: 1;
     transition: width .25s linear;
   }
@@ -229,7 +232,7 @@
   let fotoFinisDendi = false, sonDuzlukDendi = false;
   let sonLider = -1;
   let varis = [];                       // bitis cizgisini gecis sirasi
-  let kazananIlan = false, kazananZaman = 0, sonDagitilan = [];
+  let kazananIlan = false, kazananZaman = 0, sonDagitilan = [], kazananKart = null;
   let tezahurat = ATLAR.map(() => 0);   // decay'li tezahurat enerjisi
   const uidler = new Map();             // kid -> uniqueId (@etiket icin)
 
@@ -274,7 +277,9 @@
   }
   formYaz();
 
-  const BASLA = 304, BITIS_PAY = 34;
+  // BASLA, .kAt'in CSS'teki left degeriyle AYNI olmali (336px bilgi kutusu
+  // + 12px pay). Ikisi ayrisirsa atlar kulvarda kaymis basliyor.
+  const BASLA = 348, BITIS_PAY = 34;
   function atlariYerlestir() {
     for (let i = 0; i < ATLAR.length; i++) {
       const en = atEl[i].parentNode.clientWidth;
@@ -389,7 +394,7 @@
     // oldugu icin bu hile degil, okunabilir bilgi.
     hiz = ATLAR.map((a, i) => (0.85 + Math.random() * 0.3) * veriAt.guc[i]);
     fotoFinisDendi = false; sonDuzlukDendi = false; sonLider = -1;
-    varis = []; kazananIlan = false; kazananZaman = 0; sonDagitilan = [];
+    varis = []; kazananIlan = false; kazananZaman = 0; sonDagitilan = []; kazananKart = null;
     tezahurat = ATLAR.map(() => 0);
     sahaEl.classList.add('kosuyor');
     Ses.muzik('at');
@@ -476,6 +481,10 @@
     sayacSn = KUTLAMA_SN;
     sahaEl.classList.remove('kosuyor');
     Ses.muzikDur(0.35);
+    // Perde ANCAK simdi aciliyor: saha durdu, herkes cizgiyi gecti.
+    // Kart kendi sahnesini kuruyor (isim once, ses 2 kare arkadan,
+    // konfeti 3.5 sn sonra) — finis.js'teki nota bak.
+    if (kazananKart) { Finis.kart(kazananEl, kazananKart); kazananKart = null; }
 
     // Form guncelle: varis pozisyonu son-5 listesine girer, gizli guc kayar
     const sira = tamSiralama();
@@ -536,13 +545,17 @@
     }
     // demo kosuda sohbete hic yazma — bos odaya bot mesaji spam olur
 
-    Finis.kart(kazananEl, {
+    // Kart burada ACILMIYOR — sadece hazirlaniyor. Ilk at cizgiyi gectiginde
+    // digerleri hala kosuyor (finalize'a kadar 2.6 sn'ye kadar var); perdeyi
+    // o anda acmak, yarisin en gerilimli anini %82 opakligin arkasina
+    // gomuyordu. Odeme/sohbet hemen isliyor, perde finalize()'da aciliyor.
+    kazananKart = {
       url: at.formaBuyukURL,
       isim: at.ad,
       alt: dagitilan.length
         ? `#${i + 1} · oran x${o.toFixed(1)} · ${dagitilan.length} bahisçi kazandı`
         : `#${i + 1} · kimseye yatan yok — sürpriz koşu`,
-    });
+    };
     document.getElementById('cagri').textContent = at.ad + ' kazandı';
     Spiker.soyle(`🏆 <b>${at.ad}</b> ` + (dagitilan.length ? `— ${dagitilan.length} bahisçiye ödeme` : '— kimse görmedi bunu'),
       { oncelik: 3, sure: 4500 });

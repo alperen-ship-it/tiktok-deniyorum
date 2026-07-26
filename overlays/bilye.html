@@ -811,7 +811,9 @@
 
   function yarisBitti(b) {
     Ses.muzikDur(0.35);
-    Ses.cal('bitis');
+    // Zafer sesi burada DEGIL: Finis.kart onu ismin 2 kare ARKASINDAN calar.
+    // Sesi goruntuden once tetiklemek es zamanli hissettirmiyor — tersi
+    // gerekiyor (finis.js'teki nota bak).
     // Kayitlari isle: katilan herkese +1 yaris, kazanana +1 galibiyet
     for (const kid of katilanlar.keys()) {
       if (Kimlik.botMu(kid)) continue;

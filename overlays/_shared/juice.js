@@ -59,15 +59,22 @@
     if (!donuyor) { donuyor = true; requestAnimationFrame(adim); }
   }
 
-  function adim() {
+  /* Kare degil ZAMAN tabanli. Onceden her sey "kare basina" ilerliyordu:
+     gelistirmede 60fps, OBS'te 30fps — yani yayinlanan konfeti gelistirirken
+     gordugumuzun yarisi hizinda dusuyor, yarisi kadar yasiyordu. k = gecen
+     surenin 60fps karesine orani; tum sabitler eskisi gibi 60fps'e gore. */
+  let sonT = 0;
+  function adim(t) {
+    const k = sonT ? Math.min(3, (t - sonT) / (1000 / 60)) : 1;
+    sonT = t;
     ctx.clearRect(0, 0, tuval.width, tuval.height);
     parcalar = parcalar.filter((p) => p.omur > 0 && p.y < tuval.height + 30);
     for (const p of parcalar) {
-      p.vy += 0.34;                    // yercekimi
-      p.vx *= 0.99; p.vy *= 0.99;
-      p.x += p.vx; p.y += p.vy;
-      p.don += p.donHiz;
-      p.omur -= 0.008;
+      p.vy += 0.34 * k;                // yercekimi
+      p.vx *= Math.pow(0.99, k); p.vy *= Math.pow(0.99, k);
+      p.x += p.vx * k; p.y += p.vy * k;
+      p.don += p.donHiz * k;
+      p.omur -= 0.008 * k;
 
       ctx.save();
       ctx.translate(p.x, p.y);
@@ -79,10 +86,54 @@
       ctx.restore();
     }
     if (parcalar.length) requestAnimationFrame(adim);
-    else { donuyor = false; ctx.clearRect(0, 0, tuval.width, tuval.height); }
+    else { donuyor = false; sonT = 0; ctx.clearRect(0, 0, tuval.width, tuval.height); }
   }
 
-  // ---- sarsinti ------------------------------------------------------------
+  // ---- yerel darbe ---------------------------------------------------------
+  /*
+   * NEDEN EKRAN SARSINTISI DEGIL DE BU.
+   * Olcum: sars() genligi 14 * travma^2 piksel. Gercek cagri yerlerimizde
+   * travma 0.18-0.5 arasi, yani tuvalde 0.45-3.5 px. Yayin 1920 tuvali dikey
+   * telefonda ~390pt'ye iniyor (4.92x): telefonda 0.09-0.71 px kaliyor.
+   * Yani ALT PIKSEL — hicbir izleyici goremez. Ustelik lite modda (yani
+   * uretimde) sars() en basta return ediyordu; bu efekt hic calismadi.
+   *
+   * Telefonda gorunur olmasi icin genligi ~20 kat buyutmek gerekirdi; o da
+   * 1920x1080'lik tum sahneyi zipzip oynatmak demek — "darbe" degil "yayin
+   * bozuldu" gibi okunur.
+   *
+   * Cozum: MUTLAK piksel yerine ORANSAL efekt. scale ve opacity olcekten
+   * bagimsizdir — %14 buyume, ekran ne kadar kuculurse kuculsun %14'tur.
+   * Ikisi de html.tt-lite'in yasak listesinde degil, ikisi de kompozit
+   * katmaninda kalir: uretimde CALISIR ve BEDAVA.
+   */
+
+  /** Olcek darbesi. Kendi transform'u OLMAYAN ogeler icin (kart, rozet, bar). */
+  function vur(el, siddet) {
+    if (!el || !el.animate) return;
+    const s = 1 + Math.min(0.3, (siddet == null ? 0.4 : siddet) * 0.32);
+    const taban = el.style.transform || '';
+    el.animate(
+      [{ transform: `${taban} scale(${s.toFixed(3)})` },
+       { transform: `${taban} scale(1)` }],
+      { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)' });
+  }
+
+  /**
+   * Saydamlik carpmasi. transform'u SUREKLI guncellenen ogeler icin —
+   * orada transform'u canlandirmak konum guncellemesini animasyon suresince
+   * dondurur. opacity o catismayi yasamaz.
+   * (Eskiden burada filter: brightness() vardi; lite modda olu bir efektti.)
+   */
+  function parla(el) {
+    if (!el || !el.animate) return;
+    el.animate([{ opacity: 1 }, { opacity: .3 }, { opacity: 1 }],
+      { duration: 300, easing: 'ease-out' });
+  }
+
+  // ---- sarsinti (SADECE gelistirme onizlemesi) ------------------------------
+  /* Uretimde lite acik oldugu icin bu kod yolu calismaz — bilerek boyle.
+     Yerine vur()/parla() kullan; yukaridaki gerekceye bak. */
   let travma = 0, hedefEl = null, sarsiyor = false;
 
   function sarsHedef(el) { hedefEl = el; }
@@ -111,5 +162,5 @@
     requestAnimationFrame(sarsAdim);
   }
 
-  global.Juice = { konfeti, sars, sarsHedef };
+  global.Juice = { konfeti, sars, sarsHedef, vur, parla };
 })(window);
