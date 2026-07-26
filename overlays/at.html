@@ -391,6 +391,7 @@
     varis = []; kazananIlan = false; kazananZaman = 0; sonDagitilan = [];
     tezahurat = ATLAR.map(() => 0);
     sahaEl.classList.add('kosuyor');
+    Ses.muzik('at');
     document.getElementById('cagri').textContent = 'koşu sürüyor — yaz & beğen, atına güç ver!';
     Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> — ${bahisler.size} bahis`, { oncelik: 3 });
   }
@@ -473,6 +474,7 @@
     durum = 'bitti';
     sayacSn = KUTLAMA_SN;
     sahaEl.classList.remove('kosuyor');
+    Ses.muzikDur(0.35);
 
     // Form guncelle: varis pozisyonu son-5 listesine girer, gizli guc kayar
     const sira = tamSiralama();

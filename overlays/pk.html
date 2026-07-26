@@ -181,6 +181,7 @@
 
   // ---- tur ------------------------------------------------------------------
   function yeniTur() {
+    Ses.muzik('pk');
     durum = 'savas';
     kalanSn = TUR_SN;
     puanA = 0; puanB = 0;
@@ -300,6 +301,7 @@
     const speedMi = kalanSn <= SPEED_SN;
     if (speedMi && !speedEl.classList.contains('acik')) {
       speedEl.classList.add('acik');
+      Ses.muzikHizli(1.25);   // son 30 sn: tempo yukselsin
       Spiker.soyle('🔥 <b>SPEED BÖLÜMÜ!</b> Hediyeler 2 KAT — son şans!', { oncelik: 3, sure: 4000 });
       Juice.sars(0.3);
     }
@@ -307,6 +309,7 @@
   }, 250);
 
   function bitir() {
+    Ses.muzikDur(0.35);
     Ses.cal('bitis');
     durum = 'bitti';
     kalanSn = KUTLAMA_SN;

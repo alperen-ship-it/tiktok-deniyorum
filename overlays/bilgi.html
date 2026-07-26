@@ -232,6 +232,7 @@
   // ---- soru akisi ----------------------------------------------------------
   function yeniSoru() {
     Ses.cal('start');
+    Ses.muzik('bilgi');
     durum = 'soru';
     kalanSn = SORU_SN;
     cevaplar = new Map();
@@ -277,6 +278,7 @@
   }
 
   function cevabiAc() {
+    Ses.muzikDur(0.3);
     durum = 'acik';
     kalanSn = ACIK_SN;
 

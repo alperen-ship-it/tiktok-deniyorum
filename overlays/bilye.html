@@ -679,6 +679,7 @@
 
     if (!sonDuzlukDendi && lider.y > bitis * 0.86) {
       sonDuzlukDendi = true;
+      Ses.muzikHizli(1.3);       // son duzlukte tempo yukselsin
       akis('🔥 <b>SON DÜZLÜK!</b>', { oncelik: 3 });
       // Finis agir cekimi: yaris yayinlarindaki an. dt dongu icinde
       // Finis.carpan ile carpiliyor.
@@ -809,6 +810,7 @@
   const kazananEl = document.getElementById('kazanan');
 
   function yarisBitti(b) {
+    Ses.muzikDur(0.35);
     Ses.cal('bitis');
     // Kayitlari isle: katilan herkese +1 yaris, kazanana +1 galibiyet
     for (const kid of katilanlar.keys()) {
@@ -884,6 +886,7 @@
     }
     durum = 'yaris';
     Ses.cal('start');
+    Ses.muzik('bilye');
     bilyeKur();
     for (const [kid, adet] of bekleyenItki) {
       const b = bilyeler.find((x) => x.kid === kid);
