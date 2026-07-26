@@ -49,10 +49,19 @@
 
   /* Tip olcegi: 5 kademe, oranlar >=1.25 (26/34/44/56/140).
      26 mutlak taban: 1920 tuval telefonda ~5x kuculuyor. */
+  /* HIYERARSI DUZELTMESI. Olcum: izleyicinin adi 34px -> telefonda 6.9 px;
+     hic degismeyen oyun basligi 8.9; "kac kisi var" sayaci 11.4 ve ustelik
+     altin rengindeydi. Yani urunun ta kendisi, ekrandaki en onemsiz iki
+     seyden de kucuktu.
+
+     Bunun neden bu kadar onemli oldugunun sebebi su: overlay HERKES ICIN
+     BIR KEZ render ediliyor. Izleyici basina durum yok, yani "senin satirin"
+     diye bir sey vurgulanamiyor. O yuzden HER isim, her an, ekrandaki en
+     onemli nesne olmak zorunda — hangisinin kime ait oldugunu bilemiyoruz. */
   --tip-dev: 140px;
   --tip-vurgu: 56px;
   --tip-baslik: 44px;
-  --tip-isim: 34px;
+  --tip-isim: 46px;          /* 34 -> 46: izleyicinin adi artik en iri kalici metin */
   --tip-kucuk: 26px;
 
   /* ---- OYUN KIMLIK RENGI ----
@@ -217,7 +226,9 @@ html.tt-kcyok #katilCagri { display: none; }
 }
 #baslik { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #sayac { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
-#sayacBuyuk { font-size: var(--tip-vurgu); font-weight: 900; color: var(--altin); line-height: 1; }
+/* Sayac artik altin degil ve kucuk: "kac kisi var" urun degil, baglam.
+   Altin rengi ve en buyuk boyut isimlere ait. */
+#sayacBuyuk { font-size: 34px; font-weight: 900; color: var(--soluk); line-height: 1; }
 #sayacKucuk { font-size: 26px; font-weight: 700; color: var(--soluk); letter-spacing: 1.5px; text-transform: uppercase; }
 
 /* ---- KOMUT CIPI ----
@@ -271,7 +282,7 @@ html.tt-lite #komut.degisti { animation: none; }
 }
 .sira .bayrak { flex: none; width: 17px; height: 17px; border-radius: 5px; border: 2px solid var(--cizgi); }
 .sira .ad {
-  flex: 1; min-width: 0; font-size: var(--tip-isim); font-weight: 700; text-transform: none;
+  flex: 1; min-width: 0; font-size: var(--tip-isim); font-weight: 900; text-transform: none;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -.3px;
 }
 .sira .plaka { flex: none; font-size: var(--tip-kucuk); font-weight: 900; color: #a89ce0; font-variant-numeric: tabular-nums; }
@@ -325,7 +336,7 @@ html.tt-lite .satir { animation-duration: 2.6s; }
   text-transform: uppercase; letter-spacing: -1px;
   max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-#kazanan .altYazi { font-size: var(--tip-isim); font-weight: 800; color: var(--soluk); margin-top: 4px; }
+#kazanan .altYazi { font-size: 34px; font-weight: 800; color: var(--soluk); margin-top: 4px; }
 
 /* Sag sutun: sabit kabukta dogrudan ana sutunda akiyor.
    (Eski dikey/yatay izgara dallari silindi — tek yonelim kaldi.) */
