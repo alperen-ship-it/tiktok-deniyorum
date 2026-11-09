@@ -1047,7 +1047,7 @@
       // acikken her onizleme iframe'i kendi yarisini kosturuyor; botu
       // kazanan duyurulariyla spamlamasinlar.
       if (cfg.mock) return;
-      try { fetch('/api/soyle?text=' + encodeURIComponent(metin)).catch(() => {}); }
+      try { fetch('/api/soyle?text=' + encodeURIComponent(metin), { method: 'POST', headers: { 'X-TT': '1' } }).catch(() => {}); }
       catch { /* file:// vb. */ }
     },
     /** Elle olay tetikle (test / oyun ici). */

@@ -93,7 +93,7 @@
     // Kopruye hangi oyunun ekranda oldugunu bildir: olaylari dogru oyuna
     // yazsin. Boylece "hangi oyun daha cok yazdiriyor" tahminle degil
     // sayiyla cevaplaniyor. Kopru yoksa sessizce duser.
-    try { fetch('/api/oyun?ad=' + encodeURIComponent(SIRA[indeks])).catch(() => {}); } catch { /* olsun */ }
+    try { fetch('/api/oyun?ad=' + encodeURIComponent(SIRA[indeks]), { method: 'POST', headers: { 'X-TT': '1' } }).catch(() => {}); } catch { /* olsun */ }
     sahne.classList.add('soluk');
     setTimeout(() => {
       sahne.src = o.dosya + '?' + 'ic=1' + EK;
@@ -119,7 +119,8 @@
       // sohbetten de gorsun. Kopru yoksa fetch sessizce duser.
       try {
         fetch('/api/soyle?text=' + encodeURIComponent(
-          `🎮 Sıradaki oyun: ${o.ikon} ${o.ad} — ekrana bak, katıl!`)).catch(() => {});
+          `🎮 Sıradaki oyun: ${o.ikon} ${o.ad} — ekrana bak, katıl!`),
+          { method: 'POST', headers: { 'X-TT': '1' } }).catch(() => {});
       } catch { /* olsun */ }
     }
     oyunAc(indeks + 1);

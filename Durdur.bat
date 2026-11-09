@@ -10,7 +10,7 @@ echo.
 REM Once nazik yol: koprunun kendi kapatma ucuna istek at.
 REM Boylece acik baglantilar duzgunce kapanir.
 powershell -NoProfile -Command ^
-  "try { Invoke-WebRequest -Uri 'http://localhost:8787/api/kapat' -TimeoutSec 3 -UseBasicParsing | Out-Null; Write-Host '   Kapatma istegi gonderildi.' } catch { Write-Host '   Kopru zaten kapali gorunuyor.' }"
+  "try { Invoke-WebRequest -Method Post -Headers @{'X-TT'='1'} -Uri 'http://localhost:8787/api/kapat' -TimeoutSec 3 -UseBasicParsing | Out-Null; Write-Host '   Kapatma istegi gonderildi.' } catch { Write-Host '   Kopru zaten kapali gorunuyor.' }"
 
 timeout /t 2 /nobreak >nul
 

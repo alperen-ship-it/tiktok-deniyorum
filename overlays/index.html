@@ -280,9 +280,9 @@
     {
       oyun: true,
       file: 'at.html',
-      name: '🏇 At Yarışı + Bahis',
-      desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür — bahis yazı-tura değil form okuma). Oranlar havuzdan (pari-mutuel). Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı — sonucu yine form + şans belirler). Varış sırası tam koşulur, podyum gösterilir. Kazanan bahisçiler sohbet botuyla @etiketlenir.',
-      opts: '<code>?bahis=25</code> bahis süresi (sn) · <code>?sure=20</code> koşu uzunluğu · puanlar ve galibiyetler kalıcı (localStorage)',
+      name: '🏇 At Yarışı + Tahmin',
+      desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür — tahmin şans değil form okuma). Oranlar havuzdan (pari-mutuel). Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı — sonucu yine form + şans belirler). Varış sırası tam koşulur, podyum gösterilir. Doğru tahmin edenler sohbet botuyla @etiketlenir.',
+      opts: '<code>?tahmin=25</code> tahmin süresi (sn) · <code>?sure=20</code> koşu uzunluğu · puanlar ve galibiyetler kalıcı (localStorage)',
     },
 
     // ---- WIDGET --------------------------------------------------------
@@ -384,9 +384,12 @@
     }, 160);
   });
 
+  // Yan etkili uclar yalnizca POST + X-TT basligiyla calisir (baska siteler gonderemez)
+  const TT_POST = { method: 'POST', headers: { 'X-TT': '1' } };
+
   // ---- test olayi gonder --------------------------------------------------
   function fire(type) {
-    fetch('/api/fire?type=' + encodeURIComponent(type))
+    fetch('/api/fire?type=' + encodeURIComponent(type), TT_POST)
       .then((r) => r.json())
       .then((d) => flash(`${type} → ${d.sentTo} katmana gönderildi`))
       .catch(() => flash('Köprü kapalı — sadece önizlemeler çalışıyor'));
@@ -396,7 +399,7 @@
   const kullaniciEl = document.getElementById('kullanici');
 
   function baglan(ad) {
-    fetch('/api/baglan?user=' + encodeURIComponent(ad || ''))
+    fetch('/api/baglan?user=' + encodeURIComponent(ad || ''), TT_POST)
       .then((r) => r.json())
       .then((d) => {
         flash(d.mode === 'live' ? `@${d.user} bağlanıyor…` : 'sahte veriye geçildi');
@@ -418,7 +421,7 @@
   document.getElementById('durdur').addEventListener('click', () => {
     // Yayin sirasinda yanlislikla basilirsa overlay'ler aninda olur — onay iste
     if (!confirm('Köprü kapatılacak. Yayındaki tüm overlay\'ler duracak. Emin misin?')) return;
-    fetch('/api/kapat').catch(() => {});
+    fetch('/api/kapat', TT_POST).catch(() => {});
     flash('kapatılıyor…');
     setTimeout(() => {
       document.body.innerHTML =
@@ -445,7 +448,7 @@
           statusTxt.textContent = 'mock modu (sahte olaylar)';
         } else {
           dot.className = 'dot off';
-          statusTxt.textContent = d.user ? `@${d.user} — bağlanılamadı` : 'boşta';
+          statusTxt.textContent = d.user ? `@${d.user} — ${d.detay || 'bağlanılamadı'}` : 'boşta';
         }
         statsBox.style.display = '';
         document.getElementById('stats').textContent =

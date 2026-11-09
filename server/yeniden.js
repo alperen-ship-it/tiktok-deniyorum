@@ -46,7 +46,7 @@ function sinif(e) {
       e?.reason === 'Premium Feature' || e?.reason === 'Empty Payload') return 'ucretli';
   if (ad === 'UserOfflineError') return 'cevrimdisi';
   if (/Business plan|requires a .*plan|MissingTokens|Premium Feature/i.test(msg)) return 'ucretli';
-  if (/rate.?limit|too many (connections|requests)|\b429\b/i.test(msg)) return 'limit';
+  if (/rate.?limit|retry-after|too many (connections|requests)|\b429\b/i.test(msg)) return 'limit';
   if (/offline|room ?id|isn'?t online/i.test(msg)) return 'cevrimdisi';
   return 'diger';
 }

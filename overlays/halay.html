@@ -133,7 +133,7 @@
   /* ---- baslik: cosku gostergesi + sure ---- */
   #durumSar { display: flex; align-items: center; gap: 10px; }
   #cosku {
-    flex: none; width: 272px; padding: 5px 12px 9px; border-radius: 14px;
+    flex: none; width: 258px; padding: 5px 12px 9px; border-radius: 14px;
     background: rgba(23, 18, 58, .16); border: 3px solid rgba(23, 18, 58, .35);
   }
   #coskuUst { display: flex; justify-content: space-between; align-items: baseline; font-weight: 900; color: #17123a; line-height: 1.15; }
@@ -168,7 +168,7 @@
         <div id="coskuUst"><span id="coskuEtiket">COŞKU</span><span id="coskuSeviye">AĞIR</span></div>
         <div id="coskuYol"><div id="coskuDolu"></div><div class="coskuEsik" id="esik1"></div><div class="coskuEsik" id="esik2"></div></div>
       </div>
-      <div class="rozetBuyuk" id="geriSayim">⏳ <span id="sure">0:00</span></div>
+      <div class="rozetBuyuk" id="geriSayim"><span id="sure">0:00</span></div>
     </div>
     <div id="sayac">
       <div id="sayacBuyuk">0</div>
@@ -451,7 +451,13 @@
     if (e.scrollWidth <= e.clientWidth) return enBuyuk;
     let a = enKucuk, b = enBuyuk;                 // ikili arama: a sigar mi bilinmiyor, b sigmiyor
     e.style.fontSize = a + 'px';
-    if (e.scrollWidth > e.clientWidth) { e.classList.add('sar'); return a; }
+    if (e.scrollWidth > e.clientWidth) {
+      // Tabanda da sigmadi: SAR. Bosluksuz adlar harfin ortasindan degil
+      // ayractan (_ . -) bolunsun diye oralara gorunmez kirilma noktasi konur.
+      e.textContent = e.textContent.replace(/([_.\-])(?=[\p{L}\p{N}])/gu, '$1\u200B');
+      e.classList.add('sar');
+      return a;
+    }
     while (b - a > 1) {
       const o = (a + b) >> 1;
       e.style.fontSize = o + 'px';
@@ -512,18 +518,21 @@
     let en = null;
     for (let R = 1; R <= 4; R++) {
       const per = Math.ceil(n / R);
-      const s = Math.min(Wu / (per * ARALIK), HB / (BOY * (1 + SATIR_ORAN * (R - 1))), S_TAVAN);
+      // Birden fazla sirada arka siralar YARIM ADIM kayik durur (tugla duzeni):
+      // arkadaki, ondekilerin omuz araligindan gorunur. O yarim adim da yer ister.
+      const s = Math.min(Wu / ((per + (R > 1 ? 0.5 : 0)) * ARALIK), HB / (BOY * (1 + SATIR_ORAN * (R - 1))), S_TAVAN);
       if (!en || s > en.s + 0.015) en = { R, per, s };
     }
-    const { per, s } = en;
+    const { R: satirSay, per, s } = en;
     const onY = bantY - 10;                         // on siranin ayak hizasi
     for (let i = 0; i < n; i++) {
       const r = Math.floor(i / per), k = i % per;
       const sr = s * (1 - 0.05 * r);               // derinlik: arka sira biraz kucuk
       const adim = ARALIK * s;
-      const genis = per * adim;
+      const yarim = satirSay > 1 ? adim / 2 : 0;
+      const genis = per * adim + yarim;
       const sol = KENAR + (Wu - genis) / 2;
-      const x = (r % 2 === 0) ? sol + genis - (k + 0.5) * adim : sol + (k + 0.5) * adim;
+      const x = (r % 2 === 0) ? sol + per * adim - (k + 0.5) * adim : sol + yarim + (k + 0.5) * adim;
       const u = genis > 0 ? ((x - (sol + genis / 2)) / (Wu / 2)) : 0;   // -1..1
       const y = onY - r * BOY * s * SATIR_ORAN - (1 - u * u) * 14 * s;  // yay: orta geride
       yuvalar.push({ x, y, s: sr, r });
@@ -538,7 +547,8 @@
   function ortaYer(kac, hangi) {
     const cx = W - figurEn / 2 - 6;
     const S = sik((H - bantY - 46) / BOY, 0.9, 1.9);
-    const s = kac === 1 ? S : Math.min(S, (figurEn - 30) / (ARALIK * 1.72));
+    // Iki figur: kalkan kollarla birlikte ~226 birim genislik; sutuna sigacak olcek.
+    const s = kac === 1 ? S : Math.min(S, (figurEn - 60) / 226);
     const ac = ARALIK * s * 0.86;
     return { x: kac === 1 ? cx : cx + (hangi === 0 ? -ac / 2 - 10 : ac / 2 + 10), y: H - 26, s };
   }
@@ -1224,7 +1234,7 @@
     if (!orta) return;
     okAltEl.textContent = '';
     if (orta.evre === 'davet') {
-      okAltEl.append('yaz ya da ❤️ beğen → birlikte oynayın · ');
+      okAltEl.append('👆 yaz ya da ❤️ beğen → birlikte oynayın · ');
       const b = document.createElement('b'); b.textContent = String(Math.max(0, orta.sn));
       okAltEl.append(b);
     } else if (orta.evre === 'duet') okAltEl.textContent = 'ikisine de +12 XP · sen de birini kaldır: @isim';
@@ -1236,13 +1246,13 @@
     if (!a) return;
     const cift = !!b && (orta.evre === 'davet' || orta.evre === 'duet');
     ortaAlanEl.classList.add('dolu');
-    okBaslikEl.textContent = orta.evre === 'davet' ? '💃 DANSA KALDIRDI'
+    okBaslikEl.textContent = orta.evre === 'davet' ? '💃 DANSA KALDIRIYOR'
       : orta.evre === 'duet' ? '🎉 BİRLİKTE DÖKTÜRÜYORLAR' : '🕺 ORTADA DÖKTÜRÜYOR';
     okAd1El.textContent = a.ad;
     okAd2El.textContent = cift ? b.ad : '';
     okAd2El.style.display = cift ? '' : 'none';
     okBagEl.style.display = cift ? '' : 'none';
-    okBagEl.textContent = orta.evre === 'davet' ? '▾ seni çağırıyor' : 'ile';
+    okBagEl.textContent = orta.evre === 'davet' ? '▾' : 'ile';
     if (orta.evre === 'davet') orta.sn = Math.ceil((orta.bitis - simdi()) / 1000);
     okAltYaz(); okSiraYaz();
     sigdir(okAd1El, cift ? 104 : 124, 72);
@@ -1330,8 +1340,17 @@
     if (!altAktif || altAktif.tur !== 'giris') return;
     const d = dans.get(altAktif.kid);
     if (!d) return;
-    const x = sik(d.x - girisBoy.w / 2, 8, Math.max(8, W - girisBoy.w - 8));
-    const y = sik(d.y - BOY * d.s - girisBoy.h - 6, 6, Math.max(6, bantY - girisBoy.h - 4));
+    const w = girisBoy.w, h = girisBoy.h;
+    const ust = d.y - BOY * d.s - h - 6;
+    let x, y;
+    if (ust >= 6) {                                   // basinin ustunde
+      x = sik(d.x - w / 2, 8, Math.max(8, W - w - 8));
+      y = ust;
+    } else {                                          // yukarida yer yok: YANINA (yuzunu kapatma)
+      const sag = d.x + 46 * d.s + 8;
+      x = (sag + w <= W - 8) ? Math.max(8, sag) : Math.max(8, d.x - 46 * d.s - 8 - w);
+      y = sik(d.y - BOY * d.s + 2, 6, Math.max(6, bantY - h - 4));
+    }
     girisEl.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
   }
 
@@ -1380,6 +1399,7 @@
       const ad = document.createElement('div'); ad.className = 'ad';
       const iz = document.createElement('div'); iz.className = 'iz';
       r.append(no, kafa, ad, iz);
+      r.style.visibility = 'hidden';
       listeEl.appendChild(r);
       satirlar.push({ r, no, kafa, ad, iz, kid: null, metin: null, src: '' });
     }
@@ -1390,13 +1410,14 @@
     const sayfaSay = Math.max(1, Math.ceil(n / kac));
     if (listeSayfa >= sayfaSay) listeSayfa = 0;
     const bas = listeSayfa * kac;
-    let enBuyukNo = 0;
-    for (const d of dans.values()) if (d.no > enBuyukNo) enBuyukNo = d.no;
+    // NUMARA sirasiyla: herkes listede hep ayni yerde durur, aranan numara bulunur.
+    const duz = [...dans.values()].sort((a, b) => a.no - b.no);
+    const enBuyukNo = duz.length ? duz[duz.length - 1].no : 0;
     listeAralikEl.textContent = n ? (sayfaSay > 1 ? `${listeSayfa + 1}/${sayfaSay} · ` : '') + `yaz: 1–${enBuyukNo}` : '';
     for (let i = 0; i < kac; i++) {
-      const s = satirlar[i], d = dans.get(sira[bas + i]);
+      const s = satirlar[i], d = duz[bas + i];
       if (!d) { if (s.kid !== null) { s.r.style.visibility = 'hidden'; s.kid = null; s.metin = null; } continue; }
-      if (s.kid === null) s.r.style.visibility = '';
+      if (s.kid === null) s.r.style.visibility = 'visible';
       s.kid = d.kid;
       const noMetin = String(d.no);
       if (s.no.textContent !== noMetin) s.no.textContent = noMetin;
@@ -1443,7 +1464,7 @@
   }
   function cagriYaz() {
     const metin = durum === 'bitti' ? 'gecenin yıldızı'
-      : gercekSayi() === 0 ? '🤖 demo — yaz, halaya gir' : '❤️ beğen de olur';
+      : gercekSayi() === 0 ? '🤖 demo — sen yaz' : '❤️ beğen de olur';
     const e = el('cagri');
     if (e.textContent !== metin) e.textContent = metin;
   }

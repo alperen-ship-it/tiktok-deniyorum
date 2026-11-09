@@ -353,7 +353,7 @@ let canliBaglanti = null;
 //     disconnected ikinci dongu baslatmaz)
 //   * her yeni baglanti nesli bir sayac artirir (baglanti.nesil); eski
 //     nesillerin olaylari ve cevaplari yok sayilir
-//   * ne kadar bekleneceğini yeniden.js saf fonksiyonu soyler
+//   * ne kadar bekilecegini yeniden.js saf fonksiyonu soyler
 const baglanti = {
   nesil: 0,
   zamanlayici: null,
@@ -398,7 +398,12 @@ function bekciDurdur() {
  */
 function tekrarPlanla(hata, kullanici) {
   if (baglanti.zamanlayici) return null;
-  const deneme = hata && hata.olay === 'streamEnd' ? 1 : ++baglanti.basarisiz;
+  // Yayin kapali / bitti = TikTok'a ulasabiliyoruz, geri cekilme egrisini
+  // sifirla. Diger her sey ardisik basarisizlik sayilir.
+  const tur = yeniden.sinif(hata);
+  let deneme = 1;
+  if (tur === 'cevrimdisi' || tur === 'yayinBitti') baglanti.basarisiz = 0;
+  else deneme = ++baglanti.basarisiz;
   const k = yeniden.karar(hata, deneme, { bekle: args.bekle });
   const nesil = baglanti.nesil;
   baglanti.etiket = k.state;
@@ -813,6 +818,12 @@ function startMock() {
 // Gercek TikTok baglantisi
 // ---------------------------------------------------------------------------
 async function startLive(username) {
+  // Yeni nesil: onceki baglanti (varsa) birakilir, olaylari artik yok sayilir.
+  baglantiyiBirak();
+  tekrarIptal();
+  const nesil = baglanti.nesil;
+  const gecerli = () => nesil === baglanti.nesil;
+
   // tiktok-live-connector 2.x SADECE ESM. Bu dosya CommonJS oldugu icin
   // dinamik import() kullaniyoruz — require() ile v2'nin sinifina ulasilmiyor.
   let lib;
@@ -825,8 +836,25 @@ async function startLive(username) {
     startMock();
     return;
   }
+  if (!gecerli()) return;       // import beklerken kullanici baska ada gecti
 
   const { TikTokLiveConnection, SignConfig } = lib;
+
+  // Oda kimligi cozumleme zinciri: HTML -> TikTok API -> EulerStream. Son halka
+  // UCRETLI ve yayin kapaliyken her yoklamada (15 sn) calisirdi. Kapat: HTML
+  // ve API zaten yeterli, Euler'e sadece imzalama icin gidiyoruz.
+  if (!baglanti.euler) {
+    baglanti.euler = true;
+    try {
+      if (lib.RoomIdRouteConfig && lib.IsLiveRouteConfig) {
+        lib.RoomIdRouteConfig.skipFetchRoomIdFromEulerRoute = true;
+        lib.IsLiveRouteConfig.skipFetchRoomIdFromEulerRoute = true;
+        log('EulerStream oda-kimligi yedegi kapatildi (ucretli uc; yalnizca imzalama kullanilir).');
+      } else {
+        log('uyari: RoomIdRouteConfig bulunamadi — EulerStream oda yedegi kapatilamadi (eski paket?).');
+      }
+    } catch (e) { log('Euler yedegi kapatilamadi:', e?.message || e); }
+  }
 
   // Imzalama: TikTok'un webcast WebSocket adresi imzalanmak zorunda ve bunu
   // yapan tek surdurulen servis EulerStream. Anahtarsiz da calisiyor ama
@@ -836,7 +864,8 @@ async function startLive(username) {
   const apiKey = args.key || process.env.EULER_API_KEY;
   // Yayin beklerken bu blok her 15 saniyede bir tekrar yazilirdi; ilk seferde
   // soylemek yeterli.
-  if (!state.bekliyor) {
+  if (!state.bekliyor && !baglanti.anahtarYazildi) {
+    baglanti.anahtarYazildi = true;
     if (apiKey && SignConfig) {
       log('EulerStream imzalama anahtari ayarlandi.');
     } else {
@@ -862,14 +891,26 @@ async function startLive(username) {
   }
 
   state.mode = 'live';
-  const conn = new Ctor(username, {
-    processInitialData: false,
-    // enableExtendedGiftInfo, hediye KATALOGUNU ayri bir uctan cekiyor ve o uc
-    // EulerStream'de ucretli. Kapaliyken hediye adi/elmas degeri yine mesajin
-    // kendi icinden geliyor — sadece katalog ikonlari gelmiyor, overlay'ler
-    // zaten emoji'ye dusuyor. Varsayilan KAPALI; istersen --gifts ile ac.
-    enableExtendedGiftInfo: !!args.gifts,
-  });
+  let conn;
+  try {
+    // NOT: authenticateWs'i HIC vermiyoruz (varsayilan false) -> kutuphane
+    // WebSocket el sikismasinda oturum cerezini (sessionid) GONDERMEZ, sadece
+    // anonim cerezleri yollar. Oturum cerezi yalnizca sohbete yazarken
+    // (sendMessage -> EulerStream) kullanilir.
+    conn = new Ctor(username, {
+      processInitialData: false,
+      // enableExtendedGiftInfo, hediye KATALOGUNU ayri bir uctan cekiyor ve o uc
+      // EulerStream'de ucretli. Kapaliyken hediye adi/elmas degeri yine mesajin
+      // kendi icinden geliyor — sadece katalog ikonlari gelmiyor, overlay'ler
+      // zaten emoji'ye dusuyor. Varsayilan KAPALI; istersen --gifts ile ac.
+      enableExtendedGiftInfo: !!args.gifts,
+    });
+  } catch (e) {
+    log('!! baglanti nesnesi kurulamadi:', e?.message || e);
+    const k = tekrarPlanla(e, username);
+    if (k) log('   ' + k.message);
+    return;
+  }
 
   // Olay adlari surumler arasi degisti (subscribe -> subNotify gibi). Enum
   // varsa oradan al, yoksa duz string kullan — ikisi de ayni degere cikiyor.
@@ -882,6 +923,8 @@ async function startLive(username) {
     const names = ALIASES[evName] || [E[evName.toUpperCase()], evName];
     for (const n of new Set(names.filter(Boolean))) {
       conn.on(n, (data) => {
+        if (!gecerli()) return;
+        baglanti.sonVeri = Date.now();
         try {
           const ev = fn(data || {});
           if (ev) emit(ev);
@@ -891,37 +934,45 @@ async function startLive(username) {
       });
     }
   }
+  // Ham kare: kalp atisi cevaplari dahil sunucudan gelen HER sey. Sessizlik
+  // bekcisinin asil sinyali (yorum olmayan sessiz odada da akar).
+  conn.on('websocketData', () => {
+    if (!gecerli()) return;
+    baglanti.sonVeri = Date.now();
+    baglanti.kareSayisi++;
+  });
 
   conn.on('streamEnd', () => {
+    if (!gecerli()) return;
     state.connected = false;
-    log('yayin bitti — yeniden yayin beklemeye geciliyor.');
-    durumYayinla();
+    state.bekliyor = true;
+    state.mode = 'bekliyor';
+    bekciDurdur();
     // Yayin bitti diye programi kapatma; ayni oturumda tekrar yayin acabilir.
-    const tekrar = setTimeout(() => {
-      if (args.user === username) startLive(username).catch(() => {});
-    }, Math.max(10, Number(args.bekle) || 15) * 1000);
-    mockZamanlayicilar.push(tekrar);
+    const k = tekrarPlanla({ olay: 'streamEnd' }, username);
+    log('yayin bitti — yeniden yayin beklemeye geciliyor.');
+    if (!k) durumYayinla();
   });
   conn.on('disconnected', () => {
+    if (!gecerli()) return;       // eski/kapatilmis baglanti: sessizce yut
     state.connected = false;
+    bekciDurdur();
+    if (Date.now() - baglanti.baglandiAt < SAGLAM_MS) baglanti.basarisiz = baglanti.kayit;
+    // streamEnd zaten planladiysa (kutuphane ikisini art arda yollar) bu
+    // cagri yok sayilir -> tek dongu.
+    const k = tekrarPlanla({ olay: 'disconnected' }, username);
     durumYayinla();
-    log('baglanti koptu, 10 sn sonra tekrar denenecek');
-    setTimeout(() => conn.connect().catch(() => {}), 10000);
+    if (k) log('baglanti koptu — ' + k.message);
   });
   // Kutuphane hata olayinda cogu zaman Error degil, icinde tam stack olan bir
   // nesne yolluyor. Ham haliyle basilinca konsol okunmaz oluyor — ozetliyoruz.
   // Yayin beklerken zaten normal bir durum, hic basmiyoruz.
   conn.on('error', (e) => {
-    if (state.bekliyor) return;
+    if (!gecerli() || state.bekliyor) return;
     const ozet = e?.info || e?.message || e?.exception?.message || String(e);
     log('hata:', ozet);
   });
 
-  // Onceki deneme kalintisi kalmasin — her tekrar denemede yeni bir baglanti
-  // nesnesi kuruluyor, eskisi arkada sessizce ugrasmaya devam etmesin.
-  if (canliBaglanti && canliBaglanti !== conn) {
-    try { canliBaglanti.disconnect(); } catch { /* zaten kapali */ }
-  }
   canliBaglanti = conn;
 
   // Sohbet botu icin oturum cerezi: --oturum verildiyse kaydet, yoksa
@@ -935,21 +986,37 @@ async function startLive(username) {
         type: 'cookie',
         value: { sessionId: oturum.sessionId, ttTargetIdc: oturum.idc || 'useast1a' },
       });
-      log('bot: oturum cerezi islendi (sohbete yazma denenir).');
+      if (!baglanti.oturumYazildi) {
+        baglanti.oturumYazildi = true;
+        log('bot: oturum cerezi islendi (sohbete yazma denenir; WebSocket el sikismasina GONDERILMEZ).');
+      }
     }
   } catch (e) { log('bot: oturum islenemedi:', e?.message || e); }
 
   if (!state.bekliyor) log(`@${username} yayinina baglaniliyor...`);
   try {
     const st = await conn.connect();
+    if (!gecerli()) {
+      // Biz beklerken baska bir baglanti nesli basladi: bunu kapat, karisma.
+      try { Promise.resolve(conn.disconnect()).catch(() => {}); } catch { /* kapali */ }
+      return;
+    }
     state.connected = true;
     if (state.bekliyor) log('YAYIN BASLADI — baglaniliyor.');
     state.bekliyor = false;
+    state.denemeSayisi = 0;
+    baglanti.tavsiye = false;
+    baglanti.kayit = baglanti.basarisiz;     // erken kopma olursa geri donmek icin
+    baglanti.basarisiz = 0;                  // basarili baglanti: geri cekilme sifirlandi
+    baglanti.baglandiAt = Date.now();
+    bekciKur(nesil, username);
     durumYayinla();
     log(`BAGLANDI  roomId=${st?.roomId ?? '?'}`);
   } catch (e) {
+    if (!gecerli()) return;       // eski nesil: sonucu onemsiz
     state.connected = false;
     const msg = e?.message || String(e);
+    const tur = yeniden.sinif(e);
 
     // --- YAYIN BEKLEME MODU ---------------------------------------------
     // Kullanici henuz yayinda degilse bu bir hata degil, sadece "daha
@@ -960,14 +1027,13 @@ async function startLive(username) {
     // UserOfflineError, bazen de once oda kimligini bulamayip
     // "Failed to retrieve Room ID" diyor. Ikisi de "henuz yayinda degil"
     // demek, ikisinde de beklemeye geciyoruz.
-    if (/offline|room ?id/i.test(msg)) {
+    if (tur === 'cevrimdisi') {
       state.denemeSayisi = (state.denemeSayisi || 0) + 1;
       if (!state.bekliyor) {
         state.bekliyor = true;
         state.mode = 'bekliyor';
         log(`@${username} henuz yayinda degil — YAYIN BEKLENIYOR.`);
         log('   Yayina gectiginde kendiliginden baglanacak, bu pencereyi kapatma.');
-        durumYayinla();
       }
       // Uzun sure hic baglanamiyorsak kullanici adi yanlis yazilmis olabilir.
       // 20 deneme ~ 5 dakika; bir kez hatirlat, sonra yine sus.
@@ -976,19 +1042,27 @@ async function startLive(username) {
         log(`    kontrol et: tiktok.com/@${username} calisiyor mu?)`);
       }
       // Sessizce tekrar dene; kullaniciyi log yagmuruna bogma
-      const tekrar = setTimeout(() => {
-        if (args.user === username) startLive(username).catch(() => {});
-      }, Math.max(10, Number(args.bekle) || 15) * 1000);
-      mockZamanlayicilar.push(tekrar);
+      tekrarPlanla(e, username);
       return;
     }
 
     state.bekliyor = false;
     state.denemeSayisi = 0;
+    const ilkTavsiye = tur === 'ucretli' && !baglanti.tavsiye;
+    const k = tekrarPlanla(e, username);
+
+    if (tur === 'ucretli' && !ilkTavsiye) {
+      // Tavsiye bir kez basildi; sonraki denemelerde tek satir.
+      log('!! Baglanilamadi (ucretli plan):', msg.split('\n')[0]);
+      if (k) log('   ' + k.message);
+      return;
+    }
+
     log('!! Baglanilamadi:', msg);
     log('');
 
-    if (/Business plan|requires a .*plan|MissingTokens/i.test(msg)) {
+    if (tur === 'ucretli') {
+      baglanti.tavsiye = true;
       // En sik ve en can sikici durum: zincirin geri kalani calisiyor,
       // sadece imzalama paywall'a takiliyor.
       log('   >>> IMZALAMA PAYWALL <<<');
@@ -1010,12 +1084,13 @@ async function startLive(username) {
       log('        (TikFinity ws://127.0.0.1:21213 uzerinden yayin yapiyor)');
       log('');
       log('   3) Ucretli EulerStream plani — aylik ucret.');
-    } else if (/rate.?limit|429/i.test(msg)) {
+    } else if (tur === 'limit') {
       log('   Imzalama limiti doldu. Ucretsiz anahtar al: https://www.eulerstream.com');
       log('   sonra:  $env:EULER_API_KEY="<anahtar>"');
     }
 
     log('');
+    if (k) log('   ' + k.message + ' (kopru acik kalir, kendiliginden dener.)');
     log('   Overlay\'leri sahte veriyle denemeye devam:  node server/bridge.js --mock');
   }
 }
@@ -1053,7 +1128,10 @@ function argVerildi(bayrak) {
   return process.argv.includes(bayrak);
 }
 
-server.listen(args.port, '0.0.0.0', async () => {
+// Varsayilan: SADECE bu bilgisayar (127.0.0.1 + ::1). --lan ile tum arayuzler.
+const DINLE_ADRES = args.lan ? '0.0.0.0' : '127.0.0.1';
+
+server.listen(args.port, DINLE_ADRES, async () => {
   const base = `http://localhost:${args.port}`;
   // TikTok LIVE Studio'nun "Link" kaynagi ham IP ve `localhost` yazimini
   // REDDEDIYOR; gercek bir alan adi istiyor. localtest.me herkese acik bir
@@ -1068,6 +1146,11 @@ server.listen(args.port, '0.0.0.0', async () => {
    Kontrol paneli : ${base}/
       ^ Butun oyunlarin adresi, kopyala dugmeleriyle burada.
         Asagisini okumana gerek yok, panel yeter.
+
+   Erisim : ${args.lan ? 'AGDAKI HERKES (--lan acik)' : 'sadece bu bilgisayar (127.0.0.1 / ::1)'}
+     Izinli adlar : ${guv.liste().filter((x) => x !== 'null').join(', ')}, *.localtest.me
+     Baska ad icin --host <ad>  |  agdaki cihazlar icin --lan
+     Sessizlik bekcisi: ${Math.max(30, Number(args.sessiz) || 180)} sn veri gelmezse yeniden baglanir (--sessiz)
 
    >> LIVE Studio'ya nasil eklenir (Kaynak ekle > Link) <<
       "localhost" YAZMA, LIVE Studio kabul etmiyor. Bunu kullan:
@@ -1086,7 +1169,7 @@ server.listen(args.port, '0.0.0.0', async () => {
      bilye.html   MISKET YARISI — yazana ozel misket, 10 etaplik uzun pist
      bilgi.html   soru cikar, A/B/C/D yaz — ILK dogru en cok puani alir
      pk.html      iki taraf kapisir (kedi vs kopek...), tarafini yaz, ittir
-     at.html      8 sabit at, 1-8 yaz bahis oyna, oranlar havuzdan
+     at.html      8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
 
       Ucu de kendi kendine donuyor: katilim penceresi acilir, oyun
       oynanir, kazanan cikar, yeni tur baslar. Mudahale gerekmiyor.
@@ -1151,24 +1234,40 @@ server.on('error', (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// Ikinci dinleyici: port 80
+// Ek dinleyiciler: ::1 ve port 80
 // ---------------------------------------------------------------------------
-// LIVE Studio'nun Link kaynagindaki URL dogrulamasi hakkinda iki farkli bulgu
-// var: bir kaynak "port yazilabilir" diyor, digeri "acik port da reddediliyor"
-// diyor (surume gore degisiyor olabilir). Ikisini de karsilamak icin ayni
-// icerigi port 80'den de sunuyoruz -> http://localtest.me/overlays/... seklinde
-// hic port yazmadan da calisir.
-// Windows'ta 80'e baglanmak yonetici gerektirmez; dolu ise sessizce geciyoruz.
-if (args.port !== 80 && !args.no80) {
+// 1) ::1 (IPv6 loopback). Windows'ta tarayici "localhost"u once ::1'e cozup
+//    deneyebiliyor; sadece 127.0.0.1'i dinlersek ilk baglanti reddedilir ve
+//    yedek adrese dusmesi tarayiciya/OBS surumune kalir. Sistemde IPv6 yoksa
+//    (EADDRNOTAVAIL / EAFNOSUPPORT) sessizce geciyoruz.
+// 2) Port 80 — LIVE Studio'nun Link kaynagindaki URL dogrulamasi hakkinda iki
+//    farkli bulgu var: bir kaynak "port yazilabilir" diyor, digeri "acik port
+//    da reddediliyor" diyor (surume gore degisiyor olabilir). Ikisini de
+//    karsilamak icin ayni icerigi port 80'den de sunuyoruz ->
+//    http://localtest.me/overlays/... seklinde hic port yazmadan da calisir.
+//    Windows'ta 80'e baglanmak yonetici gerektirmez; dolu ise sessizce geciyoruz.
+// Hepsi ayni isleyiciyi (ve ayni Host/Origin denetimini) paylasir.
+function ekDinleyici(port, adres, acikla) {
   const alt = http.createServer((req, res) => server.emit('request', req, res));
   // upgrade isteklerini de ana sunucuya devret ki ws://localtest.me/ws calissin
   alt.on('upgrade', (req, socket, head) => server.emit('upgrade', req, socket, head));
   alt.on('error', (e) => {
-    if (e.code === 'EADDRINUSE' || e.code === 'EACCES') {
-      log(`port 80 kullanilamadi (${e.code}) — sorun degil, ${args.port} portu yeterli.`);
+    if (e.code === 'EADDRNOTAVAIL' || e.code === 'EAFNOSUPPORT') {
+      if (args.verbose) log(`${acikla}: bu adres yok (${e.code}) — sorun degil.`);
+    } else if (e.code === 'EADDRINUSE' || e.code === 'EACCES') {
+      log(`${acikla} kullanilamadi (${e.code}) — sorun degil.`);
+    } else {
+      log(`${acikla} hatasi:`, e.code || e.message);
     }
   });
-  alt.listen(80, '0.0.0.0', () => {
-    log('ek dinleyici: port 80 acik  ->  http://localtest.me/overlays/alerts.html?lite=1');
+  alt.listen(port, adres, () => {
+    if (port === 80) log(`ek dinleyici: ${acikla} acik  ->  http://localtest.me/overlays/alerts.html?lite=1`);
+    else if (args.verbose) log(`ek dinleyici: ${acikla} acik`);
   });
+}
+
+ekDinleyici(args.port, '::1', `[::1]:${args.port}`);
+if (args.port !== 80 && !args.no80) {
+  ekDinleyici(80, DINLE_ADRES, `port 80 (${args.lan ? 'tum arayuzler' : '127.0.0.1'})`);
+  ekDinleyici(80, '::1', 'port 80 ([::1])');
 }
