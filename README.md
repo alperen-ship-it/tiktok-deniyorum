@@ -70,7 +70,7 @@ tahminini yapar; çarpan havuzdan hesaplanır (az kişinin seçtiği at doğru �
 çarpan büyür, kalabalığın tersine tahmin yapmak daha çok puan getirir). Doğru bilen
 `10 × çarpan` puan alır; puanlar yalnızca skor tablosunda birikir. Koşu sırasında
 **mesaj ve beğeni kendi atına tezahürat gücü verir** (küçük, tavanlı bir destek).
-Hediye gelince adı ekranda teşekkürle çıkar, puana ve sonuca etkisi yoktur.
+Hediye gelince adı ekranda teşekkürle çıkar; puanı büyütmez. Koşu sırasında, tahmini olan izleyicinin hediyesi birkaç mesajlık tezahürat sayılır (mesajla aynı tavan: en çok +%12 hız).
 Foto finişte ağır çekim, sonda podyum.
 Eski OBS linklerindeki `?bahis=` süre parametresi `?tahmin=` ile aynı işi görmeye devam eder.
 
@@ -80,13 +80,17 @@ Eski OBS linklerindeki `?bahis=` süre parametresi `?tahmin=` ile aynı işi gö
 
 - Yayında sesinle ya da kameranla sen de ol: oyunlar kendi kendine döner ama sohbetle konuşan bir yayıncı hem izleyiciye hem platform kurallarına daha yakın durur (öneridir, TikTok'un kendi metnini doğrulamadık).
 - Oda boşken oynayan demo botların adı 🤖 ile işaretlidir; puan tablosuna girmezler.
-- Bahis mekaniği yok: hediye hiçbir zaman şansa dayalı bir sonucu satın almaz, ödülü de büyütmez; teşekkür bandında ismi görünür.
+- Bahis mekaniği yok: hediye ödülü büyütmez; koşudaki hediye yalnızca mesajla da verilebilen tavanlı tezahürata eklenir. Teşekkür bandında ismi görünür.
 - İzleyicilerin adları ekranda büyük görünür; adlar ekrana olduğu gibi (yalnızca HTML karakterleri temizlenerek) yazılır, ayrıca bir küfür süzgeci yoktur.
-- Köprü bayrakları (`--lan`, `--host`, `--sessiz`): BURAYA_EKLENECEK.
+- **Güvenlik (kendiliğinden açık):** Köprü yalnızca bu bilgisayardan açılır. Paneldeki adresler (`localhost`, `localtest.me`) ve `tools\hosts-ekle.ps1` ile eklediğin `yayin.local` hazır izinlidir; başka bir sitenin ya da ağdaki başka bir cihazın oyunlara komut göndermesi engellenir. Tarayıcıda "403" görürsen (köprü "Bu adres izinli değil…" ya da "Bu siteden erişim izinli değil…" der) adresi paneldeki gibi yaz.
+- **Başka cihazdan açacaksan** (ikinci bilgisayardaki OBS gibi): köprüyü `--lan` ile başlat, yalnızca kendi ev ağında kullan. Farklı bir alan adı kullanıyorsan `--host ad1,ad2` ekle. Oyunu OBS'te "yerel dosya" olarak açıyorsan `--host null` ekle.
+- **Bağlantı koparsa kapatma, bekle:** Yayın kapalıyken, imza servisi sınır koyduğunda ya da internet gidip geldiğinde uygulama açık kalır ve kendiliğinden yeniden dener: yayın kapalıyken önce 15 sn'de bir, uzun sürerse dakikada bir; hatalarda en çok 5 dk, limitte en çok 15 dk arayla. Neyi beklediği panelde yazar.
+- **Sessizlik bekçisi:** Bağlı görünüp 3 dakika hiç veri gelmezse bağlantı kendiliğinden yenilenir; oda sessiz kalmaya devam ederse bekleme uzar. Süreyi `--sessiz <saniye>` ile değiştirebilirsin (en az 30).
+- Kapatmak için paneldeki **Durdur** düğmesini ya da `Durdur.bat`'ı kullan; eski `/api/kapat` adresi tarayıcıdan artık çalışmaz.
 
 ---
 
-## Otomasyon: aç ve unut
+## Kendi kendine dönen kısımlar
 
 | Durum | Ne olur |
 |---|---|

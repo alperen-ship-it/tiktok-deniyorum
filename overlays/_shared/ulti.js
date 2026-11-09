@@ -127,9 +127,17 @@
    * @param {number} sure  ms (varsayilan 1500)
    */
   function duyur(kim, k, sure = 1500) {
-    // Kuyruk sisirmesin: cok hizli hediye akisinda eskiyi at
-    if (kuyruk.length > 4) kuyruk.splice(0, kuyruk.length - 4);
-    kuyruk.push({ kim, ad: k.ad, emoji: k.emoji, renk: k.renk, sure });
+    // Kuyruk sisirmesin (en cok 5 bekleyen): doluysa EN DUSUK kademeli bekleyeni
+    // at (esitlikte en eskiyi); yeni gelen hepsinden dusukse yenisini atla.
+    // Boylece 5000 elmaslik hediye, ardindan gelen 11 kucuk hediyeyle silinmez.
+    const guc = Number(k.guc) || 0;
+    if (kuyruk.length >= 5) {
+      let en = 0;
+      for (let j = 1; j < kuyruk.length; j++) if (kuyruk[j].guc < kuyruk[en].guc) en = j;
+      if (guc < kuyruk[en].guc) return;
+      kuyruk.splice(en, 1);
+    }
+    kuyruk.push({ kim, ad: k.ad, emoji: k.emoji, renk: k.renk, guc, sure });
     siradaki();
   }
 

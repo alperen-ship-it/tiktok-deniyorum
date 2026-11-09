@@ -98,7 +98,7 @@
   .fSatir .fNo {
     flex: none; width: 30px; height: 30px; border-radius: 8px;
     display: grid; place-items: center;
-    font-size: 24px; font-weight: 900; color: #17123a; border: 3px solid var(--cizgi);
+    font-size: 26px; font-weight: 900; color: #17123a; border: 3px solid var(--cizgi);
   }
   .fSatir .fForma { flex: none; width: 38px; height: 27px; }
   .fSatir .fForma img { width: 100%; height: 100%; display: block; }
@@ -123,6 +123,7 @@
   /* ULTI bandi (hediye tesekkuru): shared/ulti.js kucuk yaziyi 22px/17px
      birakiyor; sayfa telefonda ~4.9x kuculur, isim en az 26px olmali. */
   /* ulti.js stili sonradan (bantKur) enjekte ediliyor: ayni ozgullukte kaybederiz, o yuzden html onekli. */
+  html #ulti-bant { top: calc(84px * var(--tt-olcek, 1)); }
   html #ulti-bant .u-kim, html.tt-vertical #ulti-bant .u-kim { font-size: 34px; }
   html.tt-vertical #ulti-bant .u-ad { font-size: 54px; letter-spacing: -2px; }
 
@@ -350,7 +351,7 @@
       ? dagitilan.slice(0, 5).map((d) =>
           `<div class="fSatir">${Kimlik.cip(d.kid, 30)}<div class="fAd">${esc(d.ad)}</div><div class="fSag">+${d.kazanc}</div></div>`
         ).join('')
-      : '<div class="fSatir bos">kimse bilemedi — puanlar yandı</div>';
+      : '<div class="fSatir bos">kimse bilemedi — sıradaki koşuda dene</div>';
     fazIcEl.innerHTML = podyum + odeme;
   }
 
@@ -516,7 +517,7 @@
     sahaEl.querySelectorAll('.kGalibiyet')[i].textContent = '🏆 ' + galibiyet[i];
 
     // Odul: havuzdan gelen carpan x 10, dogru bilen herkese AYNI formul.
-    // Hediye odule/sonuca DOKUNMAZ (sans sonucunu parayla etkilemek yok).
+    // Hediye odulu BUYUTMEZ. (Yarista tezVer ile tavanli tezahurat eklenir: bkz. gift handler.)
     const o = oranlar()[i] || 2;
     const dagitilan = [];
     for (const [kid, b] of bahisler) {
@@ -624,19 +625,7 @@
     { esik: 35,  ad: 'ŞAMPİYONA',  carpan: 2.4 },
     { esik: 1e9, ad: 'EFSANE TUR', carpan: 3.0 },
   ];
-  let sonKademe = '';
   function kademe() { return KADEMELER.find((k) => KADEME_SAYI() <= k.esik); }
-  function kademeKontrol() {
-    const k = kademe();
-    if (k.ad === sonKademe) return;
-    const ilk = sonKademe === '';
-    sonKademe = k.ad;
-    if (ilk) return;                       // acilista duyurma
-    Spiker.soyle(`⬆️ <b>${k.ad}</b> — ${KADEME_SAYI()} kişi · ödül x${k.carpan}`,
-         { oncelik: 3, sure: 3600, anahtar: 'kademe' });
-    if (window.Juice) Juice.sars(0.18);
-    if (window.Ses) Ses.cal('etap');
-  }
 
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
@@ -701,15 +690,17 @@
     tezVer(kimlik(ev.user), Math.min(2.5, (ev.likes || 1) * 0.12));
   });
 
-  // Hediye: sonuca ve odule DOKUNMAZ. Gonderen her durumda ekranda
-  // tesekkur gorur (ULTI bandi + spiker). Yarista, tahmini olan icin ayrica
-  // tavanli tezahurat (tezVer 5) — itis sonucu belirlemez, tavan +%12.
+  // Hediye: odulu BUYUTMEZ. Gonderen her durumda ekranda tesekkur gorur (ULTI
+  // bandi + spiker). Yarista tahmini olan icin hediye, mesajla ayni tavanli
+  // tezahurat sayilir (tezVer 5; tezahurat tavani +%12 hiz) — ikisi de tavanli.
   TT.on('gift', (ev) => {
+    if (ev.gift && ev.gift.streaking) return;   // seri ara tiklari (bridge.js:683 / tt.js:349); son tik gelince tek tesekkur
     const kid = kimlik(ev.user);
     const ad = esc(isim(ev.user));
     const elmas = (ev.gift && ev.gift.value) || 0;
     const b = kid ? bahisler.get(kid) : null;
-    ULTI.duyur(isim(ev.user), ULTI.kademe(elmas), 1500);
+    const k = ULTI.kademe(elmas);
+    ULTI.duyur('🎁 TEŞEKKÜRLER', { ad: isim(ev.user), emoji: '🎁', renk: k.renk, guc: k.guc }, 1500);
     if (durum === 'yaris') {
       if (b) {
         tezVer(kid, 5);
