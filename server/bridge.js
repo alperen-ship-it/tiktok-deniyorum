@@ -160,21 +160,26 @@ function erisimDenetle(req) {
     if (guv.ilkRed('host:' + ad)) {
       log(`!! izin verilmeyen adres reddedildi: "${ad || '(bos)'}" — gerekiyorsa:  --host ${ad || '<ad>'}`);
     }
-    return `Bu adres izinli degil (${ad || 'bos'}). Bu adla acmak istiyorsan koprusunu --host ${ad || '<ad>'} ile baslat.`;
+    return `Bu adres izinli degil (${ad || 'bos'}). Bu adla acmak icin kopruyu --host ${ad || '<ad>'} ile baslat.`;
   }
   const origin = req.headers.origin;
   if (!guv.originIzinli(origin, req.headers.host)) {
     const o = String(origin);
+    const dosyaMi = o === 'null' || o.startsWith('file:');   // file:// ya da sandbox'li sayfa
     const oAd = guvenlik.originAdi(o);
     const portFarki = oAd && guv.hostIzinli(oAd);     // ad izinli ama baska porttan geliyor
     if (guv.ilkRed('origin:' + o)) {
-      log(portFarki
-        ? `!! baska porttan gelen istek reddedildi: Origin ${o} (bu sunucu: ${req.headers.host})`
-        : `!! baska siteden gelen istek reddedildi: Origin ${o} — gerekiyorsa:  --host ${oAd || '<ad>'}`);
+      log(dosyaMi
+        ? `!! dosyadan acilan sayfa reddedildi (Origin ${o}) — izin icin:  --host null`
+        : portFarki
+          ? `!! baska porttan gelen istek reddedildi: Origin ${o} (bu sunucu: ${req.headers.host})`
+          : `!! baska siteden gelen istek reddedildi: Origin ${o} — gerekiyorsa:  --host ${oAd || '<ad>'}`);
     }
-    return portFarki
-      ? `Bu porttan erisim izinli degil (${o}); sayfa bu sunucudan acilmali (${req.headers.host}).`
-      : `Bu siteden erisim izinli degil (${o}). Izin vermek icin koprusunu --host ${oAd || '<ad>'} ile baslat.`;
+    return dosyaMi
+      ? `Dosyadan acilan sayfa (${o}) izinli degil. Izin icin kopruyu --host null ile baslat.`
+      : portFarki
+        ? `Bu porttan erisim izinli degil (${o}); sayfa bu sunucudan acilmali (${req.headers.host}).`
+        : `Bu siteden erisim izinli degil (${o}). Izin icin kopruyu --host ${oAd || '<ad>'} ile baslat.`;
   }
   return null;
 }
@@ -259,6 +264,9 @@ const server = http.createServer((req, res) => {
     if (varlik.SEA_MI) ayar.kullaniciKaydet(kullanici);
     kopar();
     baglanti.basarisiz = 0;      // kullanici elle denedi: geri cekilme egrisi sifirdan
+    baglanti.cevrimdisiAt = 0;   // ... ve seyreltilmis yoklama da 15 sn'ye doner
+    baglanti.seyreltildi = false;
+    baglanti.sessizCarpan = 1;
     baglanti.tavsiye = false;
     startLive(kullanici).catch((e) => log('!! baglanti hatasi:', e?.message || e));
     jsonCevap(res, { ok: true, mode: 'live', user: kullanici });
@@ -372,9 +380,12 @@ const baglanti = {
   kareSayisi: 0,        // bu baglantida gelen ham veri sayisi
   sessizCarpan: 1,      // veri hic gelmeyen baglantilarda esigi buyutur
   bekci: null,
+  cevrimdisiAt: 0,      // kesintisiz 'yayin kapali' beklemesi ne zaman basladi
   tavsiye: false,       // paywall tavsiyesi bu seansta basildi mi
 };
-const SAGLAM_MS = 60 * 1000;     // bu kadar ayakta kalmadan "basarili" sayilmaz
+const SAGLAM_MS = 60 * 1000;
+const SEYRELT_MS = 10 * 60 * 1000;   // bu kadar suredir kapali bekleniyorsa yoklamayi seyrelt
+const SEYRELT_BEKLE = 60;            // sn     // bu kadar ayakta kalmadan "basarili" sayilmaz
 
 function sessizMs() {
   return Math.max(30, Number(args.sessiz) || 180) * 1000 * baglanti.sessizCarpan;
@@ -410,7 +421,24 @@ function tekrarPlanla(hata, kullanici) {
   let deneme = 1;
   if (tur === 'cevrimdisi' || tur === 'yayinBitti') baglanti.basarisiz = 0;
   else deneme = ++baglanti.basarisiz;
-  const k = yeniden.karar(hata, deneme, { bekle: args.bekle });
+  // Kesintisiz "yayin kapali" beklemesi ~10 dk'yi gecerse yoklama 60 sn'e
+  // gevsetilir ("Room ID" hatasi captcha engeli de olabilir; tiktok.com'u
+  // dovme). Basarili baglanti, elle baglan ya da baska turde hata sayaci sifirlar.
+  let bekle = args.bekle;
+  if (tur === 'cevrimdisi' || tur === 'yayinBitti') {
+    if (!baglanti.cevrimdisiAt) baglanti.cevrimdisiAt = Date.now();
+    if (Date.now() - baglanti.cevrimdisiAt >= SEYRELT_MS) {
+      if (Math.max(10, Number(args.bekle) || 15) < SEYRELT_BEKLE) {
+        if (!baglanti.seyreltildi) log(`   uzun suredir yayin yok — yoklama ${SEYRELT_BEKLE} sn'de bire seyreltildi.`);
+        baglanti.seyreltildi = true;
+        bekle = SEYRELT_BEKLE;
+      }
+    }
+  } else {
+    baglanti.cevrimdisiAt = 0;
+    baglanti.seyreltildi = false;
+  }
+  const k = yeniden.karar(hata, deneme, { bekle });
   const nesil = baglanti.nesil;
   baglanti.etiket = k.state;
   baglanti.tekrarAt = Date.now() + k.delayMs;
@@ -456,12 +484,13 @@ function bekciKur(nesil, kullanici) {
     const sessiz = Date.now() - baglanti.sonVeri;
     if (sessiz < sessizMs()) return;
     bekciDurdur();
-    // Hic kare gelmeyen baglanti: oda gercekten cok sessiz olabilir. Esigi
-    // ikiye katla (en fazla 8x) ki bos yere imza hakki yakmayalim.
-    const hicVeriYok = baglanti.kareSayisi === 0;
+    // Art arda sessizlikle tetiklenen her yeniden baglanma esigi ikiye katlar
+    // (en fazla 8x): sessiz bir odada her seferinde bir imza hakki yakmayalim.
+    // Ilk normal olay (yorum, hediye...) esigi 1x'e dondurur; yalniz ham kare
+    // (kalp atisi cevabi) dondurmez.
+    baglanti.sessizCarpan = Math.min(8, baglanti.sessizCarpan * 2);
     log(`!! ${Math.round(sessiz / 1000)} sn boyunca hic veri gelmedi — baglanti yenileniyor` +
-        (hicVeriYok ? ' (bu baglantida hic kare gelmemisti, esik buyutulecek).' : '.'));
-    baglanti.sessizCarpan = hicVeriYok ? Math.min(8, baglanti.sessizCarpan * 2) : 1;
+        (baglanti.sessizCarpan > 1 ? ` (sonraki esik ${Math.round(sessizMs() / 1000)} sn).` : '.'));
     state.connected = false;
     if (Date.now() - baglanti.baglandiAt < SAGLAM_MS) baglanti.basarisiz = baglanti.kayit;
     baglantiyiBirak();
@@ -931,6 +960,7 @@ async function startLive(username) {
       conn.on(n, (data) => {
         if (!gecerli()) return;
         baglanti.sonVeri = Date.now();
+        baglanti.sessizCarpan = 1;     // gercek olay geldi: bekci esigi normale doner
         try {
           const ev = fn(data || {});
           if (ev) emit(ev);
@@ -1012,6 +1042,8 @@ async function startLive(username) {
     state.bekliyor = false;
     state.denemeSayisi = 0;
     baglanti.tavsiye = false;
+    baglanti.cevrimdisiAt = 0;
+    baglanti.seyreltildi = false;
     baglanti.kayit = baglanti.basarisiz;     // erken kopma olursa geri donmek icin
     baglanti.basarisiz = 0;                  // basarili baglanti: geri cekilme sifirlandi
     baglanti.baglandiAt = Date.now();

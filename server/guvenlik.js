@@ -126,7 +126,7 @@ function olustur(o) {
   }
   const lan = opt.lan ? (opt.lanListesi || lanAdresleri()) : [];
   for (const ip of lan) tam.add(ip);
-  // --host null: file:// ya da sandbox'li sayfalarin Origin'i "null". Varsayilan
+  // --host null: file:// ya da sandbox'li sayfalarin Origin'i "null" / "file://". Varsayilan
   // reddedilir; bilerek acmak isteyen --host null der.
   const nullOk = tam.has('null');
 
@@ -148,7 +148,10 @@ function olustur(o) {
      */
     originIzinli(origin, hostBasligi) {
       if (origin === undefined || origin === null || origin === '') return true;
-      if (String(origin) === 'null') return nullOk;
+      // file:// sayfalarda Chromium WebSocket'e "Origin: file://" yollar, bazi
+      // yollarda "null"; ikisi de ayni anahtara (--host null) baglidir.
+      const o = String(origin);
+      if (o === 'null' || o.startsWith('file:')) return nullOk;
       if (!hostIzinli(originAdi(origin))) return false;
       if (hostBasligi === undefined) return true;
       return originPortu(origin) === hostPortu(hostBasligi);
