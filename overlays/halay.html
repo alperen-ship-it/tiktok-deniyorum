@@ -1313,7 +1313,7 @@
     const son = sonDavet.get(kimD.kid);
     if (son != null && t - son < DAVET_ARA_SN * 1000) return 'bekle';
     const solo = !hedefD || hedefD.kid === kimD.kid;
-    if (!solo) {
+    if (!solo && !hedefD.bot) {                 // botlar dekor: 45 sn kurali izleyiciyi korumak icin
       const sk = sonKaldirilma.get(hedefD.kid);
       if (sk != null && t - sk < HEDEF_ARA_SN * 1000) return 'hedefbekle';
     }
