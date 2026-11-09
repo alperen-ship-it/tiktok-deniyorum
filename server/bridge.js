@@ -160,15 +160,21 @@ function erisimDenetle(req) {
     if (guv.ilkRed('host:' + ad)) {
       log(`!! izin verilmeyen adres reddedildi: "${ad || '(bos)'}" — gerekiyorsa:  --host ${ad || '<ad>'}`);
     }
-    return `Bu adres izinli degil (${ad || 'bos'}). Bu adla acmak istiyorsan koprueyu --host ${ad || '<ad>'} ile baslat.`;
+    return `Bu adres izinli degil (${ad || 'bos'}). Bu adla acmak istiyorsan koprusunu --host ${ad || '<ad>'} ile baslat.`;
   }
   const origin = req.headers.origin;
-  if (!guv.originIzinli(origin)) {
+  if (!guv.originIzinli(origin, req.headers.host)) {
     const o = String(origin);
+    const oAd = guvenlik.originAdi(o);
+    const portFarki = oAd && guv.hostIzinli(oAd);     // ad izinli ama baska porttan geliyor
     if (guv.ilkRed('origin:' + o)) {
-      log(`!! baska siteden gelen istek reddedildi: Origin ${o} — gerekiyorsa:  --host ${guvenlik.originAdi(o) || o}`);
+      log(portFarki
+        ? `!! baska porttan gelen istek reddedildi: Origin ${o} (bu sunucu: ${req.headers.host})`
+        : `!! baska siteden gelen istek reddedildi: Origin ${o} — gerekiyorsa:  --host ${oAd || '<ad>'}`);
     }
-    return `Bu siteden erisim izinli degil (${o}). Izin vermek icin koprueyu --host ${guvenlik.originAdi(o) || '<ad>'} ile baslat.`;
+    return portFarki
+      ? `Bu porttan erisim izinli degil (${o}); sayfa bu sunucudan acilmali (${req.headers.host}).`
+      : `Bu siteden erisim izinli degil (${o}). Izin vermek icin koprusunu --host ${oAd || '<ad>'} ile baslat.`;
   }
   return null;
 }
@@ -1190,7 +1196,13 @@ server.listen(args.port, DINLE_ADRES, async () => {
   ================================================================
 `);
 
-  // Dosyalar nereden okunuyor — sessiz kalirsa "guncelledim ama degismedi"
+  if (args.lan) {
+    log('!! UYARI: --lan acik — ayni agdaki HERKES paneli, sohbet olaylarini ve');
+    log('   test/baglan/kapat dugmelerini kullanabilir. Sadece guvendigin agda kullan.');
+    log('   Erisim adresleri: ' + (guv.lan.length ? guv.lan.map((ip) => `http://${ip}:${args.port}/`).join('  ') : '(LAN adresi bulunamadi)'));
+  }
+
+    // Dosyalar nereden okunuyor — sessiz kalirsa "guncelledim ama degismedi"
   // durumu tesbit edilemez oluyor.
   if (disKlasorYolu) {
     log('oyun dosyalari DIS KLASORDEN okunuyor:', disKlasorYolu);

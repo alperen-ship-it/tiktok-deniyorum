@@ -9,7 +9,7 @@
  *   1) Host basligi izin listesinde olmali (rebinding'i keser: saldirgan adi
  *      listede yok)
  *   2) Yan etkili uclar POST + ozel baslik ister (bridge.js); Origin varsa o da
- *      listede olmali.
+ *      listede olmali ve portu bu sunucununkiyle ayni olmali.
  *
  * Izinli adlar (port karsilastirilmaz):
  *   localhost, 127.0.0.1, ::1
@@ -35,6 +35,23 @@ function hostAdi(deger) {
   const iki = h.indexOf(':');
   if (iki !== -1 && h.indexOf(':', iki + 1) === -1) h = h.slice(0, iki);   // ad:port
   return h.replace(/\.$/, '');              // "localhost." (mutlak ad)
+}
+
+/** "Host: ad:8787" / "[::1]:8787" -> 8787 (port yoksa http icin 80). */
+function hostPortu(deger) {
+  const h = String(deger || '').trim();
+  const m = /:(\d+)$/.exec(h.replace(/^\[[^\]]*\]/, ''));
+  return m ? Number(m[1]) : 80;
+}
+
+/** Origin'in portu (yoksa semaya gore 80/443). */
+function originPortu(origin) {
+  try {
+    const u = new URL(String(origin));
+    return u.port ? Number(u.port) : (u.protocol === 'https:' ? 443 : 80);
+  } catch {
+    return -1;
+  }
 }
 
 /** Origin basligindan host adi. "null" / bozuk -> '' (listede olamaz). */
@@ -122,11 +139,19 @@ function olustur(o) {
   return {
     hostAdi,
     hostIzinli,
-    /** Origin yoksa (ayni-origin GET, curl, sunucu) serbest; varsa host'u izinli olmali. */
-    originIzinli(origin) {
+    /**
+     * Origin yoksa (ayni-origin GET, curl, sunucu) serbest. Varsa host'u izinli
+     * olmali VE (hostBasligi verildiyse) portu bu sunucunun portuyla ayni:
+     * ayni makinede baska portta calisan bir sayfa (ornegin
+     * http://127.0.0.1:3000) sohbet olaylarini okuyamasin. Gercek overlay'ler
+     * her zaman kendi sunucusundan gelir, yani port zaten tutar.
+     */
+    originIzinli(origin, hostBasligi) {
       if (origin === undefined || origin === null || origin === '') return true;
       if (String(origin) === 'null') return nullOk;
-      return hostIzinli(originAdi(origin));
+      if (!hostIzinli(originAdi(origin))) return false;
+      if (hostBasligi === undefined) return true;
+      return originPortu(origin) === hostPortu(hostBasligi);
     },
     /** Reddedilen host'u yalnizca ILK kez true doner (log icin). */
     ilkRed(ad) {
@@ -140,4 +165,4 @@ function olustur(o) {
   };
 }
 
-module.exports = { olustur, hostAdi, originAdi, hostsAyikla, hostsOku, lanAdresleri, SABIT };
+module.exports = { olustur, hostAdi, hostPortu, originAdi, hostsAyikla, hostsOku, lanAdresleri, SABIT };

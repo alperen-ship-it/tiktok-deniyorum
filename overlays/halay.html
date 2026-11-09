@@ -29,20 +29,55 @@
       linear-gradient(180deg, #2c2560 0%, #262056 40%, #1f1946 100%);
   }
   #tuval { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
-  /* Kilim seridi: halay sirasi ile pisti ayiran ince desen. Statik CSS,
-     kare basi maliyeti sifir. */
-  #kilim {
-    position: absolute; left: 0; right: 0; top: var(--bant, 300px); height: 8px; z-index: 0;
-    background: repeating-linear-gradient(90deg,
-      rgba(245, 163, 230, .55) 0 22px, rgba(246, 201, 79, .55) 22px 44px,
-      rgba(79, 214, 201, .45) 44px 66px, rgba(244, 241, 255, .35) 66px 88px);
-    opacity: .5;
+  /* ---- COSKU SERIDI: odanin ORTAK HEDEFI ----
+     Halay sirasi ile pist arasinda, sahnenin tam ortasinda: iri sayi + herkesin
+     birlikte doldurdugu bar. Baslikta kucuk bir gostergeydi; ortak hedef
+     ekrandaki en gorunur ikinci sey olmali (birincisi isimler). Sadece
+     transform/opacity canlanir. */
+  #coskuSerit {
+    position: absolute; left: 0; right: 0; top: var(--bant, 271px); height: var(--cosku-boy, 52px); z-index: 2;
+    display: flex; align-items: center; gap: 14px; padding: 0 16px;
+    background: #17123a; border-top: 4px solid var(--cizgi); border-bottom: 4px solid var(--cizgi);
   }
+  #coskuSol { flex: none; display: flex; align-items: baseline; gap: 10px; }
+  #coskuEtiket { font-size: var(--tip-kucuk); font-weight: 900; letter-spacing: 1.6px; color: var(--soluk); }
+  #coskuSayi {
+    font-size: 44px; font-weight: 900; line-height: 1; color: var(--oyun-renk);
+    font-variant-numeric: tabular-nums; min-width: 98px;
+  }
+  #coskuYol {
+    flex: 1; min-width: 0; position: relative; height: 30px; border-radius: 15px;
+    background: #2e2666; overflow: hidden; border: 3px solid var(--cizgi);
+  }
+  #coskuDolu {
+    position: absolute; inset: 0; background: var(--oyun-renk); border-radius: 12px;
+    transform-origin: left center; transform: scaleX(0); transition: transform .3s linear;
+  }
+  #coskuSerit[data-seviye="0"] #coskuDolu { background: var(--soluk); }
+  #coskuSerit[data-seviye="2"] #coskuDolu { background: var(--altin); }
+  #coskuSerit[data-seviye="0"] #coskuSayi { color: var(--soluk); }
+  #coskuSerit[data-seviye="2"] #coskuSayi, #coskuSerit[data-seviye="2"] #coskuSeviye { color: var(--altin); }
+  .coskuEsik { position: absolute; top: 0; bottom: 0; width: 5px; margin-left: -2px; background: #17123a; }
+  #coskuSeviye {
+    flex: none; min-width: 132px; text-align: right;
+    font-size: 34px; font-weight: 900; letter-spacing: .5px; color: var(--murekkep); line-height: 1;
+  }
+
+  /* ---- LEJANT: hangi hareket ne yapar. Kalici, sahnenin altinda. ---- */
+  #lejant {
+    position: absolute; left: 0; right: 0; bottom: 0; height: var(--lejant-boy, 74px); z-index: 2;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 16px;
+    background: rgba(18, 13, 48, .78); border-top: 4px solid var(--cizgi);
+  }
+  .lj { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .ljIkon { flex: none; font-size: 40px; line-height: 1; }
+  .ljNe { font-size: 28px; font-weight: 900; color: var(--murekkep); line-height: 1.12; white-space: nowrap; letter-spacing: .3px; }
+  .ljEtki { font-size: var(--tip-kucuk); font-weight: 800; color: var(--oyun-renk); line-height: 1.12; white-space: nowrap; }
 
   /* ---- orta (pist): isimler DOM'da, figurler tuvalde (sag sutun) ---- */
   #ortaAlan {
-    position: absolute; left: 0; right: 0; bottom: 0; top: var(--bant, 300px);
-    display: flex; align-items: stretch; z-index: 2; pointer-events: none;
+    position: absolute; left: 0; right: 0; bottom: var(--lejant-boy, 74px); top: var(--pist-ust, 323px);
+    display: flex; align-items: stretch; z-index: 3; pointer-events: none;
   }
   #ortaYazi {
     flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;
@@ -56,6 +91,9 @@
   #ortaBos .obSatir b { color: var(--murekkep); font-weight: 900; }
 
   #ortaKart { display: none; flex-direction: column; min-width: 0; }
+  /* Iki uzun ad sarinca kart pistten uzun olur: yukari tasar ve arkasini kapatir. */
+  #ortaYazi.tasma { justify-content: flex-end; }
+  #ortaYazi.tasma #ortaKart { background: #1f1946; border-radius: 16px; padding: 8px 10px 6px 0; }
   #ortaAlan.dolu #ortaKart { display: flex; }
   #ortaAlan.dolu #ortaBos { display: none; }
   #okBaslik {
@@ -68,7 +106,7 @@
     color: var(--altin); white-space: nowrap; min-width: 0;
   }
   /* 72px tabanda bile tek satira sigmayan ad KESILMEZ, alt satira sarar. */
-  .okAd.sar, #basAd.sar, .gAd.sar, .aAd.sar, .kisi .ad.sar { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+  .okAd.sar, #basAd.sar, .gAd.sar, .aAd.sar, .kisi .ad.sar, #liderAd.sar { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
   #okBag { font-size: 30px; font-weight: 900; color: var(--soluk); letter-spacing: 1px; line-height: 1.2; }
   #okAlt { font-size: 30px; font-weight: 800; color: var(--murekkep); line-height: 1.2; margin-top: 6px; }
   #okAlt b { color: var(--oyun-renk); font-weight: 900; font-variant-numeric: tabular-nums; }
@@ -76,7 +114,7 @@
 
   /* ---- giris etiketi: yuruyen danscinin ustunde, tek seferde tek etiket ---- */
   #giris, #anons {
-    position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none;
+    position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none;
     opacity: 0; will-change: transform, opacity; transition: opacity .2s ease;
   }
   #girisIc, #anonsIc {
@@ -93,17 +131,36 @@
 
   /* ---- sag ray: halay basi plakasi + numarali liste ---- */
   #ray { flex: none; width: 470px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
-  #basKutu { flex: none; padding: 10px 14px 12px; min-width: 0; }
-  #basUst {
-    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
-    font-size: var(--tip-kucuk); font-weight: 900; letter-spacing: 1.2px; color: var(--soluk);
+  /* HALAY BASI PLAKASI = havanin en cok katilani: profil fotografi + tac +
+     katilim sayisi + iri ad. Hediyeyle basa gecen varken plakada o durur
+     (sayi yerinde kalan saniye), en cok katilan alttaki satira iner. */
+  #basKutu { flex: none; padding: 10px 14px 10px; min-width: 0; }
+  #basUst { display: flex; align-items: center; gap: 12px; }
+  #basKafaSar { flex: none; position: relative; width: 70px; height: 70px; }
+  #basKafa {
+    width: 70px; height: 70px; border-radius: 50%; object-fit: cover; display: block;
+    background: #3a3170; border: 4px solid var(--altin);
   }
-  #basSure { color: var(--oyun-renk); font-variant-numeric: tabular-nums; }
+  #basTac { position: absolute; left: -12px; top: -18px; font-size: 36px; line-height: 1; transform: rotate(-18deg); }
+  #basBilgi { flex: 1; min-width: 0; }
+  #basEtiket { font-size: var(--tip-kucuk); font-weight: 900; letter-spacing: 1.2px; color: var(--soluk); line-height: 1.15; white-space: nowrap; }
+  #basAlt { font-size: var(--tip-kucuk); font-weight: 800; color: var(--murekkep); line-height: 1.15; white-space: nowrap; }
+  #basSayiSar { flex: none; text-align: right; }
+  #basSayi { font-size: 48px; font-weight: 900; line-height: .95; color: var(--altin); font-variant-numeric: tabular-nums; }
+  #basSayiEt { font-size: var(--tip-kucuk); font-weight: 800; color: var(--soluk); line-height: 1.1; }
   #basAd {
-    font-size: 72px; font-weight: 900; line-height: 1.04; letter-spacing: -.8px;
+    font-size: 72px; font-weight: 900; line-height: 1.04; letter-spacing: -.8px; margin-top: 4px;
     color: var(--altin); white-space: nowrap; min-height: 1.04em;
   }
-  #basAlt { font-size: var(--tip-kucuk); font-weight: 800; color: var(--murekkep); margin-top: 2px; }
+  #liderSatir {
+    display: none; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px;
+    border-top: 3px solid var(--cizgi);
+  }
+  #liderSatir.acik { display: flex; }
+  #liderTac { flex: none; font-size: 32px; line-height: 1; }
+  #liderKafa { flex: none; width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #3a3170; }
+  #liderAd { flex: 1; min-width: 0; font-size: var(--tip-isim); font-weight: 900; line-height: 1.05; white-space: nowrap; letter-spacing: -.3px; }
+  #liderSayi { flex: none; font-size: 34px; font-weight: 900; color: var(--altin); font-variant-numeric: tabular-nums; }
 
   #listeKutu { flex: 1; min-height: 0; padding: 8px 6px; overflow: hidden; display: flex; flex-direction: column; }
   #listeBaslik {
@@ -130,21 +187,8 @@
   .kisi .iz { flex: none; font-size: 30px; line-height: 1; }
   .kisi.bos { justify-content: center; color: #8a7fc4; font-weight: 800; font-size: var(--tip-kucuk); }
 
-  /* ---- baslik: cosku gostergesi + sure ---- */
+  /* ---- baslik: kalan sure (kucuk, sakin) ---- */
   #durumSar { display: flex; align-items: center; gap: 10px; }
-  #cosku {
-    flex: none; width: 258px; padding: 5px 12px 9px; border-radius: 14px;
-    background: rgba(23, 18, 58, .16); border: 3px solid rgba(23, 18, 58, .35);
-  }
-  #coskuUst { display: flex; justify-content: space-between; align-items: baseline; font-weight: 900; color: #17123a; line-height: 1.15; }
-  #coskuEtiket { font-size: var(--tip-kucuk); letter-spacing: 1px; color: rgba(23, 18, 58, .72); }
-  #coskuSeviye { font-size: 30px; letter-spacing: .5px; }
-  #coskuYol { position: relative; height: 16px; border-radius: 8px; background: rgba(23, 18, 58, .26); overflow: hidden; margin-top: 3px; }
-  #coskuDolu {
-    position: absolute; inset: 0; background: #17123a; border-radius: 8px;
-    transform-origin: left center; transform: scaleX(0); transition: transform .35s linear;
-  }
-  .coskuEsik { position: absolute; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: var(--oyun-renk); }
 
   /* Paylasilan katilim sutunundaki alt satir 24px; bu sayfada 26 taban. */
   #katilCagri .kcsAlt { font-size: var(--tip-kucuk); }
@@ -164,11 +208,7 @@
     </div>
     <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">BİR ŞEY → HALAYA GİR</span></div>
     <div id="durumSar">
-      <div id="cosku">
-        <div id="coskuUst"><span id="coskuEtiket">COŞKU</span><span id="coskuSeviye">AĞIR</span></div>
-        <div id="coskuYol"><div id="coskuDolu"></div><div class="coskuEsik" id="esik1"></div><div class="coskuEsik" id="esik2"></div></div>
-      </div>
-      <div class="rozetBuyuk" id="geriSayim"><span id="sure">0:00</span></div>
+      <div class="rozetBuyuk" id="geriSayim">⏳ <span id="sure">0:00</span></div>
     </div>
     <div id="sayac">
       <div id="sayacBuyuk">0</div>
@@ -178,8 +218,12 @@
 
   <div id="orta">
     <div id="sahneKutu" class="kutu">
-      <div id="kilim"></div>
       <canvas id="tuval"></canvas>
+      <div id="coskuSerit" data-seviye="0">
+        <div id="coskuSol"><span id="coskuEtiket">COŞKU</span><span id="coskuSayi">%0</span></div>
+        <div id="coskuYol"><div id="coskuDolu"></div><div class="coskuEsik" id="esik1"></div></div>
+        <div id="coskuSeviye">AĞIR</div>
+      </div>
       <div id="ortaAlan">
         <div id="ortaYazi">
           <div id="ortaBos">
@@ -198,6 +242,12 @@
         </div>
         <div id="ortaFigur"></div>
       </div>
+      <div id="lejant">
+        <div class="lj"><div class="ljIkon">💬</div><div><div class="ljNe">YAZ</div><div class="ljEtki">halaya gir</div></div></div>
+        <div class="lj"><div class="ljIkon">❤️</div><div><div class="ljNe">BEĞEN</div><div class="ljEtki">coşku dolar</div></div></div>
+        <div class="lj"><div class="ljIkon">💃</div><div><div class="ljNe">@İSİM · 12</div><div class="ljEtki">dansa kaldır</div></div></div>
+        <div class="lj"><div class="ljIkon">🎁</div><div><div class="ljNe">HEDİYE</div><div class="ljEtki">halay başı 15–40 sn</div></div></div>
+      </div>
       <div id="giris"><div id="girisIc"></div></div>
       <div id="anons"><div id="anonsIc"></div></div>
       <div id="kazanan"></div>
@@ -205,12 +255,19 @@
 
     <div id="ray">
       <div id="basKutu" class="kutu">
-        <div id="basUst"><span>HALAY BAŞI</span><span id="basSure"></span></div>
+        <div id="basUst">
+          <div id="basKafaSar"><img id="basKafa" alt=""><span id="basTac">👑</span></div>
+          <div id="basBilgi">
+            <div id="basEtiket">HALAY BAŞI</div>
+            <div id="basAlt">en çok katılan</div>
+          </div>
+          <div id="basSayiSar"><div id="basSayi">0</div><div id="basSayiEt">katılım</div></div>
+        </div>
         <div id="basAd"></div>
-        <div id="basAlt">mendil sende</div>
+        <div id="liderSatir"><span id="liderTac">👑</span><img id="liderKafa" alt=""><span id="liderAd"></span><span id="liderSayi"></span></div>
       </div>
       <div id="listeKutu" class="kutu">
-        <div id="listeBaslik"><span>HALAYDAKİLER</span><span id="listeAralik"></span></div>
+        <div id="listeBaslik"><span id="listeAd">SON GİRENLER</span><span id="listeAralik"></span></div>
         <div id="liste"></div>
       </div>
     </div>
@@ -410,10 +467,12 @@
   const okBaslikEl = el('okBaslik'), okAd1El = el('okAd1'), okAd2El = el('okAd2');
   const okBagEl = el('okBag'), okAltEl = el('okAlt'), okSiraEl = el('okSira');
   const girisEl = el('giris'), girisIcEl = el('girisIc'), anonsEl = el('anons'), anonsIcEl = el('anonsIc');
-  const basAdEl = el('basAd'), basAltEl = el('basAlt'), basSureEl = el('basSure'), basKutuEl = el('basKutu');
-  const listeEl = el('liste'), listeAralikEl = el('listeAralik');
+  const basAdEl = el('basAd'), basAltEl = el('basAlt'), basKutuEl = el('basKutu');
+  const basKafaEl = el('basKafa'), basTacEl = el('basTac'), basSayiEl = el('basSayi'), basSayiEtEl = el('basSayiEt');
+  const liderSatirEl = el('liderSatir'), liderKafaEl = el('liderKafa'), liderAdEl = el('liderAd'), liderSayiEl = el('liderSayi');
+  const listeEl = el('liste'), listeAralikEl = el('listeAralik'), listeAdEl = el('listeAd');
   const kazananEl = el('kazanan'), akisEl = el('akis');
-  const coskuEl = el('cosku'), coskuDoluEl = el('coskuDolu'), coskuSeviyeEl = el('coskuSeviye');
+  const coskuSeritEl = el('coskuSerit'), coskuDoluEl = el('coskuDolu'), coskuSeviyeEl = el('coskuSeviye'), coskuSayiEl = el('coskuSayi');
 
   Spiker.kur(akisEl);
   Juice.sarsHedef(el('kok'));
@@ -470,7 +529,8 @@
   // ==========================================================================
   // TUVAL + YERLESIM
   // ==========================================================================
-  let W = 0, H = 0, bantY = 300, figurEn = 372;
+  let W = 0, H = 0, bantY = 271, pistUst = 323, pistAlt = 678, figurEn = 372;
+  const COSKU_BOY = 52, LEJANT_BOY = 74;
   const BOY = 214;          // olcek 1'de figur boyu (ayak -> tepe)
   const ARALIK = 100;       // olcek 1'de omuz omuza aralik
   const SATIR_ORAN = 0.42;  // arka sira, on siranin boyunun bu kadari yukarida
@@ -490,10 +550,16 @@
     tuval.width = Math.round(W * dpr);
     tuval.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Ust %40 halay sirasi, alt %60 pist. Pist buyuk: 72px+ iki isim buraya sigmali.
-    bantY = Math.round(sik(H * 0.4, 230, 330));
+    // Yukaridan asagi: halay sirasi (%36) · cosku seridi · pist (72px+ iki isim
+    // buraya sigmali) · lejant.
+    bantY = Math.round(sik(H * 0.36, 200, 300));
+    pistUst = bantY + COSKU_BOY;
+    pistAlt = H - LEJANT_BOY;
     figurEn = Math.round(sik(W * 0.36, 300, 400));
     sahneEl.style.setProperty('--bant', bantY + 'px');
+    sahneEl.style.setProperty('--pist-ust', pistUst + 'px');
+    sahneEl.style.setProperty('--cosku-boy', COSKU_BOY + 'px');
+    sahneEl.style.setProperty('--lejant-boy', LEJANT_BOY + 'px');
     sahneEl.style.setProperty('--figur-en', figurEn + 'px');
     yerlesimKirli = true;
     adlariYenidenSigdir();
@@ -524,7 +590,7 @@
       if (!en || s > en.s + 0.015) en = { R, per, s };
     }
     const { R: satirSay, per, s } = en;
-    const onY = bantY - 10;                         // on siranin ayak hizasi
+    const onY = bantY - 8;                          // on siranin ayak hizasi
     for (let i = 0; i < n; i++) {
       const r = Math.floor(i / per), k = i % per;
       const sr = s * (1 - 0.05 * r);               // derinlik: arka sira biraz kucuk
@@ -540,17 +606,17 @@
   }
   function yuva(i) {
     if (yerlesimKirli || yerlesimN !== sira.length) yerlesimKur();
-    return yuvalar[i] || { x: W / 2, y: bantY - 10, s: 1, r: 0 };
+    return yuvalar[i] || { x: W / 2, y: bantY - 8, s: 1, r: 0 };
   }
 
   /** Pistteki figur yerleri (sag sutun). tek = solo, cift = davet/duet. */
   function ortaYer(kac, hangi) {
     const cx = W - figurEn / 2 - 6;
-    const S = sik((H - bantY - 46) / BOY, 0.9, 1.9);
+    const S = sik((pistAlt - pistUst - 40) / BOY, 0.8, 1.9);
     // Iki figur: kalkan kollarla birlikte ~226 birim genislik; sutuna sigacak olcek.
     const s = kac === 1 ? S : Math.min(S, (figurEn - 60) / 226);
     const ac = ARALIK * s * 0.86;
-    return { x: kac === 1 ? cx : cx + (hangi === 0 ? -ac / 2 - 10 : ac / 2 + 10), y: H - 26, s };
+    return { x: kac === 1 ? cx : cx + (hangi === 0 ? -ac / 2 - 10 : ac / 2 + 10), y: pistAlt - 18, s };
   }
 
   // ==========================================================================
@@ -594,7 +660,11 @@
     img.decoding = 'async';
     img.onload = () => {
       if (d.avatarUrl !== url || !img.naturalWidth) return;
-      try { kafaPisir(d, img); d.avatarTamam = true; listeKirli = true; } catch { /* bozuk gorsel: kure kalir */ }
+      try {
+        kafaPisir(d, img); d.avatarTamam = true; listeKirli = true;
+        if (d.kid === basKid) kafaSrc(basKafaEl, d);
+        liderGosterilen = '';
+      } catch { /* bozuk gorsel: kure kalir */ }
     };
     img.onerror = () => { /* kure zaten pisirildi */ };
     img.src = url;
@@ -613,7 +683,7 @@
     const d = {
       kid, ad, uid: uid || '', bot: Kimlik.botMu(kid), no: bosNo(), renk: kim.renk,
       kafa: null, avatarUrl: '', avatarTamam: false,
-      x: -60, y: bantY - 10, s: 1, gorunur: false, durum: 'bekliyor',
+      x: -60, y: bantY - 8, s: 1, gorunur: false, durum: 'bekliyor',
       puan: 0, begeniPuan: 0, sonPuanT: 0, duet: 0, katildi: simdi(), sonAktif: simdi(),
       zipla: 0, cikis: 0,
     };
@@ -877,7 +947,72 @@
         figurCiz(a, a.x, a.y, a.s, 'oyna', { altin: altinlar.has(a.kid) });
       }
     }
+    efektCiz();
   }
+  // ---- KISIYE OZEL ETKI ------------------------------------------------------
+  /*
+   * Her begeni ve her mesaj, O izleyicinin danscisinda gorunur: begenide
+   * basindan kalp yukselir, mesajda omzundan mendil savrulur; ikisinde de
+   * kafasinin cevresinde bir halka acilir (kalabalikta "hangisi bendim"
+   * sorusunun cevabi) ve dansci ziplar. Boylece izleyici yaptigi seyin
+   * ekrana DUSTUGUNU gorur. Kalabalikta da secilsin diye alt boyut sabit.
+   */
+  const efektler = [];
+  function efekt(d, tur, adet) {
+    if (!d.gorunur) return;
+    const t = simdi();
+    if (t - (d.sonEfekt || 0) < 160 || efektler.length > 120) return;    // seri begenide bulut olmasin
+    d.sonEfekt = t;
+    const s = d.s;
+    efektler.push({ tur: 'halka', x: d.x, y: d.y - 180 * s, s, p: 0, omur: 0.45, renk: tur === 'kalp' ? '#ff7aa8' : '#ffffff' });
+    for (let i = 0; i < adet; i++) {
+      efektler.push(tur === 'kalp'
+        ? { tur, x: d.x + (Math.random() - 0.5) * 34 * s, y: d.y - (BOY - 8) * s, s, p: -i * 0.18, omur: 1.2, f: Math.random() * 6.28 }
+        : { tur, x: d.x + 30 * s, y: d.y - 150 * s, s, p: -i * 0.18, omur: 0.65, f: Math.random() * 6.28 });
+    }
+  }
+  function efektIlerle(dt) {
+    for (let i = efektler.length - 1; i >= 0; i--) {
+      const e = efektler[i];
+      e.p += dt / e.omur;
+      if (e.p >= 1) efektler.splice(i, 1);
+    }
+  }
+  function efektCiz() {
+    if (!efektler.length) return;
+    for (const e of efektler) {
+      if (e.p < 0) continue;
+      const p = e.p, s = e.s;
+      if (e.tur === 'halka') {
+        ctx.globalAlpha = (1 - p) * 0.9;
+        ctx.strokeStyle = e.renk; ctx.lineWidth = Math.max(3, 5 * s);
+        ctx.beginPath(); ctx.arc(e.x, e.y, (38 + 26 * p) * s, 0, 6.2832); ctx.stroke();
+      } else if (e.tur === 'kalp') {
+        const r = Math.max(12, 15 * s) * (0.7 + 0.3 * Math.min(1, p * 4));
+        const x = e.x + Math.sin(e.f + p * 5) * 8 * s, y = e.y - p * Math.max(64, 96 * s);
+        ctx.globalAlpha = Math.min(1, (1 - p) * 2.4);
+        ctx.fillStyle = '#ff6f9c'; ctx.strokeStyle = '#17123a'; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(x, y + r * 0.95);
+        ctx.bezierCurveTo(x - r * 1.55, y - r * 0.25, x - r * 0.8, y - r * 1.3, x, y - r * 0.45);
+        ctx.bezierCurveTo(x + r * 0.8, y - r * 1.3, x + r * 1.55, y - r * 0.25, x, y + r * 0.95);
+        ctx.fill(); ctx.stroke();
+      } else {                                   // mendil: omuzdan yay cizerek savrulan beyaz ucgen
+        const b = Math.max(16, 20 * s);
+        const x = e.x + p * 22 * s, y = e.y - Math.sin(p * Math.PI) * Math.max(40, 56 * s) - p * 20 * s;
+        const a = e.f + p * 5;
+        ctx.globalAlpha = Math.min(1, (1 - p) * 2.6);
+        ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#f5a3e6'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(a) * b, y + Math.sin(a) * b);
+        ctx.lineTo(x + Math.cos(a + 2.2) * b, y + Math.sin(a + 2.2) * b);
+        ctx.lineTo(x + Math.cos(a + 4.1) * b * 0.8, y + Math.sin(a + 4.1) * b * 0.8);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
   /** Sira figurlerinin o anki ortak ziplama yuksekligi (el noktasi icin). */
   function bobOrtak(s) {
     return durum === 'bitti' ? 0 : (5.5 + 2.5 * seviye) * s * (0.5 - 0.5 * Math.cos(6.2832 * faz));
@@ -925,6 +1060,7 @@
       d.x -= 560 * dt;
       if (d.x < -70 || simdi() - d.cikis > 4000) cikanlar.splice(i, 1);
     }
+    efektIlerle(dt);
     girisKonumla();
   }
 
@@ -950,42 +1086,57 @@
   /*
    * ISBIRLIGI: bar tek, herkesin. Kalabalik buyudukce bir kisinin payi
    * kuculur (5/n, 0.3-1.7 arasi) — 3 kisilik odada uc kisi, 60 kisilik
-   * odada bir avuc kisi birlikte basarsa COSTU'ya cikar. Yari omru 20 sn.
+   * odada bir avuc kisi birlikte basarsa bar TAM dolar: COSTU. Yari omru 20 sn.
+   * %45'te OYNAK; dolunca COSTU, %72'nin altina inene kadar surer.
    */
-  const ESIK_CIK = [40, 80], ESIK_IN = [31, 69];
-  let coskuCizilen = -1;
+  const ESIK_CIK = [45, 100], ESIK_IN = [36, 72];     // COSTU = bar TAM doldu
+  const SEVIYE_YAZI = ['AĞIR', 'OYNAK', 'COŞTU!'];
+  let coskuCizilen = -1, coskuYazilan = -1;
   function coskuEkle(m) {
     if (durum !== 'oyun') return;
     cosku = Math.min(100, cosku + m * sik(5 / Math.max(3, sira.length), 0.3, 1.7));
+    seviyeKontrol();                 // tam dolma ani bir sonraki sonumu beklemeden yakalansin
   }
-  function coskuTik(dt) {
-    cosku = Math.max(0, cosku * Math.pow(0.5, dt / 20) - 0.35 * dt);
+  function seviyeKontrol() {
     let yeni = seviye;
     while (yeni < 2 && cosku >= ESIK_CIK[yeni]) yeni++;
     while (yeni > 0 && cosku < ESIK_IN[yeni - 1]) yeni--;
     if (yeni !== seviye) seviyeAyarla(yeni, false);
-    if (Math.abs(cosku - coskuCizilen) >= 0.6) {
+  }
+  function coskuTik(dt) {
+    cosku = Math.max(0, cosku * Math.pow(0.5, dt / 20) - 0.35 * dt);
+    seviyeKontrol();
+    coskuCiz();
+  }
+  function coskuCiz() {
+    if (Math.abs(cosku - coskuCizilen) >= 0.5) {
       coskuCizilen = cosku;
       coskuDoluEl.style.transform = `scaleX(${(cosku / 100).toFixed(3)})`;
     }
+    const tam = Math.round(cosku);
+    if (tam !== coskuYazilan) { coskuYazilan = tam; coskuSayiEl.textContent = '%' + tam; }
   }
   function seviyeAyarla(yeni, sessiz) {
     const eski = seviye;
     seviye = yeni;
-    coskuSeviyeEl.textContent = SEVIYE_AD[yeni];
-    if (sessiz) { coskuCizilen = -1; coskuDoluEl.style.transform = 'scaleX(0)'; return; }
+    coskuSeviyeEl.textContent = SEVIYE_YAZI[yeni];
+    coskuSeritEl.dataset.seviye = String(yeni);
+    if (sessiz) { coskuCizilen = -1; coskuYazilan = -1; coskuCiz(); return; }
     if (yeni > eski) {
       // Hizlanma: muzik de adim da. muzikHizli O ANKI tempoyu carpar.
       Ses.muzikHizli(BPM[yeni] / BPM[eski]);
-      Juice.vur(coskuEl, 0.5);
+      Juice.vur(coskuSeviyeEl, 0.6);
       Ses.cal('etap');
       if (yeni === 2) {
-        anonsEkle({ ust: '🔥 HALAY COŞTU!', alt: 'beğenmeye devam — tempo düşmesin', sure: 2200 });
-        soyle('🔥 <b>HALAY COŞTU!</b> herkes döktürüyor', { oncelik: 3, sure: 3600, anahtar: 'sev2' });
-        if (!konfetiAtildi) { konfetiAtildi = true; Juice.konfeti({ y: 0.34 }); }   // bir havada bir kez
+        // DORUK: bar tam doldu. Herkes ayni anda ziplar, bar parlar, anons cikar.
+        for (const d of dans.values()) d.zipla = 0.42;
+        Juice.parla(coskuDoluEl);
+        anonsEkle({ ust: '🔥 HALAY COŞTU!', alt: 'bar doldu — beğenmeye devam, tempo düşmesin', sure: 2400, renk: 'var(--altin)' });
+        soyle('🔥 <b>HALAY COŞTU!</b> bar doldu, herkes döktürüyor', { oncelik: 3, sure: 3600, anahtar: 'sev2' });
+        if (!konfetiAtildi) { konfetiAtildi = true; Juice.konfeti({ y: 0.34, adet: 60 }); }   // bir havada bir kez
       } else {
-        anonsEkle({ ust: '🥁 HAVA OYNAKLAŞTI', alt: '❤️ beğenin, coşsun', sure: 1800 });
-        soyle('🥁 <b>HAVA OYNAKLAŞTI</b> — ❤️ beğenin, halay coşsun', { oncelik: 2, anahtar: 'sev1' });
+        anonsEkle({ ust: '🥁 HAVA OYNAKLAŞTI', alt: '❤️ beğenin, bar dolsun', sure: 1800 });
+        soyle('🥁 <b>HAVA OYNAKLAŞTI</b> — ❤️ beğenin, bar dolsun', { oncelik: 2, anahtar: 'sev1' });
       }
     } else {
       // Yavaslama: muzikHizli 1'in altina inemiyor; mutlak tempoyu ayarla.
@@ -999,19 +1150,51 @@
   // ==========================================================================
   let basNeden = 'katilim';
 
+  /** <img>'e danscinin yuzunu koy: yuklenmis profil fotografi, yoksa Kimlik kuresi. */
+  function kafaSrc(img, d) {
+    const src = !d ? '' : d.avatarTamam ? d.avatarUrl : Kimlik.al(d.kid).url;
+    if (img._src === src) return;
+    img._src = src;
+    if (src) img.src = src; else img.removeAttribute('src');
+  }
+  const yaz = (e, metin) => { if (e.textContent !== metin) e.textContent = metin; };
+
   function basCiz() {
     const d = dans.get(basKid);
     basAdEl.textContent = d ? d.ad : '';
     if (d) sigdir(basAdEl, 76, 56);
-    basAltEl.textContent = !d ? 'yaz, mendili sen al'
-      : (hediyeBas && hediyeBas.kid === d.kid) ? '🎁 hediyeyle · mendil sende'
-      : d.bot ? 'demo — yaz, mendil sana geçsin' : 'en çok katılan · mendil sende';
+    kafaSrc(basKafaEl, d);
+    liderGosterilen = '';
     basSureYaz();
   }
+  /** Plakanin degisen kisimlari: sayi (katilim / kalan sn), alt satir, en cok katilan satiri. */
+  let liderGosterilen = '';
   function basSureYaz() {
-    const kalan = hediyeBas ? Math.max(0, Math.ceil((hediyeBas.bitis - simdi()) / 1000)) : 0;
-    const metin = hediyeBas ? kalan + ' sn' + (basKuyruk.length ? ' · sırada ' + basKuyruk.length : '') : '';
-    if (basSureEl.textContent !== metin) basSureEl.textContent = metin;
+    const d = dans.get(basKid);
+    const hediye = !!(d && hediyeBas && hediyeBas.kid === d.kid);
+    yaz(basTacEl, hediye ? '🎁' : '👑');
+    if (hediye) {
+      yaz(basSayiEl, String(Math.max(0, Math.ceil((hediyeBas.bitis - simdi()) / 1000))));
+      yaz(basSayiEtEl, 'sn');
+      yaz(basAltEl, basKuyruk.length ? 'hediyeyle · sırada ' + basKuyruk.length : 'hediyeyle');
+    } else {
+      yaz(basSayiEl, d ? String(Math.round(d.puan)) : '0');
+      yaz(basSayiEtEl, 'katılım');
+      yaz(basAltEl, !d ? 'mendil boşta' : d.bot ? 'demo · sen yaz' : 'en çok katılan');
+    }
+    // Basta hediye veren dururken havanin EN COK KATILANI gozden kaybolmasin.
+    const l = hediye ? katilimLideri() : null;
+    const goster = l && l.kid !== basKid && l.puan > 0 ? l : null;
+    liderSatirEl.classList.toggle('acik', !!goster);
+    if (goster) {
+      kafaSrc(liderKafaEl, goster);
+      yaz(liderSayiEl, String(Math.round(goster.puan)));
+      if (liderGosterilen !== goster.kid + '|' + goster.ad) {
+        liderGosterilen = goster.kid + '|' + goster.ad;
+        liderAdEl.textContent = goster.ad;
+        sigdir(liderAdEl, 46, 28);
+      }
+    } else liderGosterilen = '';
   }
 
   /** d'yi siranin basina (sag uca) al. */
@@ -1199,7 +1382,7 @@
     orta = null;
     ortaBosluk = simdi() + 700;
     ortaAlanEl.classList.remove('dolu');
-    el('ortaYazi').style.justifyContent = '';
+    el('ortaYazi').classList.remove('tasma');
   }
 
   function ortaTik() {
@@ -1255,13 +1438,13 @@
     okBagEl.textContent = orta.evre === 'davet' ? '▾' : 'ile';
     if (orta.evre === 'davet') orta.sn = Math.ceil((orta.bitis - simdi()) / 1000);
     okAltYaz(); okSiraYaz();
-    sigdir(okAd1El, cift ? 104 : 124, 72);
-    if (cift) sigdir(okAd2El, 104, 72);
+    sigdir(okAd1El, cift ? 96 : 120, 72);
+    if (cift) sigdir(okAd2El, 96, 72);
     // Iki uzun ad sarinca kart pistten uzun olabilir: alta yasla, YUKARI tassin
-    // (asagi tasarsa sahne kenari keserdi).
+    // (asagi tasarsa lejantin ustune binerdi).
     const yazi = el('ortaYazi');
-    yazi.style.justifyContent = '';
-    if (el('ortaKart').offsetHeight > yazi.clientHeight - 30) yazi.style.justifyContent = 'flex-end';
+    yazi.classList.remove('tasma');
+    if (el('ortaKart').offsetHeight > yazi.clientHeight - 24) yazi.classList.add('tasma');
   }
 
   // ==========================================================================
@@ -1410,10 +1593,13 @@
     const sayfaSay = Math.max(1, Math.ceil(n / kac));
     if (listeSayfa >= sayfaSay) listeSayfa = 0;
     const bas = listeSayfa * kac;
-    // NUMARA sirasiyla: herkes listede hep ayni yerde durur, aranan numara bulunur.
-    const duz = [...dans.values()].sort((a, b) => a.no - b.no);
-    const enBuyukNo = duz.length ? duz[duz.length - 1].no : 0;
-    listeAralikEl.textContent = n ? (sayfaSay > 1 ? `${listeSayfa + 1}/${sayfaSay} · ` : '') + `yaz: 1–${enBuyukNo}` : '';
+    // EN YENI GIREN USTTE: ilk sayfa "son girenler" — yeni gelen adini, yuzunu
+    // ve numarasini listenin basinda gorur. Sigmayanlar sayfa sayfa doner.
+    const duz = [...dans.values()].sort((a, b) => b.katildi - a.katildi || b.no - a.no);
+    let enBuyukNo = 0;
+    for (const d of duz) if (d.no > enBuyukNo) enBuyukNo = d.no;
+    yaz(listeAdEl, listeSayfa === 0 ? 'SON GİRENLER' : `HALAYDAKİLER ${listeSayfa + 1}/${sayfaSay}`);
+    yaz(listeAralikEl, n ? `yaz: 1–${enBuyukNo}` : '');
     for (let i = 0; i < kac; i++) {
       const s = satirlar[i], d = duz[bas + i];
       if (!d) { if (s.kid !== null) { s.r.style.visibility = 'hidden'; s.kid = null; s.metin = null; } continue; }
@@ -1439,7 +1625,8 @@
   function listeTik() {
     const t = simdi();
     const kac = satirlar.length || 1;
-    if (sira.length > kac && t - listeSonSayfa > 3500) {     // sigmayanlar sayfa sayfa doner
+    // sigmayanlar sayfa sayfa doner; "son girenler" sayfasi iki kat uzun kalir
+    if (sira.length > kac && t - listeSonSayfa > (listeSayfa === 0 ? 7000 : 3500)) {
       listeSonSayfa = t; listeSayfa++; listeKirli = true;
       listeEl.animate([{ opacity: .35 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
     }
@@ -1464,7 +1651,7 @@
   }
   function cagriYaz() {
     const metin = durum === 'bitti' ? 'gecenin yıldızı'
-      : gercekSayi() === 0 ? '🤖 demo — sen yaz' : '❤️ beğen de olur';
+      : gercekSayi() === 0 ? '🤖 demo — yaz, halaya gir' : '❤️ beğen de olur';
     const e = el('cagri');
     if (e.textContent !== metin) e.textContent = metin;
   }
@@ -1624,7 +1811,8 @@
     const d = olayGiris(ev.user);
     if (!d || durum !== 'oyun') return;
     const t = simdi();
-    d.zipla = 0.42;                                  // her mesaja gorunur karsilik: danscin ziplar
+    d.zipla = 0.42;                                  // her mesaja gorunur karsilik: danscin ziplar,
+    efekt(d, 'mendil', 1);                           // omzundan mendil savrulur
     if (t - d.sonPuanT > 1200) { d.puan += 1; d.sonPuanT = t; }
     coskuEkle(2);
 
@@ -1666,6 +1854,7 @@
     const ek = Math.min(LIKE_TAVAN - d.begeniPuan, n * 0.1);
     if (ek > 0) { d.begeniPuan += ek; d.puan += ek; }
     d.zipla = 0.42;
+    efekt(d, 'kalp', n >= 8 ? 2 : 1);                // begeni: O danscinin basindan kalp yukselir
     coskuEkle(Math.min(4, n * 0.4));
     if (orta && orta.evre === 'davet' && orta.hedef === d.kid) ortaKabul();
   });
@@ -1749,7 +1938,6 @@
 
   // ---- basla ----------------------------------------------------------------
   el('esik1').style.left = ESIK_CIK[0] + '%';
-  el('esik2').style.left = ESIK_CIK[1] + '%';
   boyutla();
   sarkiBasla(true);
   requestAnimationFrame(dongu);
