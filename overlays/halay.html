@@ -576,8 +576,13 @@
     e.style.fontSize = a + 'px';
     if (e.scrollWidth > e.clientWidth) {
       // Tabanda da sigmadi: SAR. Bosluksuz adlar harfin ortasindan degil
-      // ayractan (_ . -) bolunsun diye oralara gorunmez kirilma noktasi konur.
-      e.textContent = e.textContent.replace(/([_.\-])(?=[\p{L}\p{N}])/gu, '$1\u200B');
+      // ayractan (_ . -) bolunsun diye oralara <wbr> konur. Metnin KENDISI
+      // degismez (textContent / innerText ayni ad) — araya karakter girmiyor.
+      const parca = e.textContent.match(/[^_.\-]*[_.\-]+|[^_.\-]+/g) || [];
+      if (parca.length > 1) {
+        e.textContent = '';
+        parca.forEach((x, i) => { if (i) e.appendChild(document.createElement('wbr')); e.appendChild(document.createTextNode(x)); });
+      }
       e.classList.add('sar');
       return a;
     }
