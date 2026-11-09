@@ -24,12 +24,14 @@ const veri = require('./veri');
 const varlik = require('./varlik');
 const ayar = require('./ayar');
 const istatistik = require('./istatistik');
+const guvenlik = require('./guvenlik');
+const yeniden = require('./yeniden');
 
 // ---------------------------------------------------------------------------
 // Argumanlar
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
-  const out = { port: 8787, mock: false, user: null, verbose: false, rate: 1, bekle: 15 };
+  const out = { port: 8787, mock: false, user: null, verbose: false, rate: 1, bekle: 15, sessiz: 180, host: [] };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--mock' || a === '-m') out.mock = true;
@@ -42,6 +44,9 @@ function parseArgs(argv) {
     else if (a === '--key' || a === '-k') out.key = String(argv[++i] || '');
     else if (a === '--gifts') out.gifts = true;
     else if (a === '--no-80') out.no80 = true;
+    else if (a === '--lan') out.lan = true;
+    else if (a === '--host') out.host.push(...String(argv[++i] || '').split(',').map((x) => x.trim()).filter(Boolean));
+    else if (a === '--sessiz') out.sessiz = Number(argv[++i]) || 180;
     else if (a === '--oturum') out.oturum = String(argv[++i] || '');
     else if (a === '--idc') out.idc = String(argv[++i] || '');
     else if (a === '--klasor') out.klasor = String(argv[++i] || '');
@@ -82,6 +87,14 @@ TikTok LIVE koprusu
   --gifts            Hediye katalogunu da cek (ikon URL'leri icin) — UCRETLI uc,
                      varsayilan kapali. Kapaliyken hediye adi/elmas degeri yine gelir.
   --no-80            Port 80'i da dinleme (varsayilan: dener)
+  --lan              Agdaki diger cihazlar da baglanabilsin (varsayilan: SADECE bu
+                     bilgisayar — 127.0.0.1 ve ::1). Acinca ayni Wi-Fi'daki herkes
+                     paneli ve sohbet olaylarini gorebilir; sadece guvendigin agda kullan.
+  --host <a,b>       Izinli ek alan adlari (virgulle). Hazir izinli: localhost,
+                     127.0.0.1, localtest.me, hosts dosyasinda 127.0.0.1'e yazdigin
+                     adlar (yayin.local gibi). Baska bir adla acarsan 403 gorursun.
+  --sessiz <sn>      Baglanti acik ama bu kadar saniye hic veri gelmezse yeniden
+                     baglan (varsayilan 180, en az 30)
   --oturum <sid>     Sohbet botu icin TikTok sessionid cerezi (bir kez ver,
                      ayarlara kaydedilir). GERCEK sohbete yazmak ayrica
                      EulerStream'in ucretli planini gerektirir; yoksa bot
@@ -117,8 +130,70 @@ const MIME = {
 };
 
 
+// ---------------------------------------------------------------------------
+// Erisim denetimi (Host / Origin / yan etkili uclar) — ayrinti: guvenlik.js
+// ---------------------------------------------------------------------------
+const guv = guvenlik.olustur({ ekstra: args.host, lan: args.lan });
+
+// Durumu degistiren uclar: yalnizca POST + "X-TT: 1" basligi. Ozel baslik
+// tarayicida CORS preflight zorunlu kilar; biz preflight'a hic onay vermiyoruz
+// (hicbir yanita access-control-* basligi koymuyoruz) -> baska siteden gelen
+// sayfa bu istegi GONDEREMEZ. <img src> ve <form> ise POST + ozel baslik
+// yapamaz.
+const YAN_ETKILI = new Set(['/api/fire', '/api/baglan', '/api/kapat', '/api/soyle', '/api/oyun']);
+
+function metinCevap(res, kod, metin, baslik) {
+  res.writeHead(kod, Object.assign(
+    { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }, baslik));
+  res.end(metin);
+}
+
+function jsonCevap(res, nesne) {
+  res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+  res.end(JSON.stringify(nesne));
+}
+
+/** HTTP istegi ve WebSocket upgrade icin ortak: reddedilirse sebep metni doner. */
+function erisimDenetle(req) {
+  const ad = guv.hostAdi(req.headers.host);
+  if (!guv.hostIzinli(ad)) {
+    if (guv.ilkRed('host:' + ad)) {
+      log(`!! izin verilmeyen adres reddedildi: "${ad || '(bos)'}" — gerekiyorsa:  --host ${ad || '<ad>'}`);
+    }
+    return `Bu adres izinli degil (${ad || 'bos'}). Bu adla acmak istiyorsan koprueyu --host ${ad || '<ad>'} ile baslat.`;
+  }
+  const origin = req.headers.origin;
+  if (!guv.originIzinli(origin)) {
+    const o = String(origin);
+    if (guv.ilkRed('origin:' + o)) {
+      log(`!! baska siteden gelen istek reddedildi: Origin ${o} — gerekiyorsa:  --host ${guvenlik.originAdi(o) || o}`);
+    }
+    return `Bu siteden erisim izinli degil (${o}). Izin vermek icin koprueyu --host ${guvenlik.originAdi(o) || '<ad>'} ile baslat.`;
+  }
+  return null;
+}
+
 const server = http.createServer((req, res) => {
   const urlPath = (req.url || '/').split('?')[0];
+
+  const red = erisimDenetle(req);
+  if (red) { metinCevap(res, 403, '403 - ' + red); return; }
+
+  if (urlPath.startsWith('/api/')) {
+    if (YAN_ETKILI.has(urlPath)) {
+      if (req.method !== 'POST') {
+        metinCevap(res, 405, '405 - bu uc sadece POST kabul eder', { allow: 'POST' });
+        return;
+      }
+      if (req.headers['x-tt'] !== '1') {
+        metinCevap(res, 403, '403 - "X-TT: 1" basligi gerekli');
+        return;
+      }
+    } else if (req.method !== 'GET' && req.method !== 'HEAD') {
+      metinCevap(res, 405, '405 - bu uc sadece GET kabul eder', { allow: 'GET, HEAD' });
+      return;
+    }
+  }
 
   // --- test olayi tetikleme ucu (kontrol paneli kullanir) ---
   if (urlPath === '/api/fire') {
@@ -126,8 +201,7 @@ const server = http.createServer((req, res) => {
     const type = q.get('type') || 'chat';
     const ev = makeMockEvent(type);
     const n = wss.broadcast(ev);
-    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
-    res.end(JSON.stringify({ ok: true, sentTo: n, event: ev }));
+    jsonCevap(res, { ok: true, sentTo: n, event: ev });
     return;
   }
 
@@ -135,24 +209,20 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/oyun') {
     const q = new URL(req.url, 'http://localhost').searchParams;
     const ad = istatistik.oyunAyarla(q.get('ad'));
-    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
-    res.end(JSON.stringify({ ok: true, oyun: ad }));
+    jsonCevap(res, { ok: true, oyun: ad });
     return;
   }
 
   // --- olcum ozeti (panel gosteriyor) ---
   if (urlPath === '/api/istatistik') {
-    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
-    res.end(JSON.stringify(istatistik.ozet()));
+    jsonCevap(res, istatistik.ozet());
     return;
   }
 
   // --- oyunlarin kazanan duyurusu (sohbet botu) ---
   if (urlPath === '/api/soyle') {
     const q = new URL(req.url, 'http://localhost').searchParams;
-    const sonuc = botSoyle(q.get('text') || '');
-    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
-    res.end(JSON.stringify(sonuc));
+    jsonCevap(res, botSoyle(q.get('text') || ''));
     return;
   }
 
@@ -168,13 +238,12 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/baglan') {
     const q = new URL(req.url, 'http://localhost').searchParams;
     const kullanici = String(q.get('user') || '').replace(/^@/, '').trim();
-    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
 
     if (!kullanici) {
       args.user = null;
       kopar();
       startMock();
-      res.end(JSON.stringify({ ok: true, mode: 'mock' }));
+      jsonCevap(res, { ok: true, mode: 'mock' });
       return;
     }
 
@@ -183,15 +252,16 @@ const server = http.createServer((req, res) => {
     // acilista tekrar sormayalim.
     if (varlik.SEA_MI) ayar.kullaniciKaydet(kullanici);
     kopar();
+    baglanti.basarisiz = 0;      // kullanici elle denedi: geri cekilme egrisi sifirdan
+    baglanti.tavsiye = false;
     startLive(kullanici).catch((e) => log('!! baglanti hatasi:', e?.message || e));
-    res.end(JSON.stringify({ ok: true, mode: 'live', user: kullanici }));
+    jsonCevap(res, { ok: true, mode: 'live', user: kullanici });
     return;
   }
 
   // --- uygulamayi kapat (panelin "Durdur" dugmesi) ---
   if (urlPath === '/api/kapat') {
-    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
-    res.end(JSON.stringify({ ok: true }));
+    jsonCevap(res, { ok: true });
     log('kapatma istegi alindi, cikiliyor.');
     // Cevabin gitmesine firsat ver
     setTimeout(() => process.exit(0), 250);
@@ -199,23 +269,26 @@ const server = http.createServer((req, res) => {
   }
 
   if (urlPath === '/api/status') {
-    res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
-    res.end(
-      JSON.stringify({
-        mode: state.mode,
-        user: args.user,
-        connected: state.connected,
-        bekliyor: !!state.bekliyor,
-        clients: wss.clients.size,
-        events: state.eventCount,
-        uptime: Math.round(process.uptime()),
-        veriKaynaklari: veriCekici ? veriCekici.kaynaklar() : [],
-      })
-    );
+    jsonCevap(res, {
+      mode: state.mode,
+      user: args.user,
+      connected: state.connected,
+      bekliyor: !!state.bekliyor,
+      detay: durumDetay(),
+      tekrarSn: baglanti.tekrarAt ? Math.max(0, Math.ceil((baglanti.tekrarAt - Date.now()) / 1000)) : 0,
+      clients: wss.clients.size,
+      events: state.eventCount,
+      uptime: Math.round(process.uptime()),
+      veriKaynaklari: veriCekici ? veriCekici.kaynaklar() : [],
+    });
     return;
   }
 
   // --- statik dosyalar -----------------------------------------------------
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    metinCevap(res, 405, '405 - sadece GET', { allow: 'GET, HEAD' });
+    return;
+  }
   // Diskten mi yoksa exe'nin icinden mi okundugunu varlik.js biliyor.
   let ad = varlik.adaCevir(urlPath);
   if (ad === null) {
@@ -238,13 +311,13 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, {
     'content-type': MIME[path.extname(ad).toLowerCase()] || 'application/octet-stream',
     'cache-control': 'no-store',
-    'access-control-allow-origin': '*',
   });
   res.end(govde);
 });
 
 const wss = attach(server, {
   path: '/ws',
+  dogrula: erisimDenetle,
   onConnect(client) {
     client.send({
       type: 'hello',
@@ -252,6 +325,7 @@ const wss = attach(server, {
       user: args.user,
       connected: state.connected,
       bekliyor: !!state.bekliyor,
+      detay: durumDetay(),
       ts: Date.now(),
     });
     log(`overlay baglandi (toplam ${wss.clients.size})`);
@@ -267,6 +341,124 @@ const state = { mode: 'idle', connected: false, eventCount: 0 };
 // Panelden kullanici adi degistirilince eskisinin arkada calismaya devam
 // etmemesi icin gerekli.
 let canliBaglanti = null;
+
+// ---------------------------------------------------------------------------
+// TEK yeniden-baglanma zamanlayicisi
+// ---------------------------------------------------------------------------
+// Eskiden streamEnd, disconnected ve "yayin kapali" yollari kendi setTimeout'unu
+// kuruyordu; ayni anda iki yol calisabiliyor, eski bir baglantinin olayi yeni
+// baglantiyi bozabiliyordu. Simdi:
+//   * bekleyen tek bir zamanlayici var (baglanti.zamanlayici); doluyken yeni
+//     istek yok sayilir (ilk gelen kazanir: streamEnd'den hemen sonra gelen
+//     disconnected ikinci dongu baslatmaz)
+//   * her yeni baglanti nesli bir sayac artirir (baglanti.nesil); eski
+//     nesillerin olaylari ve cevaplari yok sayilir
+//   * ne kadar bekleneceğini yeniden.js saf fonksiyonu soyler
+const baglanti = {
+  nesil: 0,
+  zamanlayici: null,
+  tekrarAt: 0,          // zamanlayici ne zaman atesleyecek (ms epoch)
+  etiket: '',           // panelde gosterilen kisa durum: 'limit', 'hata'...
+  basarisiz: 0,         // ardisik basarisiz deneme (basarili baglantida sifirlanir)
+  kayit: 0,             // basarisiz'in baglanmadan onceki degeri (erken kopma icin)
+  baglandiAt: 0,
+  sonVeri: 0,           // son olay/ham veri zamani (sessizlik bekcisi)
+  kareSayisi: 0,        // bu baglantida gelen ham veri sayisi
+  sessizCarpan: 1,      // veri hic gelmeyen baglantilarda esigi buyutur
+  bekci: null,
+  tavsiye: false,       // paywall tavsiyesi bu seansta basildi mi
+};
+const SAGLAM_MS = 60 * 1000;     // bu kadar ayakta kalmadan "basarili" sayilmaz
+
+function sessizMs() {
+  return Math.max(30, Number(args.sessiz) || 180) * 1000 * baglanti.sessizCarpan;
+}
+
+/** Panelde gosterilecek: "limit — 120 sn sonra tekrar" ya da bos. */
+function durumDetay() {
+  if (!baglanti.zamanlayici || !baglanti.etiket) return '';
+  return yeniden.durumMetni(baglanti.etiket, baglanti.tekrarAt - Date.now());
+}
+
+function tekrarIptal() {
+  if (baglanti.zamanlayici) clearTimeout(baglanti.zamanlayici);
+  baglanti.zamanlayici = null;
+  baglanti.tekrarAt = 0;
+  baglanti.etiket = '';
+}
+
+function bekciDurdur() {
+  if (baglanti.bekci) clearInterval(baglanti.bekci);
+  baglanti.bekci = null;
+}
+
+/**
+ * Bir sonraki baglanti denemesini planla. Bekleyen zamanlayici varsa yok sayar.
+ * @returns {object|null} karar (loglama icin) ya da null (zaten planli)
+ */
+function tekrarPlanla(hata, kullanici) {
+  if (baglanti.zamanlayici) return null;
+  const deneme = hata && hata.olay === 'streamEnd' ? 1 : ++baglanti.basarisiz;
+  const k = yeniden.karar(hata, deneme, { bekle: args.bekle });
+  const nesil = baglanti.nesil;
+  baglanti.etiket = k.state;
+  baglanti.tekrarAt = Date.now() + k.delayMs;
+  baglanti.zamanlayici = setTimeout(() => {
+    baglanti.zamanlayici = null;
+    baglanti.tekrarAt = 0;
+    baglanti.etiket = '';
+    // Bu arada kullanici baska ada gectiyse / kopar() cagrildiysa dokunma
+    if (args.user !== kullanici || nesil !== baglanti.nesil || state.mode === 'mock') return;
+    startLive(kullanici).catch((e) => {
+      log('!! baglanti hatasi:', e?.message || e);
+      tekrarPlanla(e, kullanici);
+    });
+  }, k.delayMs);
+  durumYayinla();
+  return k;
+}
+
+/** Acik baglantiyi kapat; olaylari artik dikkate alinmaz (nesil artar). */
+function baglantiyiBirak() {
+  baglanti.nesil++;
+  bekciDurdur();
+  if (canliBaglanti) {
+    const eski = canliBaglanti;
+    canliBaglanti = null;
+    try { Promise.resolve(eski.disconnect()).catch(() => {}); } catch { /* zaten kapali */ }
+  }
+}
+
+/**
+ * Sessizlik bekcisi: baglanti "acik" gorunup veri gelmeyi kesmisse (olu
+ * soket) kimse fark etmiyordu. Kutuphane 10 sn'de bir kalp atisi yolluyor ve
+ * gelen HER kare 'websocketData' olayi uretiyor; ayrica oda olaylari var.
+ * --sessiz sn boyunca bunlarin hicbiri gelmezse yeniden baglan.
+ */
+function bekciKur(nesil, kullanici) {
+  bekciDurdur();
+  baglanti.sonVeri = Date.now();
+  baglanti.kareSayisi = 0;
+  const aralik = Math.max(1000, Math.min(10000, Math.floor(sessizMs() / 4)));
+  baglanti.bekci = setInterval(() => {
+    if (nesil !== baglanti.nesil) { bekciDurdur(); return; }
+    const sessiz = Date.now() - baglanti.sonVeri;
+    if (sessiz < sessizMs()) return;
+    bekciDurdur();
+    // Hic kare gelmeyen baglanti: oda gercekten cok sessiz olabilir. Esigi
+    // ikiye katla (en fazla 8x) ki bos yere imza hakki yakmayalim.
+    const hicVeriYok = baglanti.kareSayisi === 0;
+    log(`!! ${Math.round(sessiz / 1000)} sn boyunca hic veri gelmedi — baglanti yenileniyor` +
+        (hicVeriYok ? ' (bu baglantida hic kare gelmemisti, esik buyutulecek).' : '.'));
+    baglanti.sessizCarpan = hicVeriYok ? Math.min(8, baglanti.sessizCarpan * 2) : 1;
+    state.connected = false;
+    if (Date.now() - baglanti.baglandiAt < SAGLAM_MS) baglanti.basarisiz = baglanti.kayit;
+    baglantiyiBirak();
+    const k = tekrarPlanla({ olay: 'sessiz' }, kullanici);
+    if (k) log('   ' + k.message);
+  }, aralik);
+  baglanti.bekci.unref?.();
+}
 
 // ---------------------------------------------------------------------------
 // Sohbet botu — oyunlar kazananlari kutlamak icin /api/soyle cagirir.
@@ -325,10 +517,8 @@ let veriCekici = null;
 const mockZamanlayicilar = [];
 
 function kopar() {
-  if (canliBaglanti) {
-    try { canliBaglanti.disconnect(); } catch { /* zaten kapali */ }
-    canliBaglanti = null;
-  }
+  baglantiyiBirak();
+  tekrarIptal();
   // Node'da setTimeout ve setInterval ayni Timeout nesnesini donduruyor,
   // ikisini de clearTimeout ile iptal edebiliyoruz.
   while (mockZamanlayicilar.length) clearTimeout(mockZamanlayicilar.pop());
@@ -349,6 +539,7 @@ function durumYayinla() {
     user: args.user,
     connected: state.connected,
     bekliyor: !!state.bekliyor,
+    detay: durumDetay(),
     ts: Date.now(),
   });
 }

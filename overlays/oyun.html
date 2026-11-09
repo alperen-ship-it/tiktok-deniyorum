@@ -60,6 +60,10 @@
     //   kalan — battle royale, kullanici istemedi
     tepe:  { dosya: 'tepe.html',  ad: 'Tepe Savaşı',  ikon: '👑' },
     kalan: { dosya: 'kalan.html', ad: 'Son Ayakta Kalan', ikon: '💀' },
+    //   halay — ortak dans sahnesi (yarisma degil): yaz/begen = halaya gir,
+    //           @isim ya da numara = dansa kaldir. Varsayilan siraya ALINMADI;
+    //           ?oyunlar=...,halay ile acilir.
+    halay: { dosya: 'halay.html', ad: 'Halay', ikon: '💃' },
   };
   const SIRA = (q.get('oyunlar') || 'bilye,bilgi,pk,at')
     .split(',').map((s) => s.trim()).filter((s) => OYUNLAR[s]);

@@ -24,6 +24,7 @@
   #sahneKutu {
     flex: 1; min-width: 0; position: relative; overflow: hidden;
     background:
+      radial-gradient(21% 9% at 82.5% 96.5%, rgba(245, 163, 230, .34), rgba(245, 163, 230, 0) 100%),
       radial-gradient(58% 44% at 50% 84%, rgba(245, 163, 230, .17), rgba(245, 163, 230, 0) 72%),
       linear-gradient(180deg, #2c2560 0%, #262056 40%, #1f1946 100%);
   }
@@ -76,17 +77,17 @@
   /* ---- giris etiketi: yuruyen danscinin ustunde, tek seferde tek etiket ---- */
   #giris, #anons {
     position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none;
-    opacity: 0; will-change: transform, opacity;
+    opacity: 0; will-change: transform, opacity; transition: opacity .2s ease;
   }
   #girisIc, #anonsIc {
-    background: rgba(12, 8, 40, .9); border: 4px solid var(--cizgi); border-radius: 18px;
+    background: #120d30; border: 4px solid var(--cizgi); border-radius: 18px;
     padding: 6px 18px 8px;
   }
   #girisIc { max-width: 580px; }
   .gUst { font-size: var(--tip-kucuk); font-weight: 900; letter-spacing: 1.2px; color: var(--oyun-renk); text-transform: uppercase; }
   .gAd { font-size: 58px; font-weight: 900; line-height: 1.05; letter-spacing: -.5px; color: var(--altin); white-space: nowrap; }
-  #anonsIc { text-align: center; max-width: 900px; padding: 8px 26px 10px; }
-  .aUst { font-size: 64px; font-weight: 900; line-height: 1.05; letter-spacing: -.5px; color: var(--oyun-renk); white-space: nowrap; }
+  #anonsIc { text-align: center; max-width: 900px; padding: 8px 26px 10px; border-color: var(--oyun-renk); }
+  .aUst { font-size: 54px; font-weight: 900; line-height: 1.05; letter-spacing: -.5px; color: var(--oyun-renk); white-space: nowrap; }
   .aAd { font-size: 64px; font-weight: 900; line-height: 1.05; color: var(--altin); white-space: nowrap; }
   .aAlt { font-size: 28px; font-weight: 800; color: var(--soluk); }
 
@@ -132,7 +133,7 @@
   /* ---- baslik: cosku gostergesi + sure ---- */
   #durumSar { display: flex; align-items: center; gap: 10px; }
   #cosku {
-    flex: none; width: 236px; padding: 5px 12px 9px; border-radius: 14px;
+    flex: none; width: 272px; padding: 5px 12px 9px; border-radius: 14px;
     background: rgba(23, 18, 58, .16); border: 3px solid rgba(23, 18, 58, .35);
   }
   #coskuUst { display: flex; justify-content: space-between; align-items: baseline; font-weight: 900; color: #17123a; line-height: 1.15; }
@@ -319,18 +320,18 @@
     }
     // 2) KISMI: en az 3 karakter; puani en yuksek TEK aday
     //    4 = adin bastaki kelimeleri ("ayşe" -> "Ayşe Gül")
-    //    3 = adin/kullanici adinin basi ("ayş" -> "Ayşe Gül", "meh" -> "mehmet61")
-    //    2 = icteki bir kelimenin tamami ("gül" -> "Ayşe Gül")
+    //    3 = icteki bir kelimenin tamami ("gül" -> "Ayşe Gül")
+    //    2 = adin/kullanici adinin basi ("ayş" -> "Ayşe Gül", "meh" -> "mehmet61")
     //    1 = icteki bir kelimenin basi ("yld" -> "burak_yldz")
-    const TUR = { 4: 'onad', 3: 'bas', 2: 'kelime', 1: 'kelimebas' };
+    const TUR = { 4: 'onad', 3: 'kelime', 2: 'bas', 1: 'kelimebas' };
     for (const a of yazilan) {
       if (a.length < 3) continue;
       let enIyi = 0, bulunan = [];
       for (const x of tablo) {
         let p = 0;
         if (onKelime(x.adP, a) || onKelime(x.uidP, a)) p = 4;
-        else if (x.ad.startsWith(a) || x.uid.startsWith(a)) p = 3;
-        else if (x.adP.includes(a) || x.uidP.includes(a)) p = 2;
+        else if (x.adP.includes(a) || x.uidP.includes(a)) p = 3;
+        else if (x.ad.startsWith(a) || x.uid.startsWith(a)) p = 2;
         else if (x.adP.some((k) => k.startsWith(a)) || x.uidP.some((k) => k.startsWith(a))) p = 1;
         if (!p) continue;
         if (p > enIyi) { enIyi = p; bulunan = [x]; } else if (p === enIyi) bulunan.push(x);
@@ -383,7 +384,6 @@
   const cikanlar = [];              // sahneden yuruyerek cikanlar (cizilir, sayilmaz)
   const tasan = new Map();          // sira doluyken bekleyen: kid -> user
   const altinlar = new Set();       // taki toreni yapanlar (oturum boyunca altin rozet)
-  const uidler = new Map();         // kid -> uniqueId (@etiket icin)
 
   let cosku = 0, seviye = 0, konfetiAtildi = false;
   let faz = 0;                      // vurus fazi (dortluk), surekli artar
@@ -667,7 +667,6 @@
     if (!kid) return null;
     let d = dans.get(kid);
     const ad = isim(user);
-    if (user.uniqueId) uidler.set(kid, user.uniqueId);
     if (d) {
       if (d.ad !== ad) { d.ad = ad; listeKirli = true; if (basKid === kid) basCiz(); }
       if (user.uniqueId) d.uid = user.uniqueId;
@@ -860,10 +859,10 @@
       const a = dans.get(orta.kim), b = orta.hedef ? dans.get(orta.hedef) : null;
       const cift = orta.evre === 'davet' || orta.evre === 'duet';
       if (cift && a && b) {
-        const el = { x: (a.x + b.x) / 2, y: Math.min(a.y, b.y) - 196 * a.s + 6 * a.s * Math.sin(6.2832 * faz) };
+        const tut = { x: (a.x + b.x) / 2, y: Math.min(a.y, b.y) - 228 * a.s + 6 * a.s * Math.sin(6.2832 * faz) };
         const duet = orta.evre === 'duet';
-        if (b.gorunur) figurCiz(b, b.x, b.y, b.s, duet ? 'duet' : 'bekle', { yon: -1, el, altin: altinlar.has(b.kid) });
-        if (a.gorunur) figurCiz(a, a.x, a.y, a.s, duet ? 'duet' : 'davet', { yon: 1, el, altin: altinlar.has(a.kid) });
+        if (b.gorunur) figurCiz(b, b.x, b.y, b.s, duet ? 'duet' : 'bekle', { yon: -1, el: tut, altin: altinlar.has(b.kid) });
+        if (a.gorunur) figurCiz(a, a.x, a.y, a.s, duet ? 'duet' : 'davet', { yon: 1, el: tut, altin: altinlar.has(a.kid) });
       } else if (a && a.gorunur) {
         figurCiz(a, a.x, a.y, a.s, 'oyna', { altin: altinlar.has(a.kid) });
       }
@@ -1074,8 +1073,8 @@
     const t = simdi();
     const bekleyen = basKuyruk.find((b) => b.kid === d.kid);
     let hemen = false;
-    if (hediyeBas && hediyeBas.kid === d.kid) {
-      hediyeBas.bitis = Math.min(hediyeBas.bitis + sure * 1000, t + 90000);   // ust uste hediye: sure uzar
+    if (hediyeBas && hediyeBas.kid === d.kid && !basKuyruk.length) {
+      hediyeBas.bitis = Math.min(hediyeBas.bitis + sure * 1000, t + 90000);   // bekleyen yokken ust uste hediye: sure uzar
       hemen = true;
     } else if (bekleyen) {
       bekleyen.sure = Math.min(90, bekleyen.sure + sure);
@@ -1094,7 +1093,8 @@
     } else if (!hemen) {
       // Sirada bekleyecek: adi yine de HEMEN ve iri gorunsun.
       const kacinci = basKuyruk.findIndex((b) => b.kid === d.kid) + 1;
-      anonsEkle({ ust: '🎁 HALAY BAŞI SIRASINDA', ad: d.ad, alt: kacinci > 0 ? kacinci + '. sırada — mendil birazdan sende' : 'mendil birazdan sende', sure: 2400 });
+      const girdi = anonsEkle({ ust: '🎁 HALAY BAŞI SIRASINDA', ad: d.ad, alt: kacinci > 0 ? kacinci + '. sırada — mendil birazdan sende' : 'mendil birazdan sende', sure: 2400 });
+      if (!girdi) soyle(`🎁 ${adYer(d.ad)} halay başı sırasında — mendil birazdan sende`, { oncelik: 3, sure: 3000 });
     }
     basSureYaz();
     if (window.Ses) Ses.cal('hediye');
@@ -1262,12 +1262,14 @@
    * cok uzunsa uc kisi birlikte girer. Anons one gecer ama giris etiketinin
    * ustune binmez — ikisi ayni kuyrugun ogeleri.
    */
-  let altBosluk = 0, girisBoy = { w: 0, h: 0 };
+  let altBosluk = 0, girisBoy = { w: 0, h: 0 }, sonAltTur = 'giris';
+  const anonsSay = () => { let n = 0; for (const x of altyazi) if (x.tur === 'anons') n++; return n; };
+  /** @returns {boolean} kuyruga girdi mi (doluysa cagiran adi baska yoldan gostermeli) */
   function anonsEkle(a) {
     a.tur = 'anons';
-    let n = 0;
-    for (const x of altyazi) if (x.tur === 'anons') n++;
-    if (n < 6) altyazi.push(a);
+    if (anonsSay() >= 6) return false;
+    altyazi.push(a);
+    return true;
   }
 
   function altyaziTik() {
@@ -1280,9 +1282,13 @@
       return;
     }
     if (durum !== 'oyun' || t < altBosluk || !altyazi.length) return;
-    let i = altyazi.findIndex((a) => a.tur === 'anons');
-    if (i < 0) i = 0;
+    // Anons one gecer AMA ust uste iki anons girisleri ac birakmasin: ikisi de
+    // bekliyorsa sirayla (hediye yagarken bile yeni gelen sahneye cikar).
+    const ai = altyazi.findIndex((a) => a.tur === 'anons');
+    const gi = altyazi.findIndex((a) => a.tur === 'giris');
+    const i = (ai >= 0 && gi >= 0) ? (sonAltTur === 'anons' ? gi : ai) : (ai >= 0 ? ai : gi);
     const a = altyazi.splice(i, 1)[0];
+    sonAltTur = a.tur;
     if (a.tur === 'anons') anonsGoster(a); else girisGoster(a);
   }
 
@@ -1347,12 +1353,13 @@
       anonsIcEl.appendChild(alt);
     }
     anonsIcEl.style.maxWidth = Math.max(300, W - 40) + 'px';
-    sigdir(ust, 64, 40);
+    sigdir(ust, 54, 36);
     if (adEl) sigdir(adEl, 72, 56);
     const w = anonsEl.offsetWidth, h = anonsEl.offsetHeight;
     anonsEl.style.transform = `translate(${((W - w) / 2).toFixed(1)}px, ${Math.max(6, (bantY - h) / 2).toFixed(1)}px)`;
     anonsEl.style.opacity = '1';
-    altAktif = { tur: 'anons', bitis: simdi() + (a.sure || 2000), el: anonsEl };
+    // bekleyen anons coksa her biri kisalir
+    altAktif = { tur: 'anons', bitis: simdi() + Math.min(a.sure || 2000, anonsSay() >= 2 ? 1500 : 9999), el: anonsEl };
   }
 
   // ==========================================================================

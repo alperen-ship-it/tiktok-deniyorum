@@ -35,7 +35,7 @@ jobs:
       # TikTok baglantisi icin gereken kutuphane exe'nin icine gomuluyor
       - name: Sunucu bagimliliklari
         working-directory: server
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Windows exe uret
         run: node server/paketle.js --win

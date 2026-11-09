@@ -10,7 +10,7 @@
     "live": "node bridge.js --user"
   },
   "dependencies": {
-    "tiktok-live-connector": "^2.4.3"
+    "tiktok-live-connector": "^2.5.0"
   },
   "engines": {
     "node": ">=20"

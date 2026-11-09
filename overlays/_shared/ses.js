@@ -211,10 +211,31 @@
       melodi: ['G4', 'B4', 'D5', 'B4', 'G4', 'D5', 'B4', 'G4'],
       vurus:  ['x', 'x', '.', 'x', 'x', 'x', '.', 'x'],
     },
+    // Halay: davul (düm-tek) + zurna tinisi. Re uzerinde HICAZ dizisi
+    // (Re Mib Fa# Sol La Sib Do) — Mib-Fa# artik ikilisi makamin kokusu.
+    // Ezgi bu oyun icin YAZILDI; var olan bir turkuden/oyun havasindan
+    // alinmadi. Diger desenlerden iki farki var, ikisi de EKLEME:
+    //   vurus 't'  — "tek": davulun ince cubugu ('x' = "düm", eskisi gibi)
+    //   zurna      — ezgi testere disi + genizden suzgecle calinir
+    // ve ezgi/vurus 8 adimdan uzun (32 / 16): dort olculuk cumle.
+    halay: {
+      bpm: 96, dalga: 'triangle', zurna: true,
+      bas:    ['D3', '.', '.', '.', 'D3', '.', 'A2', '.'],
+      melodi: ['A5', '.', 'G5', 'F#5', 'D#5', '.', 'D5', '.',
+               'D5', 'D#5', 'F#5', 'G5', 'F#5', 'D#5', 'D5', '.',
+               'G5', 'A5', 'A#5', 'A5', 'G5', '.', 'F#5', 'G5',
+               'A5', 'G5', 'F#5', 'D#5', 'D5', '.', 'D5', '.'],
+      vurus:  ['x', '.', 't', 't', 'x', '.', 't', '.',
+               'x', '.', 't', 't', 'x', 't', 't', '.'],
+    },
   };
 
   let muzikAcik = false, desen = null, adim = 0, siradakiZaman = 0;
   let planlayici = 0, muzikGain = null;
+  // Vurus saati icin: planlanan son adimlarin (adim no, calma ani, adim suresi)
+  // kaydi. Tempo degisse de "su an hangi vurustayiz" buradan kesin okunur.
+  const saatIzi = [];
+  let zurnaSuzgec = null;
 
   function muzikKur() {
     if (muzikGain || !ctx) return;
@@ -250,24 +271,87 @@
     osc.start(t); osc.stop(t + 0.13);
   }
 
+  /** "Tek": davulun ince cubugu — kisa, tiz, kuru. ("Düm" = vurusCal.) */
+  function tekCal(t) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(900, t);
+    osc.frequency.exponentialRampToValueAtTime(420, t + 0.04);
+    g.gain.setValueAtTime(0.3, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    osc.connect(g); g.connect(muzikGain);
+    osc.start(t); osc.stop(t + 0.08);
+  }
+
+  /**
+   * Zurna tinisi: cift kamisli, genizden, parlak. Testere disi dalga +
+   * 1.9 kHz civarinda tepe (bant geciren) + susun ardindan gelen notaya
+   * alttan kisa bir kayisla giris (carpma). Zarf diger notalardan uzun:
+   * zurna nefesli, tuslu degil.
+   *
+   * ZURNA_HACIM: suzgec temel sesi kistigi icin diger desenlerin ezgi
+   * seviyesinden (0.16) yuksek yaziliyor; OLCULEN cikis seviyesi onlarla
+   * ayni bantta (desenlerin RMS karsilastirmasi yapildi).
+   */
+  const ZURNA_HACIM = 0.22;
+  function zurnaNota(f, t, sure, hacim, kayis) {
+    if (!zurnaSuzgec) {
+      zurnaSuzgec = ctx.createBiquadFilter();
+      zurnaSuzgec.type = 'bandpass';
+      zurnaSuzgec.frequency.value = 1900;
+      zurnaSuzgec.Q.value = 0.8;
+      zurnaSuzgec.connect(muzikGain);
+    }
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    if (kayis) {
+      osc.frequency.setValueAtTime(f * 0.944, t);             // yarim ses alttan
+      osc.frequency.exponentialRampToValueAtTime(f, t + 0.04);
+    } else {
+      osc.frequency.setValueAtTime(f, t);
+    }
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(hacim, t + 0.018);
+    g.gain.setValueAtTime(hacim, t + sure * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + sure);
+    osc.connect(g); g.connect(zurnaSuzgec);
+    osc.start(t);
+    osc.stop(t + sure + 0.03);
+  }
+
   function planla() {
     if (!muzikAcik || !desen || !ctx) return;
     const adimSure = 60 / desen.bpm / 2;        // 8'lik nota
     const ufuk = ctx.currentTime + 0.5;
     while (siradakiZaman < ufuk) {
-      const i = adim % 8;
-      const b = desen.bas[i];
-      const m = desen.melodi[i];
+      // Diziler 8'den UZUN olabilir (halay: 32 adimlik ezgi). Onceki dort
+      // desende uzunluk 8 oldugu icin sonuc eskisiyle ayni: adim % 8.
+      const b = desen.bas[adim % desen.bas.length];
+      const m = desen.melodi[adim % desen.melodi.length];
+      const v = desen.vurus[adim % desen.vurus.length];
       if (b && b !== '.' && NOTA[b]) nota(NOTA[b], siradakiZaman, adimSure * 1.6, desen.dalga, 0.32);
-      if (m && m !== '.' && NOTA[m]) nota(NOTA[m], siradakiZaman, adimSure * 0.75, desen.dalga, 0.16);
-      if (desen.vurus[i] === 'x') vurusCal(siradakiZaman);
+      if (m && m !== '.' && NOTA[m]) {
+        if (desen.zurna) {
+          const onceki = desen.melodi[(adim + desen.melodi.length - 1) % desen.melodi.length];
+          zurnaNota(NOTA[m], siradakiZaman, adimSure * 0.94, ZURNA_HACIM, onceki === '.');
+        } else {
+          nota(NOTA[m], siradakiZaman, adimSure * 0.75, desen.dalga, 0.16);
+        }
+      }
+      if (v === 'x') vurusCal(siradakiZaman);
+      else if (v === 't') tekCal(siradakiZaman);
+      if (adim === 0) saatIzi.length = 0;        // muzik bastan basladi
+      saatIzi.push({ a: adim, t: siradakiZaman, s: adimSure });
+      if (saatIzi.length > 24) saatIzi.shift();
       siradakiZaman += adimSure;
       adim++;
     }
   }
 
   /**
-   * Fon muzigini baslat. ad = oyun anahtari (bilye | bilgi | pk | at).
+   * Fon muzigini baslat. ad = oyun anahtari (bilye | bilgi | pk | at | halay).
    * Ayni desen zaten caliyorsa hicbir sey yapmaz — sayfa icindeki durum
    * degisimlerinde muzik bastan baslamasin diye.
    */
@@ -309,8 +393,40 @@
     desen = Object.assign({}, desen, { bpm: Math.round(desen.bpm * k) });
   }
 
+  /**
+   * Tempoyu desenin TABAN hizina gore MUTLAK ayarla (0.6 - 1.8).
+   * muzikHizli'dan farki: asagi da inebilir ve birikmez (o, o anki tempoyu
+   * carpar ve 1'in altina inmez). Calan desen bastan baslamaz, sadece
+   * bundan sonra planlanan adimlarin suresi degisir.
+   */
+  function muzikTempo(carpan) {
+    if (!desen || !muzikAcik) return;
+    // Taban: kopyalar ayni melodi dizisini paylastigi icin oradan bulunur.
+    let taban = null;
+    for (const ad in DESENLER) if (DESENLER[ad].melodi === desen.melodi) taban = DESENLER[ad];
+    if (!taban) return;
+    const k = Math.max(0.6, Math.min(1.8, Number(carpan) || 1));
+    desen = Object.assign({}, desen, { bpm: Math.round(taban.bpm * k) });
+  }
+
+  /**
+   * Vurus saati: desenin basindan beri kac SEKIZLIK adim gecti (kesirli) ve
+   * o anki bpm. Adim animasyonunu muzige kilitlemek icin (halay).
+   * Muzik calmiyorsa ya da ses saati yurumuyorsa (ses kapali, tarayici
+   * otomatik oynatmayi kilitlemis) null doner — cagiran kendi saatine duser.
+   */
+  function muzikSaat() {
+    if (!muzikAcik || !ctx || ctx.state !== 'running') return null;
+    const an = ctx.currentTime;
+    for (let i = saatIzi.length - 1; i >= 0; i--) {
+      const e = saatIzi[i];
+      if (e.t <= an) return { adim: e.a + Math.min(1, (an - e.t) / e.s), bpm: desen.bpm };
+    }
+    return null;
+  }
+
   global.Ses = {
-    cal, kur, muzik, muzikDur, muzikHizli,
+    cal, kur, muzik, muzikDur, muzikHizli, muzikTempo, muzikSaat,
     KAPALI: KAPALI || SESSIZ_MOCK,
   };
 })(window);

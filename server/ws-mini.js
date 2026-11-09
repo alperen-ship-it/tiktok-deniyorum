@@ -89,7 +89,7 @@ function drainFrames(state) {
 /**
  * Var olan bir http.Server'a WebSocket yetenegi ekler.
  * @param {import('http').Server} httpServer
- * @param {{ path?: string, onConnect?: (client) => void }} opts
+ * @param {{ path?: string, onConnect?: (client) => void, dogrula?: (req) => (string|null) }} opts
  * @returns {{ clients: Set, broadcast: (obj) => number, close: () => void }}
  */
 function attach(httpServer, opts = {}) {
@@ -101,6 +101,17 @@ function attach(httpServer, opts = {}) {
     if (url !== path) {
       socket.destroy();
       return;
+    }
+
+    // Host / Origin denetimi (bridge.js verir). Reddedilirse 403 ile kapat;
+    // tarayici WebSocket'i bu durumda hic acamaz.
+    if (opts.dogrula) {
+      const sebep = opts.dogrula(req);
+      if (sebep) {
+        socket.end('HTTP/1.1 403 Forbidden\r\ncontent-type: text/plain; charset=utf-8\r\n' +
+          'connection: close\r\n\r\n403 - ' + sebep);
+        return;
+      }
     }
 
     const key = req.headers['sec-websocket-key'];

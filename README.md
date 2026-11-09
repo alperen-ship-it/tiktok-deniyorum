@@ -2,11 +2,11 @@
 
 # 🎮 TikTok LIVE — Sohbet Oyunları
 
-**İzleyicinin sohbete yazarak oynadığı oyunlar. Aç, bırak, karışma.**
+**İzleyicinin sohbete yazarak oynadığı oyunlar. Aç, başlat, yayını sen yap.**
 
 Dört oyun bir arada döner: bilye yarışı · bilgi yarışması · PK savaşı · at yarışı.
-Yayıncı hiçbir şeye dokunmaz — oyunlar kendi kendine tur atar, kazananları
-kutlar, oda boşken demo oynar, izleyici geldiğinde gerçek oyuna geçer.
+Oyunlar kendi kendine tur atar, kazananları kutlar, oda boşken demo oynar,
+izleyici geldiğinde gerçek oyuna geçer; sen de sesinle ya da kameranla yayında kalırsın.
 
 </div>
 
@@ -65,9 +65,24 @@ Konular: `overlays/_shared/kapismalar.js`
 
 ### 🏇 At Yarışı
 8 sabit at — kalıcı isim, forma, koşudan koşuya galibiyet + son 5 koşu formu
-(bahis yazı-tura değil, form okuma). İzleyici `1-8` ya da at adı yazıp bahis oynar;
-oranlar havuzdan hesaplanır (az oynanan at çok öder). Koşu sırasında **mesaj ve
-beğeni kendi atına tezahürat gücü verir.** Foto finişte ağır çekim, sonda podyum.
+(tahmin yazı-tura değil, form okuma). İzleyici `1-8` ya da at adı yazıp ücretsiz
+tahminini yapar; çarpan havuzdan hesaplanır (az kişinin seçtiği at doğru çıkarsa
+çarpan büyür, kalabalığın tersine tahmin yapmak daha çok puan getirir). Doğru bilen
+`10 × çarpan` puan alır; puanlar yalnızca skor tablosunda birikir. Koşu sırasında
+**mesaj ve beğeni kendi atına tezahürat gücü verir** (küçük, tavanlı bir destek).
+Hediye gelince adı ekranda teşekkürle çıkar, puana ve sonuca etkisi yoktur.
+Foto finişte ağır çekim, sonda podyum.
+Eski OBS linklerindeki `?bahis=` süre parametresi `?tahmin=` ile aynı işi görmeye devam eder.
+
+---
+
+## Yayın notları
+
+- Yayında sesinle ya da kameranla sen de ol: oyunlar kendi kendine döner ama sohbetle konuşan bir yayıncı hem izleyiciye hem platform kurallarına daha yakın durur (öneridir, TikTok'un kendi metnini doğrulamadık).
+- Oda boşken oynayan demo botların adı 🤖 ile işaretlidir; puan tablosuna girmezler.
+- Bahis mekaniği yok: hediye hiçbir zaman şansa dayalı bir sonucu satın almaz, ödülü de büyütmez; teşekkür bandında ismi görünür.
+- İzleyicilerin adları ekranda büyük görünür; adlar ekrana olduğu gibi (yalnızca HTML karakterleri temizlenerek) yazılır, ayrıca bir küfür süzgeci yoktur.
+- Köprü bayrakları (`--lan`, `--host`, `--sessiz`): BURAYA_EKLENECEK.
 
 ---
 

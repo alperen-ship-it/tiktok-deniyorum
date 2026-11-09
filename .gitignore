@@ -1,5 +1,6 @@
 node_modules/
 package-lock.json
+!server/package-lock.json
 
 # Paketleme ciktilari — 90 MB'lik ikili dosyalar, depoya girmez.
 # Yeniden uretmek icin:  paketle.bat   (ya da: node server/paketle.js --win)
