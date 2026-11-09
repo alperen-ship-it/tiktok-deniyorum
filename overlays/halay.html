@@ -170,9 +170,10 @@
   }
   #liste { flex: 1; min-height: 0; overflow: hidden; }
   .kisi {
-    display: flex; align-items: center; gap: 10px; padding: 4px 8px; min-height: 62px;
+    display: flex; align-items: center; gap: 10px; padding: 2px 8px; min-height: 64px;
     border-bottom: 1px solid rgba(179, 168, 230, .13);
   }
+  .kisi .ad.sar { line-height: 1; }
   .kisi.bas { background: rgba(246, 201, 79, .1); border-radius: 12px; border-bottom-color: transparent; }
   /* Numara iki haneli olabiliyor: "rozet icinde tek karakter" istisnasina
      sigmiyor, o yuzden 30px. Izleyicinin YAZACAGI sey bu. */
@@ -1185,7 +1186,10 @@
     // Basta hediye veren dururken havanin EN COK KATILANI gozden kaybolmasin.
     const l = hediye ? katilimLideri() : null;
     const goster = l && l.kid !== basKid && l.puan > 0 ? l : null;
-    liderSatirEl.classList.toggle('acik', !!goster);
+    if (liderSatirEl.classList.contains('acik') !== !!goster) {
+      liderSatirEl.classList.toggle('acik', !!goster);
+      listeKirli = true;                       // plaka boyu degisti: listeye sigan satir sayisi da
+    }
     if (goster) {
       kafaSrc(liderKafaEl, goster);
       yaz(liderSayiEl, String(Math.round(goster.puan)));
@@ -1570,7 +1574,7 @@
   let listeKirli = true, listeSayfa = 0, listeSonCizim = 0, listeSonSayfa = 0;
   let satirlar = [];
   function listeKur() {
-    const kac = Math.max(3, Math.floor(listeEl.clientHeight / 63));
+    const kac = Math.max(3, Math.floor(listeEl.clientHeight / 65));
     if (kac === satirlar.length) return;
     listeEl.textContent = '';
     satirlar = [];
