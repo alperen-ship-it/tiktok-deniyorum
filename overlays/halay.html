@@ -1416,7 +1416,7 @@
     if (!d) return false;
     // Kuyruk uzunsa sureler kisalir ki kimse havanin disinda kalmasin (3'e kadar tam sure).
     const kat = basKuyruk.length <= 3 ? 1 : Math.max(0.4, 3 / basKuyruk.length);
-    hediyeBas = { kid: d.kid, sure: g.sure * kat, bitis: simdi() + g.sure * kat * 1000 };
+    hediyeBas = { kid: d.kid, guc: g.guc, sure: g.sure * kat, bitis: simdi() + g.sure * kat * 1000 };
     basNeden = 'hediye';
     basYap(d);
     if (!d.bot) Profil.ekle(d.kid, d.ad, { xp: 15, halayBas: 1 });
@@ -1967,6 +1967,12 @@
       alt: yildiz.bot ? '⭐ gecenin yıldızı (demo) — yaz, sıradaki sen ol'
         : `⭐ gecenin yıldızı · ${Math.round(yildiz.puan)} katılım` + (yildiz.duet ? ` · ${yildiz.duet} düet` : ''),
     });
+    // Finis adi 40px tabana kadar kucultur; orada da sigmayan (cok genis harfli)
+    // ad uc noktayla kesilmesin, sarsin. Ad 5 kare sonra yazildigi icin biraz bekle.
+    setTimeout(() => {
+      const a = kazananEl.querySelector('.kimAd');
+      if (a && a.scrollWidth > a.clientWidth) a.classList.add('sar');
+    }, 230);
     // Karttaki gorsel: profil fotografi yuklendiyse o. CSSOM ile atanir —
     // adres hicbir zaman HTML/CSS metnine enterpole edilmez.
     const g = kazananEl.querySelector('.fkGorsel');
@@ -2029,28 +2035,43 @@
       return null;
     }
     if (!vardi) katilGeriBildirim(d);
+    else if (!d.gorunur) sahneyeAl(d);      // karsilamasi sirada bekliyor ama yine hareket etti: sahneye
     d.sonAktif = simdi();
     return d;
   }
 
-  /** Davet/solo isteginin sonucunu soyle (istegi yapan icin). */
+  /**
+   * Davet/solo isteginin sonucu — istegi yapana HER DURUMDA gorunur karsilik:
+   * kendi danscisinin ustunde kisa bir balon (kacmaz, kuyruga takilmaz) +
+   * alt seritte bir satir. Reddedilen istek de karsilik alir; soz yumusak,
+   * kimseyi utandirmaz.
+   */
   function istekSonuc(kod, a, b) {
-    if (kod === 'davet') {
-      if (orta || ortaKuyruk.length > 1) {
-        soyle(`💃 ${adYer(a.ad)} <span class="ok">▸</span> dansa kaldırıyor <span class="ok">▸</span> ${adYer(b.ad)} <span class="ok">· sırada</span>`, { oncelik: 2 });
-      }
-    } else if (kod === 'solo') {
-      if (orta || ortaKuyruk.length > 1) soyle(`🕺 ${adYer(a.ad)} ortaya çıkıyor <span class="ok">· sırada</span>`, { oncelik: 2 });
+    if (!a.gorunur) sahneyeAl(a);                    // balon gorunsun: bekliyorsa hemen sahneye
+    if (kod === 'davet' || kod === 'solo') {
+      const i = ortaKuyruk.findIndex((o) => o.kim === a.kid);
+      if (!orta && i === 0) return;                  // hemen sahneye cikiyor: orta karti zaten karsilik
+      balonSistem(a, `✓ sıradasın · ${i + 1}.`);
+      soyle(kod === 'davet'
+        ? `💃 ${adYer(a.ad)} <span class="ok">▸</span> dansa kaldırıyor <span class="ok">▸</span> ${adYer(b.ad)} <span class="ok">· ${i + 1}. sırada</span>`
+        : `🕺 ${adYer(a.ad)} ortaya çıkıyor <span class="ok">· ${i + 1}. sırada</span>`, { oncelik: 2 });
     } else if (kod === 'bekle') {
-      const kalan = Math.ceil((DAVET_ARA_SN * 1000 - (simdi() - sonDavet.get(a.kid))) / 1000);
-      soyle(`⏳ ${adYer(a.ad)} — ${kalan} sn sonra yine ortaya çağırabilirsin`, { oncelik: 1, anahtar: 'bekle' + a.kid });
+      const kalan = Math.max(1, Math.ceil((DAVET_ARA_SN * 1000 - (simdi() - sonDavet.get(a.kid))) / 1000));
+      balonSistem(a, `⏳ ${kalan} sn sonra yine`);
+      soyle(`⏳ ${adYer(a.ad)} — ${kalan} sn sonra yine ortaya çağırabilirsin`, { oncelik: 2, anahtar: 'bekle' + a.kid });
     } else if (kod === 'hedefbekle') {
-      soyle(`💃 ${adYer(b.ad)} az önce ortadaydı — başka birini kaldır`, { oncelik: 1, anahtar: 'hb' + b.kid });
+      balonSistem(a, 'o az önce ortadaydı · başkasını kaldır');
+      soyle(`💃 ${adYer(b.ad)} az önce ortadaydı — ${adYer(a.ad)}, başka birini kaldır`, { oncelik: 2, anahtar: 'hb' + a.kid });
     } else if (kod === 'dolu') {
-      soyle('🎪 orta dolu — birazdan yine dene', { oncelik: 1, anahtar: 'ortadolu' });
+      balonSistem(a, 'orta dolu · az sonra yine');
+      soyle(`🎪 ${adYer(a.ad)} — orta şu an dolu, az sonra yine dene`, { oncelik: 2, anahtar: 'dolu' + a.kid });
+    } else if (kod === 'zaten') {
+      const i = ortaKuyruk.findIndex((o) => o.kim === a.kid);
+      balonSistem(a, i >= 0 ? `sıradasın · ${i + 1}.` : 'şu an ortadasın');
     }
   }
 
+  const TEZAHURAT_ARA = 1000;       // kisi basi: tezahurat katkisi saniyede bir
   TT.on('chat', (ev) => {
     const d = olayGiris(ev.user);
     if (!d || durum !== 'oyun') return;
@@ -2058,23 +2079,33 @@
     d.zipla = 0.42;                                  // her mesaja gorunur karsilik: danscin ziplar,
     efekt(d, 'mendil', 1);                           // omzundan mendil savrulur
     if (t - d.sonPuanT > 1200) { d.puan += 1; d.sonPuanT = t; }
-    coskuEkle(2);
+    // TEZAHURAT: "hey / hop / hoppa / oley" coskuyu duz mesajdan cok daha fazla iter
+    let chant = tezahurat(ev.comment);
+    if (chant && t - d.sonChant < TEZAHURAT_ARA) chant = 0;
+    if (chant) d.sonChant = t;
+    coskuEkle(2 + 4 * chant);
 
     // Davet edilen yazdi: KABUL. Mesaj baska bir komut gibi islenmez.
-    if (orta && orta.evre === 'davet' && orta.hedef === d.kid) { ortaKabul(); return; }
+    if (orta && orta.evre === 'davet' && orta.hedef === d.kid) { ortaKabul(); balonEkle(d, balonMetni(ev.comment)); return; }
 
     // Kopru bir gun yapisal etiketi (WebcastChatMessage.atUser) iletirse onu kullan.
     const yapisal = ev.mention || ev.atUser;
     const yapisalKid = yapisal ? kimlik(yapisal) : '';
     const k = komutCoz(ev.comment);
     if (yapisalKid && dans.has(yapisalKid)) { const h = dans.get(yapisalKid); istekSonuc(ortaIste(d, h), d, h); return; }
-    if (!k) return;
+    if (!k) {
+      // siradan sohbet: yazdigi, KENDI danscisinin ustunde balon olur
+      balonEkle(d, balonMetni(ev.comment), chant ? { renk: '#f6c94f' } : null);
+      return;
+    }
 
     if (k.tur === 'oyna') { istekSonuc(ortaIste(d, null), d, d); return; }
     if (k.tur === 'no') {
       let h = null;
       for (const x of dans.values()) if (x.no === k.no) { h = x; break; }
       if (!h) {
+        if (!d.gorunur) sahneyeAl(d);
+        balonSistem(d, sira.length > 1 ? `1–${sira.length} arası yaz` : 'henüz kimse yok');
         if (sira.length > 1) soyle(`🔢 numara yaz: <b>1–${sira.length}</b> arası → dansa kaldır`, { oncelik: 1, anahtar: 'nohint' });
         return;
       }
@@ -2085,9 +2116,11 @@
     const adaylar = sira.map((kid) => dans.get(kid)).filter(Boolean)
       .sort((x, y) => y.sonAktif - x.sonAktif).map((x) => ({ kid: x.kid, ad: x.ad, uid: x.uid }));
     const r = adEsle(ev.comment, adaylar);
-    if (!r) return;                                  // siradaki birine degil: siradan sohbet
+    if (!r) { balonEkle(d, balonMetni(ev.comment)); return; }      // siradaki birine degil: siradan sohbet
     if (r.kid != null) { const h = dans.get(r.kid); istekSonuc(ortaIste(d, h), d, h); return; }
     const nolar = r.belirsiz.slice(0, 4).map((kid) => dans.get(kid)).filter(Boolean).map((x) => x.no).join(' · ');
+    if (!d.gorunur) sahneyeAl(d);
+    balonSistem(d, `numarasını yaz: ${nolar}`);
     soyle(`🔎 bu adda birden fazla kişi var — numarasını yaz: <b>${nolar}</b>`, { oncelik: 1, anahtar: 'belirsiz' });
   });
 
@@ -2097,6 +2130,8 @@
     const n = Math.max(1, Number(ev.likes) || 1);
     const ek = Math.min(LIKE_TAVAN - d.begeniPuan, n * 0.1);
     if (ek > 0) { d.begeniPuan += ek; d.puan += ek; }
+    d.begeni += n;                                   // COSTURANLAR panosu: bu havadaki begeni
+    listeKirli = true;
     d.zipla = 0.42;
     efekt(d, 'kalp', n >= 8 ? 2 : 1);                // begeni: O danscinin basindan kalp yukselir
     coskuEkle(Math.min(4, n * 0.4));
@@ -2109,15 +2144,40 @@
     if (ev.gift && ev.gift.streaking) return;          // seri surerken sayma, son olayi bekle
     const kid = kimlik(ev.user);
     if (!kid) return;
-    const k = ULTI.kademe((ev.gift && ev.gift.value) || 0);
+    const elmas = Math.max(0, Number(ev.gift && ev.gift.value) || 0);
+    const k = ULTI.kademe(elmas);
     const vardi = dans.has(kid);
     let d = katil(ev.user, true);
     if (!d && yerAcZorla()) d = katil(ev.user, true);
     if (!d) return;
     if (!vardi) katilGeriBildirim(d);
     d.sonAktif = simdi();
+    // DESTEKCILER panosu: yayin boyunca toplam elmas
+    const g = destek.get(kid) || { kid, ad: d.ad, elmas: 0 };
+    g.ad = d.ad; g.elmas += elmas;
+    destek.set(kid, g);
+    if (destek.size > 300) {                           // sinirsiz buyumesin: en kucugu at
+      let enAz = null;
+      for (const x of destek.values()) if (!enAz || x.elmas < enAz.elmas) enAz = x;
+      destek.delete(enAz.kid);
+    }
+    listeKirli = true;
     if (orta && orta.evre === 'davet' && orta.hedef === d.kid) ortaKabul();
     hediyeAl(d, HEDIYE_SN(k.guc), k.guc);
+  });
+
+  // Takip: davulcu ADIYLA karsilar (bir kisiye bir kez); takip eden halaya da girer.
+  const takipSelam = new Set();
+  TT.on('follow', (ev) => {
+    const kid = kimlik(ev.user);
+    if (!kid || takipSelam.has(kid)) return;
+    if (takipSelam.size < 3000) takipSelam.add(kid);
+    const vardi = dans.has(kid);
+    const d = olayGiris(ev.user);
+    if (!d) return;
+    const bekleyen = altyazi.find((a) => a.tur === 'giris' && a.kid === kid);
+    if (bekleyen) bekleyen.takip = true;               // girisiyle ayni balonda
+    else altyazi.push({ tur: 'giris', kid, takip: true, tekrar: vardi });
   });
 
   /** Hediye veren icin: 20 sn kuralina bakmadan en sessiz kisinin yerini ac. */
@@ -2176,7 +2236,7 @@
   }, 1500);
 
   // ---- komut cipi: nasil GIRILIR / nasil KALDIRILIR sirayla -----------------
-  const CIP = ['BİR ŞEY → HALAYA GİR', '@İSİM → DANSA KALDIR', 'BİR ŞEY → HALAYA GİR', 'NUMARA → DANSA KALDIR'];
+  const CIP = ['BİR ŞEY → HALAYA GİR', 'HEY HEY → HALAYI COŞTUR', '@İSİM → DANSA KALDIR', 'NUMARA → DANSA KALDIR'];
   let cipNo = 0;
   setInterval(() => { cipNo = (cipNo + 1) % CIP.length; el('komutMetin').textContent = CIP[cipNo]; }, 6500);
 
@@ -2197,12 +2257,14 @@
         cosku: +cosku.toFixed(1), seviye, bpm: BPM[seviye], faz: +faz.toFixed(2),
         bas: basKid, basNeden,
         hediyeBas: hediyeBas ? { kid: hediyeBas.kid, kalan: +((hediyeBas.bitis - t) / 1000).toFixed(1), sure: hediyeBas.sure } : null,
-        basKuyruk: basKuyruk.map((b) => ({ kid: b.kid, sure: b.sure })),
+        basKuyruk: basKuyruk.map((b) => ({ kid: b.kid, sure: b.sure, guc: b.guc })),
         orta: orta ? { tur: orta.tur, evre: orta.evre, kim: orta.kim, hedef: orta.hedef, kalan: +((orta.bitis - t) / 1000).toFixed(1) } : null,
         ortaKuyruk: ortaKuyruk.map((o) => ({ tur: o.tur, kim: o.kim, hedef: o.hedef })),
         altyazi: altyazi.length, altAktif: altAktif ? altAktif.tur : null, tasan: tasan.size, cikan: cikanlar.length,
+        gorunum: listeGorunum, balon: balonlar.length, efekt: efektler.length,
+        destek: [...destek.values()].map((x) => ({ kid: x.kid, elmas: x.elmas })),
         altin: [...altinlar],
-        sira: sira.map((kid) => { const d = dans.get(kid); return { kid, ad: d.ad, no: d.no, puan: +d.puan.toFixed(1), durum: d.durum, gorunur: d.gorunur, avatar: d.avatarTamam }; }),
+        sira: sira.map((kid) => { const d = dans.get(kid); return { kid, ad: d.ad, no: d.no, puan: +d.puan.toFixed(1), begeni: d.begeni, durum: d.durum, gorunur: d.gorunur, avatar: d.avatarTamam }; }),
       };
     },
   };
