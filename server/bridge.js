@@ -383,9 +383,9 @@ const baglanti = {
   cevrimdisiAt: 0,      // kesintisiz 'yayin kapali' beklemesi ne zaman basladi
   tavsiye: false,       // paywall tavsiyesi bu seansta basildi mi
 };
-const SAGLAM_MS = 60 * 1000;
+const SAGLAM_MS = 60 * 1000;         // bu kadar ayakta kalmadan "basarili" sayilmaz
 const SEYRELT_MS = 10 * 60 * 1000;   // bu kadar suredir kapali bekleniyorsa yoklamayi seyrelt
-const SEYRELT_BEKLE = 60;            // sn     // bu kadar ayakta kalmadan "basarili" sayilmaz
+const SEYRELT_BEKLE = 60;            // sn
 
 function sessizMs() {
   return Math.max(30, Number(args.sessiz) || 180) * 1000 * baglanti.sessizCarpan;
