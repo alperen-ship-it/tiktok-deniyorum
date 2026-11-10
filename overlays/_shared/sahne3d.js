@@ -731,7 +731,7 @@ const Sahne3D = {
     }
     function duzenle(ad, altin) {
       const f = (px) => (altin ? '900 ' : '900 ') + px + 'px ' + FONT;
-      const maxW = 520, pad = 18;
+      const maxW = 880, pad = 18;     // 960px genislikte tek satira sigan ad bolunmez (okunurluk); yalniz ondan uzun adlar sarilir
       let px = 44; ctx.font = f(px);
       let w = ctx.measureText(ad).width;
       if (w > 440) { px = 40; ctx.font = f(px); w = ctx.measureText(ad).width; }
