@@ -82,19 +82,6 @@
     if (m.dugum) d.append(m.dugum); else d.innerHTML = m.html;
     el.appendChild(d);
     sigdir(d);
-    // Dikey: giris kaymasi en fazla 16px (CSS kayDikey 64px'ten basliyordu ve
-    // soldaki yorum bolgesine (y>1250) dusuyordu). Ayni egri/sure, yalniz
-    // transform + opacity; WAAPI ile, CSS animasyonunun yerine.
-    if (global.TT && global.TT.dikey && d.animate) {
-      d.style.animation = 'none';
-      const lite = document.documentElement.classList.contains('tt-lite');
-      d.animate([
-        { transform: 'translateY(16px)', opacity: 0, offset: 0 },
-        { transform: 'translateY(0)', opacity: 1, offset: 0.1 },
-        { transform: 'translateY(0)', opacity: 1, offset: 0.84 },
-        { transform: 'translateY(-16px)', opacity: 0, offset: 1 },
-      ], { duration: lite ? 2600 : 3400, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' });
-    }
     clearTimeout(zamanlayici);
     zamanlayici = setTimeout(() => {
       gosterilen = null;

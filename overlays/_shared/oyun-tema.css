@@ -410,11 +410,13 @@ html.tt-lite #komut.degisti { animation: none; }
   84%  { transform: translateY(0);    opacity: 1; }
   100% { transform: translateY(-52px); opacity: 0; }
 }
+/* Dikey giris/cikis kaymasi en fazla 16px: 64px'te satir, belirirken soldaki
+   yorum bolgesine (y>1250) bir an dusuyordu. */
 @keyframes kayDikey {
-  0%   { transform: translateY(64px); opacity: 0; }
+  0%   { transform: translateY(16px); opacity: 0; }
   10%  { transform: translateY(0);    opacity: 1; }
   84%  { transform: translateY(0);    opacity: 1; }
-  100% { transform: translateY(-64px); opacity: 0; }
+  100% { transform: translateY(-16px); opacity: 0; }
 }
 .satir { animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
 html.tt-lite .satir { animation-duration: 2.6s; }
