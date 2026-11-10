@@ -340,9 +340,9 @@
 
     document.getElementById('cagri').textContent = DIKEY
       ? 'her mesaj takımını iter'
-      : 'her mesaj takımını iter · 🎁 karşıyı geri iter';
+      : 'her mesaj takımını iter · 🎁 takım mesajlarını katlar';
     // Komut cipi konuya gore: izleyici tam olarak NE yazacagini gorur
-    document.getElementById('komutMetin').textContent = kap.a.ad + ' / ' + kap.b.ad;
+    document.getElementById('komutMetin').textContent = DIKEY ? '1 / 2' : kap.a.ad + ' / ' + kap.b.ad;   // dikeyde kartlar "YAZ 1 / YAZ 2" diyor
     document.getElementById('ucA').textContent = kap.a.emoji;
     document.getElementById('ucB').textContent = kap.b.emoji;
     kartTemizle();
@@ -648,7 +648,7 @@
          adi yine de ekranda — hicbir hediye sessizce dusmez. */
       ULTI.duyur(isim(ev.user), TESEKKUR(ULTI.kademe((ev.gift && ev.gift.value) || 0)), 1800);
       Spiker.satir(['🎁 Sağ ol ', { kim: isim(ev.user) }, durum === 'savas'
-        ? ' — tarafını yaz, hediye takımının mesajlarını katlar' : ' — yeni savaşta tarafını yaz'], { oncelik: 2 });
+        ? ' — tarafını yaz, hediye takımının mesajlarını 15 sn katlar' : ' — yeni savaşta tarafını yaz'], { oncelik: 2 });
       return;
     }
     const elmas = (ev.gift && ev.gift.value) || 0;
@@ -703,8 +703,8 @@
 
   TT.uyanis({
     baslik: 'PK SAVAŞI',
-    komutlar: ['KEDİ', 'VS', 'KÖPEK'],
-    aciklama: 'Tarafını sohbete yaz · her mesaj takımını ileri iter · ❤️ beğeni de sayılır · 🎁 hediye KARŞI tarafı geri iter',
+    komutlar: ['1', 'VS', '2'],
+    aciklama: 'Tarafını sohbete yaz (1 ya da 2) · her mesaj takımını ileri iter · ❤️ beğeni de sayılır · 🎁 hediye takımının mesajlarını 15 sn katlar',
     cagri: 'tarafını seç, takımını kazandır',
   });
 })();

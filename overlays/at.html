@@ -191,7 +191,13 @@
   html.tt-dikey .fSatir .fAd.izl { text-transform: none; font-weight: 800; }
   html.tt-dikey .fSatir .fSag, html.tt-dikey .fSatir .fKucuk { font-size: 30px; }
   html.tt-dikey .fSatir.bos { font-size: 30px; padding: 14px 10px; text-align: center; }
-  html.tt-dikey .fSatir.pod { padding: 3px 10px; }
+  html.tt-dikey .podSatir { display: flex; gap: 6px; flex: none; }
+  html.tt-dikey .podHucre { flex: 1; min-width: 0; background: rgba(0, 0, 0, .32); border-radius: 12px; padding: 2px 4px;
+    display: flex; flex-direction: column; align-items: center; }
+  html.tt-dikey .podUst { display: flex; align-items: center; gap: 6px; font-size: 30px; line-height: 1; }
+  html.tt-dikey .podUst .fNo { width: 30px; height: 30px; font-size: 30px; line-height: 1; border-radius: 8px; }
+  html.tt-dikey .podAd { font-size: 30px; font-weight: 900; line-height: 1.05; text-transform: uppercase; letter-spacing: -.5px;
+    white-space: nowrap; overflow: hidden; max-width: 100%; }
   html.tt-dikey .fSatir.izl { padding: 4px 10px; }
   /* Tahta hucresi: 3 satir (no+ad / carpan+kisi / galibiyet+form) */
   html.tt-dikey .hucre {
@@ -526,15 +532,19 @@
     const ilk = (sira || [kazananAt]).slice(0, 3);
     fazIcEl.className = '';
     fazIcEl.replaceChildren();
-    ilk.forEach((atIdx, p) => {
-      if (DIKEY) {
-        const r = h('div', 'fSatir pod');
-        r.append(h('div', 'fSag', MADALYA[p] || ''), noEl(atIdx), h('div', 'fAd', ATLAR[atIdx].ad));
-        fazIcEl.append(r);
-      } else {
-        fazIcEl.insertAdjacentHTML('beforeend', fSatir(atIdx, MADALYA[p] || ''));
-      }
-    });
+    if (DIKEY) {
+      // Podyum tek kompakt satir: 3 hucre (madalya + numara, altinda at adi 30px)
+      const pod = h('div', 'podSatir');
+      ilk.forEach((atIdx, p) => {
+        const c = h('div', 'podHucre'), u = h('div', 'podUst');
+        u.append(h('span', null, MADALYA[p] || ''), noEl(atIdx));
+        c.append(u, h('div', 'podAd', ATLAR[atIdx].ad));
+        pod.append(c);
+      });
+      fazIcEl.append(pod);
+    } else {
+      ilk.forEach((atIdx, p) => fazIcEl.insertAdjacentHTML('beforeend', fSatir(atIdx, MADALYA[p] || '')));
+    }
     if (dagitilan.length) {
       dagitilan.slice(0, 5).forEach((d) => fazIcEl.append(izlSatir(d.kid, d.ad, '+' + d.kazanc)));
       sigdirListe(dagitilan.length);
@@ -908,7 +918,7 @@
     const b = kid ? bahisler.get(kid) : null;
     const k = ULTI.kademe(elmas);
     // Dikeyde ILK arguman 64px buyuk satir (gonderenin ADI), opts.ad 30px etiket.
-    if (TT.dikey) ULTI.duyur(isim(ev.user), { ad: '🎁 TEŞEKKÜRLER', emoji: '🎁', renk: k.renk, guc: k.guc }, 1500);
+    if (TT.dikey) ULTI.duyur(isim(ev.user), { ad: 'TEŞEKKÜRLER', emoji: '🎁', renk: k.renk, guc: k.guc }, 1500);
     else ULTI.duyur('🎁 TEŞEKKÜRLER', { ad: isim(ev.user), emoji: '🎁', renk: k.renk, guc: k.guc }, 1500);
     if (durum === 'yaris') {
       if (b) {

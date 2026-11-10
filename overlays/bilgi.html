@@ -259,12 +259,15 @@
   let cevaplar = new Map();    // kid -> {ad, sik, sira, kat}
   let elenen = new Set();      // ipucuyla elenen sik indeksleri
   let begeniSayaci = 0;
-  let soruSayisi = Number(localStorage.getItem('tt-bilgi-no') || 1);
+  /* Depolama yoksa (ozel pencere, ucuncu taraf iframe) varsayilanlarla devam: hata yok. */
+  const depoOku = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const depoYaz = (k, v) => { try { localStorage.setItem(k, v); } catch { /* olsun */ } };
+  let soruSayisi = Number(depoOku('tt-bilgi-no') || 1) || 1;
 
   // Kalici tablo: kid -> {ad, puan, dogru, seri, enIyiSeri}
   let tablo = new Map();
   try {
-    for (const [k, v] of JSON.parse(localStorage.getItem('tt-bilgi-tablo') || '[]')) tablo.set(k, v);
+    for (const [k, v] of JSON.parse(depoOku('tt-bilgi-tablo') || '[]')) tablo.set(k, v);
   } catch { /* sifirdan */ }
 
   /* ---- TUR (40 soruluk yarisma) ----
@@ -276,12 +279,12 @@
      bastan yukleniyor ve tur 1/40'a donuyordu — 40 soruluk yarisma
      hicbir zaman bitmiyordu. Artik kaldigi yerden devam ediyor. */
   try {
-    const kayit = JSON.parse(localStorage.getItem('tt-bilgi-deste') || 'null');
+    const kayit = JSON.parse(depoOku('tt-bilgi-deste') || 'null');
     if (kayit && Array.isArray(kayit.d) && kayit.d.length && kayit.p < kayit.d.length) {
       deste = kayit.d; destePos = kayit.p;
     }
   } catch { /* sifirdan */ }
-  let turNo = Number(localStorage.getItem('tt-bilgi-tur') || 1);
+  let turNo = Number(depoOku('tt-bilgi-tur') || 1) || 1;
   let turTablo = new Map();     // bu turun puanlari: kid -> {ad, puan, dogru, seri, enIyiSeri}
 
   function desteKar() {
@@ -298,7 +301,7 @@
     desteKaydet();
   }
   function desteKaydet() {
-    try { localStorage.setItem('tt-bilgi-deste', JSON.stringify({ d: deste, p: destePos })); }
+    try { depoYaz('tt-bilgi-deste', JSON.stringify({ d: deste, p: destePos })); }
     catch { /* olsun */ }
   }
   if (!deste.length) desteKar();
@@ -452,7 +455,7 @@
       const t = tablo.get(kid);
       if (t) { t.seri = 0; tablo.set(kid, t); }
     }
-    localStorage.setItem('tt-bilgi-tablo',
+    depoYaz('tt-bilgi-tablo',
       JSON.stringify([...tablo.entries()].sort((a, b) => b[1].puan - a[1].puan).slice(0, 150)));
 
     // Ilk dogru bilenler seridi
@@ -487,7 +490,7 @@
 
     soruSayisi++;
     destePos++;
-    localStorage.setItem('tt-bilgi-no', String(soruSayisi));
+    depoYaz('tt-bilgi-no', String(soruSayisi));
     panoCiz();
     document.getElementById('cagri').textContent = DIKEY ? '✔ cevap açıldı' : 'doğru cevap: ' + soru.c[soru.d];
 
@@ -518,7 +521,7 @@
       Spiker.soyle(`🏁 <b>${turNo}. TUR BİTTİ</b> — yeni tur başlıyor`, { oncelik: 4, sure: 5000 });
     }
     turNo++;
-    localStorage.setItem('tt-bilgi-tur', String(turNo));
+    depoYaz('tt-bilgi-tur', String(turNo));
     turTablo = new Map();
     desteKar();
   }

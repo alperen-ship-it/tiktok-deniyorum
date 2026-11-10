@@ -555,7 +555,12 @@ const Sahne3D = {
     function figEkle(kid, o) {
       const op = o || {};
       if (slotOf.has(kid)) return true;
-      if (nSlot >= SLOT || slotOf.size >= CAP) return false;
+      let canli = 0; for (let k = 0; k < nSlot; k++) if (!olum[k]) canli++;
+      if (canli >= CAP) return false;
+      if (nSlot >= SLOT) {                        // olum animasyonundaki bir slotu hemen geri al
+        for (let k = 0; k < nSlot; k++) if (olum[k]) { slotSil(k); break; }
+        if (nSlot >= SLOT) return false;
+      }
       const i = nSlot++;
       kidler[i] = kid; slotOf.set(kid, i);
       const h = hash(kid);
@@ -731,7 +736,7 @@ const Sahne3D = {
     }
     function duzenle(ad, altin) {
       const f = (px) => (altin ? '900 ' : '900 ') + px + 'px ' + FONT;
-      const maxW = 880, pad = 18;     // 960px genislikte tek satira sigan ad bolunmez (okunurluk); yalniz ondan uzun adlar sarilir
+      const maxW = 520, pad = 18;
       let px = 44; ctx.font = f(px);
       let w = ctx.measureText(ad).width;
       if (w > 440) { px = 40; ctx.font = f(px); w = ctx.measureText(ad).width; }
@@ -956,7 +961,7 @@ const Sahne3D = {
     function simgeCoz(x) {                        // parca -> gorunecek metin, gecersizse null
       if (typeof x === 'number') return (Number.isInteger(x) && x >= 0 && x <= 9999) ? String(x) : null;
       if (typeof x !== 'string') return null;
-      if (SIMGE_NIDA.indexOf(x) >= 0) return x;
+      if (SIMGE_NIDA.indexOf(x) >= 0) return x + '!';     // yerlesik nidalar '!' ile cizilir (anahtar '!' siz)
       if (SIMGE_EMOJI_SET.has(x)) return x;
       if (simgeTablo.has(x)) return simgeTablo.get(x);
       return null;
@@ -969,6 +974,7 @@ const Sahne3D = {
         const m = simgeCoz(parcalar[i]); if (m === null) return false;
         metin += (i ? ' ' : '') + m;
       }
+      if (!slotOf.has(kid)) return false;         // figur sahnede degil: sayfa kendi yedegini kullansin
       const o = opt && typeof opt === 'object' ? opt : {};
       let renk = '#ffffff', yazi = '#1b1446';
       if (typeof o.renk === 'string' && /^#[0-9a-fA-F]{6}$/.test(o.renk)) {

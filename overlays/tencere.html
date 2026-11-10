@@ -194,7 +194,7 @@ if (typeof s.simge === 'function' && s.simge.tablo) s.simge.tablo({ fokur: 'FOKU
 const simge = (kid, parcalar, o) => { try { return typeof s.simge === 'function' ? s.simge(kid, parcalar, o) : false; } catch (e) { return false; } };
 s.halka.ayarla([{ yaricap: 2.5, kapasite: 16, yon: 1 }, { yaricap: 4.0, kapasite: 32, yon: 1 }]);   // zemin fener seritleri
 s.halka.hiz(0);
-const KADRAJ = { x: 60, y: 624, w: 960, h: 536 };
+const KADRAJ = { x: 60, y: 672, w: 960, h: 488 };
 s.kadrajla(KADRAJ, 4.5, 36);
 s.saat.bagla(() => (window.Ses && Ses.muzikSaat ? Ses.muzikSaat() : null));
 
@@ -921,7 +921,12 @@ setInterval(() => { kNo = (kNo + 1) % KOMUTLAR.length; $('komutMetin').textConte
 KOK.addEventListener('kalite', (e) => {
   const k = e.detail && e.detail.kalite;
   if (k === 'yok') { sonlarKirli = true; for (const d of vm.values()) { d.figur = false; d.yer = null; } for (const h of HALKALAR) h.dolu.fill(null); }
-  else if (kalitePrev === 'yok') { for (const d of vm.values()) { d.figur = false; d.yer = null; } for (const h of HALKALAR) h.dolu.fill(null); etKirli = true; }
+  else if (kalitePrev === 'yok') {          // 3D geri geldi: yakin zamanda etkin olanlari yeniden sahneye al
+    for (const d of vm.values()) { d.figur = false; d.yer = null; } for (const h of HALKALAR) h.dolu.fill(null);
+    const l = [...vm.values()].filter((d) => L - d.sonAktif < 90).sort((a, b) => b.sonAktif - a.sonAktif).slice(0, 48);
+    for (const d of l) figurKur(d);
+    etKirli = true;
+  }
   kalitePrev = k || kalitePrev;
 });
 

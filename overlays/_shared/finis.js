@@ -124,7 +124,19 @@
     adKap.className = 'kimAd';
     const altKap = document.createElement('div');
     altKap.className = 'altYazi';
-    ic.append(adKap, altKap);
+    // Istege bagli IKINCI AD satiri (o.ad2): ana ad ile alt yazi arasinda. Ayni
+    // sigdirma kurali, taban 40px (72 -> 40, sonra <wbr> ile sar). o.ad2 yoksa
+    // hic olusmaz: kart eskisiyle ayni.
+    let ad2Kap = null;
+    if (o.ad2) {
+      ad2Kap = document.createElement('div');
+      ad2Kap.className = 'kimAd kimAd2';
+      ad2Kap.style.color = 'var(--murekkep, #f4f1ff)';
+      ad2Kap.style.marginTop = '8px';
+    }
+    ic.append(adKap);
+    if (ad2Kap) ic.append(ad2Kap);
+    ic.append(altKap);
     el.appendChild(ic);
     const adEl = el.querySelector('.kimAd');
     const altEl = el.querySelector('.altYazi');
@@ -139,6 +151,7 @@
     el.classList.add('acik');
     at(5, () => { adEl.textContent = o.isim || ''; sigdir(adEl); adEl.classList.add('gel'); });
     at(7, () => { if (o.ses) o.ses(); else if (global.Ses) global.Ses.cal('bitis'); });
+    if (ad2Kap) at(10, () => { ad2Kap.textContent = String(o.ad2); sigdir(ad2Kap, 72, 40); ad2Kap.classList.add('gel'); });
     at(14, () => { altEl.textContent = o.alt || ''; altEl.classList.add('gel'); });
     at(105, () => {
       if (o.kutlama) o.kutlama();

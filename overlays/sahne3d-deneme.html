@@ -130,7 +130,6 @@ function katil(u) {
   const ad = String(u.nickname || u.uniqueId || '').trim(); if (!ad) return;
   const kid = 'u' + String(u.id || u.uniqueId || ad);
   if (katilanlar.some((k) => k.kid === kid)) return;
-  if (s.figur.sayi() >= 150 && figurKid.length) s.figur.cikar(figurKid.pop());
   if (!s.figur.ekle(kid, { renk: RENKLER[katilanlar.length % RENKLER.length] })) return;
   s.figur.yerlestir(kid, { halka: 2, sira: 3 * katilanlar.length + 1 }, { sureMs: 900 });
   katilanlar.push({ kid, ad }); if (katilanlar.length > 6) { s.figur.cikar(katilanlar.shift().kid); }
