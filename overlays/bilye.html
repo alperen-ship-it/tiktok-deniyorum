@@ -185,7 +185,7 @@
   const R_TASARIM = 22;          // dikey pistin bosluklari bu yaricapa gore tasarlandi
   const YERCEKIMI = DIKEY ? 1200 : 780;   // 1100'de yaris 23 sn suruyordu; etap anonslari yetismiyordu
   // Dikey yilan pist olculeri
-  const SURUS = 0.085 * YERCEKIMI;   // dikey: satir yonu suruc ivmesi (px/sn^2)
+  const SURUS = 0.07 * YERCEKIMI;   // dikey: satir yonu suruc ivmesi (px/sn^2)
   const SATIR = 5, SATIR_P = 124, SATIR_D = 48, SATIR_BAS = 100, BOSLUK = 84;
   const XE = 960 - BOSLUK;       // satirin zemininin bittigi x (cift satir) / basladigi mesafe
   const YARIM_UZ = 480;          // bir etap = yarim satir
@@ -363,7 +363,7 @@
       let tip;
       if (h === SATIR * 2 - 1) tip = { ad: 'SON DÜZLÜK', ikon: '🏁' };
       else tip = ETAP_TIPLERI[(bas + h) % ETAP_TIPLERI.length];
-      (DK_ETAP[tip.ad] || (() => {}))(r, s0);
+      if (h > 0) (DK_ETAP[tip.ad] || (() => {}))(r, s0);   // 1. etap = baslangic izgarasi: engelsiz (ust katmandaki bilye duvar arkasinda kalmasin)
       etaplar.push({ ad: tip.ad, ikon: tip.ikon, y0: h * YARIM_UZ, y1: h === SATIR * 2 - 1 ? 1e9 : (h + 1) * YARIM_UZ, r, s0 });
     }
     bitis = (SATIR - 1) * 960 + DK_BITIS_S;
