@@ -89,7 +89,7 @@
 }
 
 /* ESKI YATAY OLCEK (1920x1080, donmus): 26/34/44/56/140 + 46px isim. */
-html.tt-yatay {
+html.tt-yatay, html.tt-vertical {
   --tip-dev: 140px;
   --tip-vurgu: 56px;
   --tip-baslik: 44px;
@@ -126,7 +126,7 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
   display: flex; flex-direction: column; gap: 14px;
 }
 
-:where(html.tt-yatay) #kok {
+:where(html.tt-yatay, html.tt-vertical) #kok {
   position: fixed; left: 50%; top: 50%;
   width: 1920px; height: 1080px;
   margin: -540px 0 0 -960px;
@@ -156,7 +156,7 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
    padding'di), yani hicbir oyunda tasma riski yok. TikTok o alani
    kapatirsa da kaybimiz yok — altinda oyun yok, sadece bu cagri var.
    ?katil=0 ile kapanir. */
-:where(html.tt-yatay) #katilCagri {
+:where(html.tt-yatay, html.tt-vertical) #katilCagri {
   position: absolute; top: var(--yayin-ust); right: 18px; bottom: var(--yayin-alt);
   width: calc(var(--yayin-sag) - 36px);
   display: flex; flex-direction: column; justify-content: center; gap: 18px;
@@ -166,26 +166,26 @@ body, .tt-oyun { font-family: 'Outfit', system-ui, sans-serif; }
   box-shadow: 0 6px 0 rgba(10, 6, 30, .45);
   text-align: center; z-index: 4; pointer-events: none;
 }
-:where(html.tt-yatay) #katilCagri .kcUst   { font-size: 28px; font-weight: 900; letter-spacing: 2px;
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcUst   { font-size: 28px; font-weight: 900; letter-spacing: 2px;
                        color: var(--soluk); text-transform: uppercase; line-height: 1.3; }
-:where(html.tt-yatay) #katilCagri .kcDev   { font-size: 76px; font-weight: 900; line-height: .95;
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcDev   { font-size: 76px; font-weight: 900; line-height: .95;
                        color: var(--altin); letter-spacing: -1.5px; }
-:where(html.tt-yatay) #katilCagri .kcOk    { font-size: 44px; line-height: 1; }
-:where(html.tt-yatay) #katilCagri .kcAyrac { height: 3px; background: var(--cizgi); border-radius: 2px; margin: 2px 10px; }
-:where(html.tt-yatay) #katilCagri .kcNe    { font-size: 28px; font-weight: 800; letter-spacing: 1.4px;
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcOk    { font-size: 44px; line-height: 1; }
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcAyrac { height: 3px; background: var(--cizgi); border-radius: 2px; margin: 2px 10px; }
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcNe    { font-size: 28px; font-weight: 800; letter-spacing: 1.4px;
                        color: var(--soluk); text-transform: uppercase; }
-:where(html.tt-yatay) #katilCagri .kcKomut { font-size: 38px; font-weight: 900; color: #fff; line-height: 1.15;
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcKomut { font-size: 38px; font-weight: 900; color: #fff; line-height: 1.15;
                        word-break: break-word; }
-:where(html.tt-yatay) #katilCagri .kcIzleyici { font-size: 26px; font-weight: 900; color: var(--soluk);
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcIzleyici { font-size: 26px; font-weight: 900; color: var(--soluk);
                           letter-spacing: 1px; }
-:where(html.tt-yatay) #katilCagri .kcIzleyici span:first-child { color: var(--murekkep); font-size: 34px; }
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcIzleyici span:first-child { color: var(--murekkep); font-size: 34px; }
 /* Son yazan: "burada yaziliyor" kaniti + yazana kendi adini gosterme */
-:where(html.tt-yatay) #katilCagri .kcSonYazan {
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcSonYazan {
   margin-top: 4px; padding-top: 12px; border-top: 3px solid var(--cizgi);
 }
-:where(html.tt-yatay) #katilCagri .kcsAd  { display: block; font-size: 30px; font-weight: 900; color: var(--oyun-renk);
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcsAd  { display: block; font-size: 30px; font-weight: 900; color: var(--oyun-renk);
                       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:where(html.tt-yatay) #katilCagri .kcsAlt { display: block; font-size: 24px; font-weight: 800; color: var(--soluk); margin-top: 2px; }
+:where(html.tt-yatay, html.tt-vertical) #katilCagri .kcsAlt { display: block; font-size: 24px; font-weight: 800; color: var(--soluk); margin-top: 2px; }
 html.tt-kcyok #katilCagri { display: none; }
 
 
@@ -251,7 +251,7 @@ html.tt-lite #kcKomut.degisti { animation: none; }
   border-color: var(--cizgi);
   color: #17123a;
 }
-:where(html.tt-yatay) #ust { flex: none; gap: 14px; padding: 12px 18px; }
+:where(html.tt-yatay, html.tt-vertical) #ust { flex: none; gap: 14px; padding: 12px 18px; }
 /* DIKEY: kutu UST 60,252 960x128 — ikon 96px, baslik 48px + durum satiri 30px,
    tur/sure rozetleri, kucuk sayac. Komut cipi burada YOK (KOMUT seridinde). */
 :where(html.tt-dikey) #ust {
@@ -283,7 +283,7 @@ html.tt-lite #kcKomut.degisti { animation: none; }
   background: #17123a;
   border: 4px solid rgba(255,255,255,.22);
 }
-:where(html.tt-yatay) #rozet { font-size: 52px; width: 88px; height: 88px; border-radius: 22px; }
+:where(html.tt-yatay, html.tt-vertical) #rozet { font-size: 52px; width: 88px; height: 88px; border-radius: 22px; }
 :where(html.tt-dikey) #rozet { font-size: 60px; width: 96px; height: 96px; border-radius: 24px; }
 #baslikSar { flex: 1; min-width: 0; }
 #baslik {
@@ -306,8 +306,8 @@ html.tt-lite #kcKomut.degisti { animation: none; }
    Altin rengi ve en buyuk boyut isimlere ait. */
 #sayacBuyuk { font-weight: 900; color: var(--soluk); line-height: 1; }
 #sayacKucuk { font-weight: 700; color: var(--soluk); letter-spacing: 1.5px; text-transform: uppercase; }
-:where(html.tt-yatay) #sayacBuyuk { font-size: 34px; }
-:where(html.tt-yatay) #sayacKucuk { font-size: 26px; }
+:where(html.tt-yatay, html.tt-vertical) #sayacBuyuk { font-size: 34px; }
+:where(html.tt-yatay, html.tt-vertical) #sayacKucuk { font-size: 26px; }
 :where(html.tt-dikey) #sayacBuyuk { font-size: 36px; }
 :where(html.tt-dikey) #sayacKucuk { font-size: 30px; letter-spacing: .5px; }
 
@@ -324,7 +324,7 @@ html.tt-lite #kcKomut.degisti { animation: none; }
    titriyor (ustelik #kok'un kendi scale'i de var, ic ice transform).
    Cozum: surekli hareketi kaldir. Dikkat cekmek gerekiyorsa bunu KOMUT
    DEGISTIGI AN yap — tek ve anlamli bir hareket, sonsuz kipirdanma degil. */
-:where(html.tt-yatay) #komut {
+:where(html.tt-yatay, html.tt-vertical) #komut {
   flex: none; display: flex; align-items: center; gap: 10px;
   background: var(--altin); color: #191434;
   border: 2px solid var(--cizgi); border-radius: 16px;
@@ -339,7 +339,7 @@ html.tt-lite #kcKomut.degisti { animation: none; }
 :where(html.tt-dikey) #komut { display: none; }
 /* Komut metni degisince tek seferlik dikkat hareketi. Kisa surdugu ve
    opacity+translateY kullandigi icin yaziyi yeniden olceklemiyor. */
-:where(html.tt-yatay) #komut.degisti { animation: komutDegis .42s cubic-bezier(.22,1,.36,1); }
+:where(html.tt-yatay, html.tt-vertical) #komut.degisti { animation: komutDegis .42s cubic-bezier(.22,1,.36,1); }
 @keyframes komutDegis {
   0%   { transform: translateY(-6px); opacity: .35; }
   100% { transform: translateY(0);    opacity: 1; }
@@ -364,7 +364,7 @@ html.tt-lite #komut.degisti { animation: none; }
   font-weight: 900; color: #1a1145;
   border: 3px solid var(--cizgi);
 }
-:where(html.tt-yatay) .sira .rozet { width: 38px; height: 38px; border-radius: 11px; font-size: 24px; }
+:where(html.tt-yatay, html.tt-vertical) .sira .rozet { width: 38px; height: 38px; border-radius: 11px; font-size: 24px; }
 :where(html.tt-dikey) .sira .rozet { width: 46px; height: 46px; border-radius: 13px; font-size: 30px; }
 .sira .bayrak { flex: none; width: 17px; height: 17px; border-radius: 5px; border: 2px solid var(--cizgi); }
 .sira .ad {
@@ -383,7 +383,7 @@ html.tt-lite #komut.degisti { animation: none; }
 /* ---- son olaylar seridi (SPIKER) ----
    DIKEY: kutu AKIS 60,1170 960x64; TEK satir 36px, adlar (.kim) 40px.
    Sigmazsa .kucuk (30px), sonra .sar (iki satir) — spiker.js. "…" yok. */
-:where(html.tt-yatay) #akis { flex: none; height: 52px; overflow: hidden; position: relative; }
+:where(html.tt-yatay, html.tt-vertical) #akis { flex: none; height: 52px; overflow: hidden; position: relative; }
 :where(html.tt-dikey) #akis {
   position: absolute;
   left: var(--dk-akis-x); top: var(--dk-akis-y);
@@ -395,7 +395,7 @@ html.tt-lite #komut.degisti { animation: none; }
   position: absolute; inset: 0; display: flex; align-items: center; gap: 12px;
   font-weight: 700;
 }
-:where(html.tt-yatay) .satir { font-size: 30px; animation: kay 3.4s ease-out forwards; }
+:where(html.tt-yatay, html.tt-vertical) .satir { font-size: 30px; animation: kay 3.4s ease-out forwards; }
 :where(html.tt-dikey) .satir {
   font-size: 36px; white-space: nowrap; line-height: 1.1;
   animation: kayDikey 3.4s ease-out forwards;
@@ -447,7 +447,7 @@ html.tt-lite .satir { animation-duration: 2.6s; }
   background: rgba(12,8,40,.82); border-radius: 18px;
   z-index: 5;
 }
-:where(html.tt-yatay) #kazanan { position: absolute; inset: 0; }
+:where(html.tt-yatay, html.tt-vertical) #kazanan { position: absolute; inset: 0; }
 /* DIKEY: kutu KAZANAN 60,488 960x746 (SAHNE + AKIS'i kaplar; UST ve KOMUT'a
    hic dokunmaz). fixed + transform'lu #kok = kutu #kok'a gore konumlanir,
    #kazanan oyun sayfasinda hangi kutunun icinde olursa olsun. */
@@ -468,8 +468,8 @@ html.tt-lite .satir { animation-duration: 2.6s; }
    max-width:%90'i kendi metninin tanimladigi bir kutuya gore cozuluyor —
    yani isim her boyutta "tasiyor" gorunup bosuna kuculuyordu. */
 #kazanan .fkIc { width: 100%; padding: 0 24px; }
-:where(html.tt-yatay) #kazanan .kupa { font-size: 96px; line-height: 1; }
-:where(html.tt-yatay) #kazanan .fkGorsel { width: 220px; height: 220px; margin: 0 auto 10px; }
+:where(html.tt-yatay, html.tt-vertical) #kazanan .kupa { font-size: 96px; line-height: 1; }
+:where(html.tt-yatay, html.tt-vertical) #kazanan .fkGorsel { width: 220px; height: 220px; margin: 0 auto 10px; }
 :where(html.tt-dikey) #kazanan .kupa { font-size: 150px; line-height: 1; margin-bottom: 8px; }
 :where(html.tt-dikey) #kazanan .fkGorsel { width: 260px; height: 260px; margin: 0 auto 14px; }
 #kazanan .fkGorsel {
@@ -486,7 +486,7 @@ html.tt-lite .satir { animation-duration: 2.6s; }
      yuksekligi ziplamasin diye display degil opacity ile gizleniyor. */
   opacity: 0;
 }
-:where(html.tt-yatay) #kazanan .kimAd { font-size: 88px; max-width: 90%; }
+:where(html.tt-yatay, html.tt-vertical) #kazanan .kimAd { font-size: 88px; max-width: 90%; }
 :where(html.tt-dikey) #kazanan .kimAd { font-size: 110px; max-width: 100%; }
 #kazanan .kimAd.sar { white-space: normal; overflow-wrap: anywhere; text-overflow: clip; line-height: 1; }
 #kazanan .altYazi {

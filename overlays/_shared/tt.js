@@ -121,7 +121,8 @@
     if (OYUN) {
       root.classList.toggle('tt-yatay', !DIKEY);
       root.classList.toggle('tt-dikey', DIKEY);
-      root.classList.toggle('tt-vertical', cfg.vertical);
+      // tt-vertical (eski ?v=1) donusturulmus sayfalarda anlamsiz: portre = tt-dikey
+      root.classList.toggle('tt-vertical', cfg.vertical && !DIKEY);
     } else {
       // eski davranis: ?v=1 yoksa yatay
       root.classList.toggle('tt-yatay', !cfg.vertical);
