@@ -291,8 +291,11 @@
    * zurna nefesli, tuslu degil.
    *
    * ZURNA_HACIM: suzgec temel sesi kistigi icin diger desenlerin ezgi
-   * seviyesinden (0.16) yuksek yaziliyor; OLCULEN cikis seviyesi onlarla
-   * ayni bantta (desenlerin RMS karsilastirmasi yapildi).
+   * seviyesinden (0.16) yuksek yaziliyor; CIKISTA olculen seviye onlarla
+   * ayni bantta. Olcum (varsayilan seviyeler, 12 sn, cikisa bagli analizor):
+   *   halay RMS 0.0035, tepe 0.028 (131 BPM'de 0.0037 / 0.028)
+   *   diger dort desen RMS 0.0025-0.0041, tepe 0.027-0.032
+   * Bu sayi degistirilirse olcum tekrarlanmali.
    */
   const ZURNA_HACIM = 0.22;
   function zurnaNota(f, t, sure, hacim, kayis) {
