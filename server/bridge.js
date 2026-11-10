@@ -1206,6 +1206,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
      bilgi.html   soru cikar, A/B/C/D yaz — ILK dogru en cok puani alir
      pk.html      iki taraf kapisir (kedi vs kopek...), tarafini yaz, ittir
      at.html      8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
+     (istege bagli 3D: halay + Duduklu — adrese &oyunlar=bilye,bilgi,pk,at,halay,tencere ekle; OBS'te donanim hizlandirma acik olmali)
 
       Hepsi kendi kendine donuyor: katilim penceresi acilir, oyun
       oynanir, kazanan cikar, yeni tur baslar. Mudahale gerekmiyor.

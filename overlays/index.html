@@ -116,6 +116,8 @@
     border: 1px solid #39405a; color: var(--cyan); font-size: 14px; font-weight: 600; vertical-align: 2px;
   }
   .badge.yatay { color: #f59e0b; border-color: #6b4a12; }
+  .preview.yatay { aspect-ratio: 16 / 9; width: 100%; }
+  .preview.yatay iframe { width: 1280px; height: 720px; }
   .preview iframe {
     position: absolute;
     top: 0; left: 0;
@@ -319,6 +321,7 @@
     // ---- WIDGET --------------------------------------------------------
     {
       file: 'durum.html',
+      yatay: true,
       name: '📊 Durum Kartı',
       desc: 'Dışarıdan çektiğin veriyi köşede gösterir: Valorant rankın, çalan şarkı, hava durumu. İsteği köprü atıyor — CORS derdi yok ve API anahtarın yayında ekranda görünmüyor. Başlamak için <code>server/veri-kaynaklari.ornek.json</code> dosyasını <code>veri-kaynaklari.json</code> adıyla kopyala.',
       opts: '<code>?kaynak=valorant</code> hangi kaynak · <code>?baslik=RANK</code> · <code>?ana=rank</code> büyük değer · <code>?alt=puan,sonMac</code> alt satır · <code>?gorsel=gorsel</code> · <code>?kose=sag-ust</code>',
@@ -363,7 +366,7 @@
         <h2>${o.name}${o.hub ? '<span class="badge">3D</span>' : ''}</h2>
         <div class="desc">${o.desc}</div>
       </div>
-      <div class="preview"><iframe src="${url}?mock=1&rate=2" loading="lazy"></iframe></div>
+      <div class="preview${o.yatay ? ' yatay' : ''}"><iframe src="${url}?mock=1&rate=2" loading="lazy"></iframe></div>
       <div class="opts">${o.opts}</div>
       <div class="foot">
         <input class="url" readonly value="${kopya}">
@@ -380,7 +383,7 @@
   function fitPreviews() {
     for (const box of document.querySelectorAll('.preview')) {
       const f = box.querySelector('iframe');
-      if (f) f.style.transform = `scale(${box.clientWidth / 1080})`;
+      if (f) f.style.transform = `scale(${box.clientWidth / (box.classList.contains('yatay') ? 1280 : 1080)})`;
     }
   }
   addEventListener('resize', fitPreviews);
