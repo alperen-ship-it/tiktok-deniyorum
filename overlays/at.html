@@ -152,6 +152,20 @@
   html.tt-dikey .kAt { left: 312px; }
   html.tt-dikey .kAt .govde { font-size: 56px; }
   /* Tezahurat cubugu: genislik yerine transform (yalniz transform/opacity canlanir) */
+  /* Tahmin acikken kulvarin bos kosu alaninda o ata SON tahmin yapanin adi
+     (54px -> 40px -> 2 satira sar, "…" yok). Kosu baslayinca gizlenir. */
+  .kTah { display: none; }
+  html.tt-dikey .kTah {
+    position: absolute; left: 392px; right: 28px; top: 0; bottom: 0; z-index: 2;
+    align-items: center; gap: 12px; opacity: 0;
+  }
+  html.tt-dikey #sahaKutu.tahmin .kTah.dolu { display: flex; opacity: 1; }
+  html.tt-dikey .kTahAd {
+    flex: 1; min-width: 0; font-size: 54px; font-weight: 800; line-height: 1; color: var(--murekkep);
+    white-space: nowrap; overflow: hidden; text-overflow: clip;
+  }
+  html.tt-dikey .kTahAd.sar { white-space: normal; overflow-wrap: anywhere; max-height: 80px; }
+  html.tt-dikey .kTahSay { flex: none; font-size: 30px; font-weight: 900; color: var(--altin); font-variant-numeric: tabular-nums; }
   html.tt-dikey .kTez {
     left: 300px; right: 14px; width: auto; height: 8px;
     transform: scaleX(0); transform-origin: left center; transition: transform .25s linear;
@@ -342,7 +356,7 @@
   const cagriMetni = (uzun, kisa) => (DIKEY ? kisa : uzun);
 
   // ---- kulvarlar -----------------------------------------------------------
-  const atEl = [], tezEl = [], formEl = [];
+  const atEl = [], tezEl = [], formEl = [], tahEl = [];
   ATLAR.forEach((a, i) => {
     const k = document.createElement('div');
     k.className = 'kulvar';
@@ -355,12 +369,14 @@
           <div class="kGalibiyet">🏆 ${galibiyet[i]}</div>
         </div>
       </div>
+      <div class="kTah"><div class="kTahAd"></div><div class="kTahSay"></div></div>
       <div class="kTez" style="background:${a.renk}"></div>
       <div class="kAt"><span class="govde">🏇</span></div>`;
     sahaEl.insertBefore(k, kazananEl);
     atEl.push(k.querySelector('.kAt'));
     tezEl.push(k.querySelector('.kTez'));
     formEl.push(k.querySelector('.kGalibiyet'));
+    tahEl.push(k.querySelector('.kTah'));
   });
 
   function formYaz() {
@@ -406,6 +422,22 @@
       ${kucuk ? `<div class="fKucuk">${kucuk}</div>` : ''}
       <div class="fSag">${sag}</div>
     </div>`;
+  }
+
+  /** Dikey: her kulvarda o ata SON tahmin yapanin adi (+ diger kisi sayisi). */
+  function kulvarTahmin() {
+    if (!DIKEY) return;
+    const son = ATLAR.map(() => null), say = ATLAR.map(() => 0);
+    for (const b of bahisler.values()) { son[b.at] = b.ad; say[b.at]++; }
+    tahEl.forEach((el, i) => {
+      el.classList.toggle('dolu', say[i] > 0);
+      if (!say[i]) return;
+      const ad = el.firstChild;
+      ad.textContent = son[i];
+      el.lastChild.textContent = say[i] > 1 ? '+' + (say[i] - 1) : '';
+      el.classList.add('dolu');
+      TT.adSigdir(ad, 54, 40);
+    });
   }
 
   // ---- dikey PANO (460x490) ------------------------------------------------
@@ -526,6 +558,7 @@
   // Lobi: dikeyde tahta ile liderlik 8 sn aralikla doner (liste bossa donmez).
   let lobiSayfa = 0, lobiSn = 0;
   function rayLobi() {
+    kulvarTahmin();
     if (DIKEY && lobiSayfa === 1 && puanlar.size) rayLider(); else rayOran();
   }
 
@@ -564,7 +597,7 @@
     fotoFinisDendi = false; sonDuzlukDendi = false; sonLider = -1;
     varis = []; kazananIlan = false; kazananZaman = 0; sonDagitilan = []; kazananKart = null;
     tezahurat = ATLAR.map(() => 0);
-    sahaEl.classList.add('kosuyor');
+    sahaEl.classList.add('kosuyor'); sahaEl.classList.remove('tahmin');
     Ses.muzik('at');
     document.getElementById('cagri').textContent = cagriMetni('koşu sürüyor — yaz & beğen, atına güç ver!', 'koşu sürüyor — yaz & beğen');
     Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> — ${bahisler.size} tahmin`, { oncelik: 3 });
@@ -743,6 +776,7 @@
     ilerleme = ATLAR.map(() => 0);
     atlariYerlestir();
     Finis.kapat(kazananEl);
+    sahaEl.classList.add('tahmin');
     document.getElementById('cagri').textContent = 'tahmin açık';
     lobiSayfa = 0; lobiSn = 0;
     rayLobi(); sayacCiz();
@@ -884,6 +918,7 @@
   });
 
   // ---- basla ---------------------------------------------------------------
+  sahaEl.classList.add('tahmin');
   atlariYerlestir();
   rayLobi(); liderlikCiz(); sayacCiz();
   addEventListener('resize', atlariYerlestir);

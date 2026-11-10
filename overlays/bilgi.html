@@ -109,6 +109,10 @@
   .dikeyMetin { display: none; }
   .sik .bar { display: none; }
   html.tt-dikey #sureRozet { display: inline-flex; }
+  /* UST 960x128: baslik + durum satiri + 2 cip + sayac sigsin diye cipler dar */
+  html.tt-dikey #ust { gap: 12px; }
+  html.tt-dikey #ust .rozetBuyuk { padding: 4px 12px; }
+  html.tt-dikey #soruNo .soz { display: none; }
   html.tt-dikey #hizli { display: none; }
   html.tt-dikey .yatayMetin { display: none; }
   html.tt-dikey .dikeyMetin { display: inline; }
@@ -187,7 +191,7 @@
       <div id="cagri">ilk doğru en çok puanı alır</div>
     </div>
     <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">A · B · C · D</span></div>
-    <div class="rozetBuyuk" id="soruNo">SORU <span id="soruSayi">1</span></div>
+    <div class="rozetBuyuk" id="soruNo"><span class="soz">SORU </span><span id="soruSayi">1</span></div>
     <div class="rozetBuyuk" id="sureRozet">⏳ <span id="sureSn">25</span></div>
     <div id="sayac">
       <div id="sayacBuyuk">0</div>
@@ -384,7 +388,7 @@
 
     cubukEl.classList.remove('az');
     cubukYaz(cubukEl, 1);
-    document.getElementById('cagri').textContent = 'ilk doğru en çok puanı alır';
+    document.getElementById('cagri').textContent = DIKEY ? 'ilk doğru en çok puan' : 'ilk doğru en çok puanı alır';
     sureSnEl.textContent = Math.ceil(kalanSn);
     sayacCiz();
   }
@@ -480,7 +484,7 @@
     destePos++;
     localStorage.setItem('tt-bilgi-no', String(soruSayisi));
     tabloCiz();
-    document.getElementById('cagri').textContent = (DIKEY ? 'doğru: ' : 'doğru cevap: ') + soru.c[soru.d];
+    document.getElementById('cagri').textContent = DIKEY ? '✔ cevap açıldı' : 'doğru cevap: ' + soru.c[soru.d];
 
     if (destePos >= TUR_SORU) turBitir();
     desteKaydet();
