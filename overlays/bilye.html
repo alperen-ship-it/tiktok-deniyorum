@@ -185,8 +185,8 @@
   const R_TASARIM = 22;          // dikey pistin bosluklari bu yaricapa gore tasarlandi
   const YERCEKIMI = DIKEY ? 1200 : 780;   // 1100'de yaris 23 sn suruyordu; etap anonslari yetismiyordu
   // Dikey yilan pist olculeri
-  const SURUS = 0.062 * YERCEKIMI;   // dikey: satir yonu suruc ivmesi (px/sn^2)
-  const SATIR = 5, SATIR_P = 124, SATIR_D = 48, SATIR_BAS = 100, BOSLUK = 84;
+  const SURUS = 0.056 * YERCEKIMI;   // dikey: satir yonu suruc ivmesi (px/sn^2)
+  const SATIR = 5, SATIR_P = 124, SATIR_D = 48, SATIR_BAS = 100, BOSLUK = 110;
   const XE = 960 - BOSLUK;       // satirin zemininin bittigi x (cift satir) / basladigi mesafe
   const YARIM_UZ = 480;          // bir etap = yarim satir
   const ESNEKLIK = 0.42;    // carpismada korunan hiz
@@ -296,7 +296,7 @@
     const r = b.r = satirBul(b.x, b.y);
     return r * 960 + (r % 2 === 0 ? b.x : 960 - b.x);
   }
-  const DK_BITIS_S = 840;        // son satirda bitis cizgisi (satir ici mesafe)
+  const DK_BITIS_S = 800;        // son satirda bitis cizgisi (satir ici mesafe)
   // Yerel yardimci: satir r'de, mesafe s'de, tavan-zemin araligi h ve zemin ustu yuksekligi f*h
   function dkNokta(r, s, f) { const x = sX(r, s), z = zemY(r, x), t = tavY(r, x); return { x, y: z - f * (z - t), h: z - t, z, t }; }
   const KAPAT = 2 * R_TASARIM + 10;   // bilyenin altindan/ustunden gecebilecegi en dar aralik
@@ -580,12 +580,18 @@
         if (bitirenler.length === 1) yarisBitti(b);
         continue;
       }
-      // Tikanma onlemi (yalniz dikey): 2.5 sn'de 25 px'ten az ilerleyen bilyeye
+      // Tikanma onlemi (yalniz dikey): 1.5 sn'de 25 px'ten az ilerleyen bilyeye
       // yonunde kucuk bir itki. Hediye/izleyici ile ilgisi yok; herkese ayni kural.
       if (DIKEY) {
         b.psT += dt;
-        if (b.psT > 2.5) {
-          if (b.p - b.ps < 25) { b.vx += (satirBul(b.x, b.y) % 2 === 0 ? 1 : -1) * 150; b.vy -= 90; }
+        if (b.psT > 1.5) {
+          if (b.p - b.ps < 25) {
+            // kademeli: itki buyur; 3. ardisik durusta (7.5 sn) 40 px one al (herkese ayni son care)
+            b.st = (b.st || 0) + 1;
+            const yon = satirBul(b.x, b.y) % 2 === 0 ? 1 : -1;
+            b.vx += yon * 150 * b.st; b.vy -= 90 * b.st;
+            if (b.st >= 3) { b.x = Math.max(R, Math.min(960 - R, b.x + yon * 40)); b.y -= 8; b.st = 0; }
+          } else b.st = 0;
           b.ps = b.p; b.psT = 0;
         }
       }

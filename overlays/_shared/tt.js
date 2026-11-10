@@ -91,7 +91,8 @@
   // yuklendigi icin #kok bu noktada vardir). Eski overlay'ler (durum, boss,
   // chat, alerts...) ONCEKI davranisi aynen korur: tt-yatay (?v=1 ise
   // tt-vertical), 1920x1080 olcegi, eski olu-bolge degiskenleri.
-  const OYUN = !!document.querySelector('#kok.tt-oyun');
+  // data-yatay: DONUSTURULMEMIS oyun sayfasi dikeyden cikar (eski yatay davranis); sayfa dikeye cevrilince bu oznitelik SILINIR.
+  const OYUN = !!document.querySelector('#kok.tt-oyun:not([data-yatay])');
   const DIKEY = OYUN && !cfg.yatay;
   const TUVAL = DIKEY ? { w: 1080, h: 1920 } : { w: 1920, h: 1080 };
   const KUTU = Object.freeze({
