@@ -1458,7 +1458,7 @@
      kaybolabildigi icin hediyeler KENDI kuyruguna girer, birer birer gosterilir.
      gift.streaking === true olan seri tikleri sayilmaz. */
   const hediyeKuyruk = [];            // {ad, kademe, sira}
-  let hediyeSon = 0, hediyeSira = 0;
+  let hediyeSon = 0, hediyeSira = 0, hediyeYigin = -1e9;
   // Kademe (elmas): 0 <10 · 1 <100 · 2 <1000 · 3 >=1000. Buyuk hediye sirada beklemez.
   const hediyeKademe = (g) => { const d = Number(g && (g.diamonds || g.value)) || 0; return d >= 1000 ? 3 : d >= 100 ? 2 : d >= 10 ? 1 : 0; };
   TT.on('gift', (ev) => {
@@ -1474,8 +1474,10 @@
   function hediyeAkit() {
     if (!hediyeKuyruk.length) return;
     const simdi = performance.now();
+    if (hediyeKuyruk.length > 3) hediyeYigin = simdi;
     const kalabalik = hediyeKuyruk.length > 3;
-    if (simdi - hediyeSon < (kalabalik ? 800 : 1600)) return;
+    const hizli = kalabalik || simdi - hediyeYigin < 3000;   // yigin bitince kuyruk ucu da hizli akar
+    if (simdi - hediyeSon < (hizli ? 800 : 1600)) return;
     hediyeSon = simdi;
     let en = 0;
     for (const h of hediyeKuyruk) if (h.kademe > en) en = h.kademe;
@@ -1489,11 +1491,10 @@
     const parcalar = ['🎁 '];
     grup.forEach((h, i) => { if (i) parcalar.push(', '); parcalar.push({ kim: h.ad }); });
     parcalar.push(grup.length > 1 ? ' — teşekkürler' : ' hediye gönderdi — teşekkürler');
-    Spiker.satir(parcalar, { oncelik: 4, sure: kalabalik ? 850 : 1900 });
+    Spiker.satir(parcalar, { oncelik: 4, sure: hizli ? 850 : 1900 });
   }
   setInterval(hediyeAkit, 100);
 
-  window.__dbg = () => ({ geo: { pegler, duvarlar, etaplar }, durum, R, b: bilyeler.map((b) => [b.ad, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.p), b.bitti]) });  // DBG-SIL
   // ---- basla ---------------------------------------------------------------
   boyutla();
   pistUret();
