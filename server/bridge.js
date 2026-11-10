@@ -1195,11 +1195,9 @@ server.listen(args.port, DINLE_ADRES, async () => {
 
      ${tls}/overlays/oyun.html?lite=1
 
-      AYNI adresi HEM "Portrait" HEM "Landscape" bolumune ekle.
-      Sayfa kendi en-boy oranini olcup yerlesimini kendi degistiriyor;
-      iki sahne icin iki ayri adrese ihtiyacin yok.
+      Sahneyi DIKEY (1080x1920) kur; yatay gerekirse adrese &yatay=1 ekle (gecici).
 
-      TEK LINK YETER: oyun.html uc oyunu sirayla dondurur, gecisleri
+      TEK LINK YETER: oyun.html dort oyunu sirayla dondurur, gecisleri
       tur arasinda yapar, bos odada demo calistirir. Istersen oyunlari
       tek tek de ekleyebilirsin:
 
@@ -1209,7 +1207,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
      pk.html      iki taraf kapisir (kedi vs kopek...), tarafini yaz, ittir
      at.html      8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
 
-      Ucu de kendi kendine donuyor: katilim penceresi acilir, oyun
+      Hepsi kendi kendine donuyor: katilim penceresi acilir, oyun
       oynanir, kazanan cikar, yeni tur baslar. Mudahale gerekmiyor.
 
    >> Yan gosterge <<

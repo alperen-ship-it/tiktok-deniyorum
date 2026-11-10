@@ -43,7 +43,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--dim);
     padding: 6px 12px;
     border: 1px solid var(--line);
@@ -55,6 +55,7 @@
   .dot.off { background: var(--pink); }
 
   main { padding: 28px 32px 80px; max-width: 1400px; }
+  @media (max-width: 600px) { header { padding: 16px; } main { padding: 20px 16px 80px; } }
 
   .bar {
     display: flex;
@@ -77,11 +78,11 @@
   button:hover, .btn:hover { background: #1b2030; border-color: #39405a; }
   button.primary { background: var(--pink); border-color: var(--pink); font-weight: 600; }
   button.primary:hover { background: #ff456a; }
-  .barlabel { color: var(--dim); font-size: 13px; margin-right: 4px; }
+  .barlabel { color: var(--dim); font-size: 14px; margin-right: 4px; }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
     gap: 20px;
   }
 
@@ -95,24 +96,31 @@
   }
   .card h2 { margin: 0; font-size: 17px; }
   .card .head { padding: 16px 18px 12px; }
-  .card .desc { color: var(--dim); font-size: 13.5px; margin-top: 4px; }
+  .card .desc { color: var(--dim); font-size: 14px; margin-top: 4px; }
 
   .preview {
     position: relative;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 9 / 16;
+    width: min(100%, 270px);
+    margin: 0 auto 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
     background:
       linear-gradient(45deg, #1a1d29 25%, transparent 25%) 0 0 / 22px 22px,
       linear-gradient(-45deg, #1a1d29 25%, transparent 25%) 0 11px / 22px 22px,
       #10131c;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
     overflow: hidden;
   }
+  .badge {
+    display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+    border: 1px solid #39405a; color: var(--cyan); font-size: 14px; font-weight: 600; vertical-align: 2px;
+  }
+  .badge.yatay { color: #f59e0b; border-color: #6b4a12; }
   .preview iframe {
     position: absolute;
     top: 0; left: 0;
-    width: 1280px;
-    height: 720px;
+    width: 1080px;
+    height: 1920px;
     border: 0;
     transform-origin: 0 0;
   }
@@ -122,7 +130,7 @@
     flex: 1;
     min-width: 0;
     font-family: 'Cascadia Code', Consolas, monospace;
-    font-size: 12px;
+    font-size: 14px;
     padding: 8px 10px;
     background: #0d1018;
     border: 1px solid var(--line);
@@ -130,7 +138,7 @@
     color: var(--cyan);
   }
 
-  .opts { padding: 0 18px 14px; font-size: 13px; color: var(--dim); }
+  .opts { padding: 0 18px 14px; font-size: 14px; color: var(--dim); }
   .opts code {
     font-family: 'Cascadia Code', Consolas, monospace;
     background: #0d1018;
@@ -166,6 +174,7 @@
     color: #c3cade;
   }
   .note b { color: var(--ink); }
+  .note code, .opts code { overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -178,10 +187,10 @@
   </div>
 
   <!-- Kumanda: terminale donmeden yayina baglan / durdur -->
-  <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+  <div style="display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap">
     <input id="kullanici" placeholder="tiktok kullanıcı adın"
            style="font:inherit;font-size:14px;padding:7px 12px;border-radius:9px;
-                  border:1px solid var(--line);background:#0d1018;color:var(--ink);width:190px">
+                  border:1px solid var(--line);background:#0d1018;color:var(--ink);width:190px;max-width:100%">
     <button id="baglan">Bağlan</button>
     <button id="mockBtn">Sahte veri</button>
     <button id="durdur" style="border-color:#5a2030;color:#ff8fa3">Durdur</button>
@@ -190,6 +199,10 @@
 
 <main>
   <div class="note" id="note">
+    <b>Dikey yayın:</b> oyunlar artık <b>1080×1920</b> (dikey). OBS'te tuvali ve Tarayıcı Kaynağı'nı
+    1080 × 1920 yap. Eski yatay (1920×1080) düzene geçici dönmek için adrese <code>&amp;yatay=1</code> ekle
+    (yalnızca misket, bilgi, PK ve at yarışı için).
+    <br><br>
     <b>TikTok LIVE Studio:</b> <code>Kaynak ekle → Link</code> → aşağıdaki adresi yapıştır.
     Sonuna <code>?lite=1</code> ekle (gömülü tarayıcıda GPU yok, ağır efektler kare hızını
     düşürüyor).
@@ -199,8 +212,8 @@
     aynı makineye çözülen gerçek bir alan adı, her durumda çalışır.
     <span id="ltm"></span>
     <br><br>
-    <b>OBS:</b> <code>Tarayıcı Kaynağı</code>'na olduğu gibi yapıştır — şeffaflık doğrudan
-    çalışır, <code>?lite=1</code> gerekmez.
+    <b>OBS:</b> <code>Tarayıcı Kaynağı</code>'na olduğu gibi yapıştır (genişlik 1080, yükseklik 1920) —
+    şeffaflık doğrudan çalışır, <code>?lite=1</code> gerekmez.
     <br><br>
     <b>Kendi başına çalışır:</b> Oyunu açıp bırakabilirsin. Oda boşken turlar
     🤖 işaretli demo botlarla döner — gelen izleyici oyunu izleyerek anlar,
@@ -231,7 +244,7 @@
       <span id="olcumOzet" style="opacity:.75">yükleniyor…</span>
     </div>
     <div id="olcumTablo" style="margin-top:10px;overflow-x:auto"></div>
-    <div style="margin-top:8px;font-size:13px;opacity:.6">
+    <div style="margin-top:8px;font-size:14px;opacity:.75">
       Veri sadece bu makinede (<code>tiktok-istatistik.json</code>), hiçbir yere gönderilmiyor.
       <b>Kişi başı mesaj</b> oyunları karşılaştırmanın en dürüst ölçüsü — çok mesaj az kişiden de gelebilir.
     </div>
@@ -252,7 +265,7 @@
       oyun: true,
       file: 'oyun.html',
       name: '🎮 OYUN MERKEZİ — tek link (önerilen)',
-      desc: 'SADECE BUNU EKLE, gerisi otomatik: üç oyun sırayla döner, geçişler tur arasında yapılır (yarış ortasında ekran değişmez), oda boşken demo turları çalışır, geçişlerde sohbet botu duyuru bırakır. Yayın boyunca hiçbir şeye dokunmazsın.',
+      desc: 'SADECE BUNU EKLE, gerisi otomatik: dört oyun (misket, bilgi, PK, at) sırayla döner, geçişler tur arasında yapılır (yarış ortasında ekran değişmez), oda boşken demo turları çalışır, geçişlerde sohbet botu duyuru bırakır. Yayın boyunca hiçbir şeye dokunmazsın.',
       opts: '<code>?dk=6</code> oyun başına dakika · <code>?oyunlar=bilye,at</code> hangi oyunlar, hangi sıra · <code>?duyuru=0</code> geçiş duyurusu kapat · diğer tüm parametreler (<code>?lite=1&sag=24</code>...) oyunlara aynen geçer',
     },
     // ---- OYUNLAR: sohbet oynuyor, yayinci hicbir sey yapmiyor ----------
@@ -260,7 +273,7 @@
       oyun: true,
       file: 'bilye.html',
       name: '🏁 Misket Yarışı',
-      desc: 'Twitch&rsquo;in en çok oynanan sohbet oyununun (Marbles on Stream) TikTok uyarlaması. Yazan herkes KENDİNE ÖZEL misketini alır — renk ve desen kullanıcı adından üretilir, her yayında aynıdır. Canlı sıralama, spiker anlatımı, son düzlükte ağır çekim. Hediye misketi ileri iter.',
+      desc: 'Twitch&rsquo;in en çok oynanan sohbet oyununun (Marbles on Stream) TikTok uyarlaması. Yazan herkes KENDİNE ÖZEL misketini alır — renk ve desen kullanıcı adından üretilir, her yayında aynıdır. Canlı sıralama, spiker anlatımı, son düzlükte ağır çekim. Hediye göndericinin adını teşekkürle gösterir, yarışın sonucunu değiştirmez.',
       opts: '<code>?katilim=25</code> katılım süresi (sn) · <code>?max=50</code> aynı anda kaç misket · <code>?kelime=katıl</code> sadece bu kelimeyi yazan katılsın · <code>?etap=10</code> pist kaç etap',
     },
     {
@@ -274,8 +287,8 @@
       oyun: true,
       file: 'pk.html',
       name: '⚔️ PK Savaşı',
-      desc: 'TikTok’un KENDİ formatı (PK Battle) + tartışma yemi. İki taraf bir konuda kapışır — “🐱 KEDİ vs 🐶 KÖPEK”, “menemen soğanlı mı soğansız mı”, “ananaslı pizza”… İzleyici tarafının adını yazar, HER MESAJ takımını ileri iter, beğeni de sayılır. 🎁 Hediye KARŞI tarafı geri iter. Son 30 saniye “SPEED” — hediyeler 2 kat (TikTok PK’nın gerçek mekaniği). 30 konu döner, kalıcı galibiyet tablosu.',
-      opts: '<code>?sure=180</code> savaş süresi (sn) · <code>?speed=30</code> speed bölümü · <code>?mesaj=1</code> mesaj itişi · <code>?hediye=14</code> hediyenin geri itişi · Konular: <code>overlays/_shared/kapismalar.js</code>',
+      desc: 'TikTok’un KENDİ formatı (PK Battle) + tartışma yemi. İki taraf bir konuda kapışır — “🐱 KEDİ vs 🐶 KÖPEK”, “menemen soğanlı mı soğansız mı”, “ananaslı pizza”… İzleyici tarafının adını yazar, HER MESAJ takımını ileri iter, beğeni de sayılır. 🎁 Hediye göndericinin KENDİ takımının mesajlarını 15 sn boyunca çarpar (son 30 sn “SPEED”te daha çok) ve küçük bir anlık itiş verir; karşı tarafı geri itmez, beğeniler çarpılmaz. 30 konu döner, kalıcı galibiyet tablosu.',
+      opts: '<code>?sure=180</code> savaş süresi (sn) · <code>?speed=30</code> speed bölümü · <code>?mesaj=1</code> mesaj itişi · <code>?hediye=14</code> hediyenin anlık itişi · Konular: <code>overlays/_shared/kapismalar.js</code>',
     },
     {
       oyun: true,
@@ -283,6 +296,24 @@
       name: '🏇 At Yarışı + Tahmin',
       desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür — formu okuyan öne geçer). Çarpan havuzdan. Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı — sonucu yine form + şans belirler). Varış sırası tam koşulur, podyum gösterilir. Doğru tahmin edenler sohbet botuyla @etiketlenir.',
       opts: '<code>?tahmin=25</code> tahmin süresi (sn) · <code>?sure=20</code> koşu uzunluğu · puanlar ve galibiyetler kalıcı (localStorage)',
+    },
+
+    // ---- ISTEGE BAGLI 3D OYUNLAR (varsayilan donuse girmez) -------------
+    {
+      oyun: true,
+      file: 'halay.html',
+      hub: 'oyun.html?lite=1&oyunlar=bilye,bilgi,pk,at,halay',
+      name: '💃 Halay (3D) — isteğe bağlı',
+      desc: 'Ortak dans sahnesi: yazan ya da beğenen halkaya girer (üç halka, en çok 150 kişi). <code>@isim</code> ya da halka numarası = dansa kaldır (düet). Halay başı mendili taşır, coşku yükselir. Küçük hediye = TEMPO, çok büyük hediye = MEYDAN GÖSTERİSİ. Balonlarda yalnızca tezahürat ve emoji var, izleyici yazısı çıkmaz.',
+      opts: 'Dönüşe eklemek için adresteki <code>oyunlar=…,halay</code> kısmı yeter · GPU kontrolü: <code>overlays/sahne3d-deneme.html?kisi=150</code> ("kalite: tam" yazmalı)',
+    },
+    {
+      oyun: true,
+      file: 'tencere.html',
+      hub: 'oyun.html?lite=1&oyunlar=bilye,bilgi,pk,at,tencere',
+      name: '🍲 Düdüklü (3D) — isteğe bağlı',
+      desc: 'Herkes birlikte düdüklü tencereyi doldurur: yazmak = odun, beğeni de sayılır. 33 ve 66’da düdük öter, 100’de patlar. USTA AŞÇI en çok katkı yapandır; tek kişi tek başına patlatamaz. Oda boşken 🤖 botlar yardım eder. Hediye sınırlı destek verir, son itiş olmaz. Tur en çok ~2,5 dk.',
+      opts: 'İkisini birden: <code>oyunlar=bilye,bilgi,pk,at,halay,tencere</code> · GPU kontrolü: <code>overlays/sahne3d-deneme.html?kisi=150</code>',
     },
 
     // ---- WIDGET --------------------------------------------------------
@@ -323,31 +354,33 @@
 
   for (const o of OVERLAYS) {
     const url = base + o.file;
+    const kopya = o.hub ? base + o.hub : url;                 // gosterilen / kopyalanan adres
+    const ttls = o.hub ? `http://localtest.me${location.port ? ':' + location.port : ''}/overlays/${o.hub}` : ttlsUrl(o.file);
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <div class="head">
-        <h2>${o.name}</h2>
+        <h2>${o.name}${o.hub ? '<span class="badge">3D</span>' : ''}</h2>
         <div class="desc">${o.desc}</div>
       </div>
       <div class="preview"><iframe src="${url}?mock=1&rate=2" loading="lazy"></iframe></div>
       <div class="opts">${o.opts}</div>
       <div class="foot">
-        <input class="url" readonly value="${url}">
-        <button data-open="${url}">Aç</button>
+        <input class="url" readonly value="${kopya}">
+        <button data-open="${kopya}">Aç</button>
       </div>
       <div class="foot" style="padding-top:0">
-        <button data-copy="${url}" style="flex:1">📋 OBS adresi</button>
-        <button data-copy="${ttlsUrl(o.file)}" class="primary" style="flex:1">📋 LIVE Studio adresi</button>
+        <button data-copy="${kopya}" style="flex:1">📋 OBS adresi</button>
+        <button data-copy="${ttls}" class="primary" style="flex:1">📋 LIVE Studio adresi</button>
       </div>`;
     grid.appendChild(card);
   }
 
-  // Onizleme iframe'lerini kutuya sigdir (1280x720 mantiksal boyut)
+  // Onizleme iframe'lerini kutuya sigdir (1080x1920 dikey mantiksal boyut)
   function fitPreviews() {
     for (const box of document.querySelectorAll('.preview')) {
       const f = box.querySelector('iframe');
-      if (f) f.style.transform = `scale(${box.clientWidth / 1280})`;
+      if (f) f.style.transform = `scale(${box.clientWidth / 1080})`;
     }
   }
   addEventListener('resize', fitPreviews);
@@ -466,7 +499,7 @@
   // ---- olcum tablosu ------------------------------------------------------
   const OYUN_ADI = {
     bilye: '🏁 Misket', bilgi: '🧠 Bilgi', pk: '⚔️ PK', at: '🏇 At',
-    tepe: '👑 Tepe', kalan: '💀 Son Kalan', bilinmiyor: '— tek oyun',
+    halay: '💃 Halay', tencere: '🍲 Düdüklü', tepe: '👑 Tepe (yatay)', kalan: '💀 Son Kalan (yatay)', bilinmiyor: '— tek oyun',
   };
   function olcum() {
     fetch('/api/istatistik').then((r) => r.json()).then((d) => {
