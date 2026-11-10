@@ -484,42 +484,28 @@
   }
 
   /**
-   * Sohbet metnini KONUSMA BALONU icin arindir. Donen metin sadece tuvale
-   * fillText ile yazilir (isaretleme olarak hic yorumlanmaz).
-   *   - kontrol / sifir genislik / yon degistiren karakterler, ust uste binen
-   *     aksan yiginlari (zalgo) atilir
-   *   - baglanti, alan adi ve telefon gibi uzun rakam dizileri atilir
-   *   - "heyyyyyyy" -> "heyyy"; 22 karakterden uzunsa "…" ile kisalir
-   *   - kaba soz iceren mesajin balonu HIC cikmaz (mesaj oyunda yine sayilir)
-   * Bos donerse balon gosterilmez.
+   * KONUSMA BALONU metni. Izleyicinin yazdigi serbest metin ASLA ekrana basilmaz
+   * (telefon, adres, link, kufur... hicbiri): yorumlar yalniz TETIKLEYICIDIR.
+   * Balonda yalniz sunlar cikar, gerisi icin '' doner (balon yok):
+   *   - tezahurat: mesaj yalniz tezahurat kelimelerinden olusuyorsa hazir buyuk
+   *     harfli metin: "HEY!", "HOP!", "HOPPA!", "OLEY!", "hey hey" -> "HEY HEY!" (en cok 2)
+   *   - yalniz emoji mesaji: en cok 3 emoji (harf, rakam, baglanti, sifir genislik atilir)
+   * Mesaj oyunda yine sayilir (puan, cosku, komut); sadece balonu cikmaz.
+   * Donen metin tuvale fillText ile yazilir. Bos donerse balon gosterilmez.
    */
-  // Kucuk, bilerek dar tutulmus liste: TAM kelime / kelime basi. Kontrol Turkce
-  // kucuk harfle yapilir ve ı ile i AYRI tutulur — "sıkıcı", "sıkıldım",
-  // "sıkıştım", "amin", "götür" gibi masum sozler balonsuz kalmasin diye.
-  const KABA = / (?:amk|amq|aq|mk|oc|sg|got|gotun\p{L}*|gotveren\p{L}*|s[iı]kt[iı]r\p{L}*|sikt[ie]\p{L}*|sik|siki[kms]\p{L}*|siker\p{L}*|sikey\p{L}*|sikim\p{L}*|orospu\p{L}*|yarra[kg]\p{L}*|yara[kg]\p{L}*|amc[iı][kg]\p{L}*|am[iı]na\p{L}*|pezevenk\p{L}*|gavat\p{L}*|kahpe\p{L}*|ibne\p{L}*|pic|picler\p{L}*|serefsiz\p{L}*|gerizekal[iı]\p{L}*) /u;
-  function kabaMi(t) {
-    const k = String(t).normalize('NFKC').replace(/[\u200C\u200D]/g, '')
-      .replace(/I/g, 'ı').replace(/İ/g, 'i').toLowerCase()
-      .normalize('NFD').replace(/\p{M}+/gu, '');
-    return KABA.test(' ' + (k.match(/[\p{L}\p{N}]+/gu) || []).join(' ') + ' ');
-  }
+  const EMOJI_BIRIM = /\p{Extended_Pictographic}[\u{1F3FB}-\u{1F3FF}]?/gu;
   function balonMetni(ham) {
-    let t = String(ham == null ? '' : ham)
-      .normalize('NFC')
-      // kontrol, sifir genislik (ZWSP/BOM), yon isaretleri ve yon degistiriciler: tamamen cikar
-      .replace(/[\u0000-\u0008\u000B-\u001F\u007F-\u009F\u00AD\u061C\u200B\u200E\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, '')
-      .replace(/[\t\n]/g, ' ')
-      .replace(/(\p{M})\p{M}+/gu, '$1')                                 // zalgo: taban harf basina tek isaret
-      .replace(/(?:https?:\/\/|www\.)\S+/gi, ' ')
-      .replace(/\S+\.(?:com|net|org|tr|io|me|gg|xyz|co|ly|shop|link|app)\b\S*/gi, ' ')
-      .replace(/[\d\s().+\-]{9,}/g, (m) => (m.replace(/\D/g, '').length >= 7 ? ' ' : m))
-      .replace(/([^\s\d\uFE0F]\uFE0F?)\1{3,}/gu, '$1$1$1')                // "heyyyyyy" -> "heyyy", "🔥🔥🔥🔥🔥" -> "🔥🔥🔥"
-      .replace(/\s+/g, ' ').trim();
-    if (!t) return '';
-    if (kabaMi(t)) return '';
-    const g = [...t];
-    if (g.length > 22) t = g.slice(0, 21).join('').trimEnd() + '…';
-    return t;
+    const m = String(ham == null ? '' : ham).normalize('NFKC');
+    // 1) tezahurat: tum sozcukler tezahurat
+    const p = parcalar(m);
+    if (p.length && p.every((k) => /^(?:he+y+|ho+p+a*|ole+y+)$/.test(k))) {
+      return p.slice(0, 2).map((k) => (/^he/.test(k) ? 'HEY' : /^ole/.test(k) ? 'OLEY' : /a$/.test(k) ? 'HOPPA' : 'HOP')).join(' ') + '!';
+    }
+    // 2) yalniz emoji: harf/rakam yoksa (noktalama, bosluk, ZWJ, VS16 serbest)
+    if (/[\p{L}\p{N}]/u.test(m)) return '';
+    const e = (m.match(EMOJI_BIRIM) || []).map((u) => u.replace(/^(\P{Emoji_Presentation})/u, '$1\uFE0F'))
+      .filter((u) => !/^[\u00A9\u00AE\u203C\u2049\u2122\u2139]/.test(u));
+    return e.slice(0, 3).join('');
   }
 
   // ==========================================================================
@@ -1251,7 +1237,7 @@
   // ---- KONUSMA BALONU --------------------------------------------------------
   /*
    * Yazanin KENDI danscisinin ustunde, kisa omurlu. Iki tur:
-   *   sohbet  — izleyicinin mesaji (balonMetni ile arindirilmis, kisaltilmis)
+   *   sohbet  — yalniz tezahurat ya da emoji (balonMetni; serbest metin hic cikmaz)
    *   sistem  — istegine verilen cevap ("sıradasın · 2.", "⏳ 12 sn sonra"):
    *             reddedilen istek de gorunur karsilik alir, kimseyi utandirmadan
    * Metin bir kez kucuk bir tuvale yazilir (fillText: isaretleme olarak hic
@@ -2456,7 +2442,7 @@
     const k = komutCoz(ev.comment);
     if (yapisalKid && dans.has(yapisalKid)) { const h = dans.get(yapisalKid); istekSonuc(ortaIste(d, h), d, h); return; }
     if (!k) {
-      // siradan sohbet: yazdigi, KENDI danscisinin ustunde balon olur
+      // siradan sohbet: yalniz tezahurat/emoji KENDI danscisinin ustunde balon olur (gerisi balonsuz)
       if (oyunda) balonEkle(d, balonMetni(ev.comment), chant ? { renk: '#f6c94f' } : null);
       return;
     }
