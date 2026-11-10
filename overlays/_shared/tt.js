@@ -93,7 +93,6 @@
   // tt-vertical), 1920x1080 olcegi, eski olu-bolge degiskenleri.
   // data-yatay: DONUSTURULMEMIS oyun sayfasi dikeyden cikar (eski yatay davranis); sayfa dikeye cevrilince bu oznitelik SILINIR.
   const OYUN = !!document.querySelector('#kok.tt-oyun:not([data-yatay])');
-  const YATAYOYUN = !!document.querySelector('#kok.tt-oyun[data-yatay]');
   const DIKEY = OYUN && !cfg.yatay;
   const TUVAL = DIKEY ? { w: 1080, h: 1920 } : { w: 1920, h: 1080 };
   const KUTU = Object.freeze({
@@ -125,16 +124,7 @@
       root.classList.toggle('tt-vertical', cfg.vertical);
     } else {
       // eski davranis: ?v=1 yoksa yatay
-      // data-yatay oyun sayfalarinin #kok/#ust... kurallari oyun-tema.css'te html.tt-yatay
-      // altinda: ?v=1'de de tt-yatay KALIR (tt-vertical ile birlikte); eski overlay'lerde kalkar.
-      root.classList.toggle('tt-yatay', !cfg.vertical || YATAYOYUN);
-      if (YATAYOYUN && cfg.vertical) {
-        // tt-yatay acikken base.css'in yatay olu-bolge payi devreye girer; ?v=1'de eskiden
-        // :root varsayilanlari gecerliydi — ayni sayilari satir-ici yaz (URL ezmeleri applyChrome'da ustune biner).
-        const dz = { 'dz-ust': '14%', 'dz-alt': '32%', 'dz-sag': '17%', 'dz-sol': '4%',
-                     'dz2-ust': '22%', 'dz2-alt': '42%', 'dz2-sag': '19%', 'dz2-sol': '8%' };
-        for (const k in dz) root.style.setProperty('--' + k, dz[k]);
-      }
+      root.classList.toggle('tt-yatay', !cfg.vertical);
       root.classList.toggle('tt-vertical', cfg.vertical);
     }
 
@@ -834,12 +824,6 @@
 
     // Dikeyde perde SAHNE kutusuna oturur: #kok'un icine konur (transform'lu
     // atadan olcek ve konum bedava gelir). Yatayda eskisi gibi tam ekran.
-    // data-yatay + ?v=1: tt-yatay acik oldugundan base.css'in yatay perde boyutlari devreye girer;
-    // eskiden (tt-yatay yok) 46/25/30px'ti — satir-ici ayni degerler.
-    if (YATAYOYUN && cfg.vertical) {
-      baslikEl.style.fontSize = '46px'; aciklamaEl.style.fontSize = '30px';
-      for (const c of komutlarEl.children) c.style.fontSize = '25px';
-    }
     const ana = (DIKEY && document.getElementById('kok')) || document.body;
     ana.append(perde, serit);
 
