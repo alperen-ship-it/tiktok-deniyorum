@@ -1466,7 +1466,7 @@
     const kid = kimlik(ev.user);
     const ad = isim(ev.user);
     sonHediye = { kid, ad, t: performance.now() / 1000 };
-    hediyeKuyruk.push({ ad, kademe: hediyeKademe(ev.gift), sira: hediyeSira++ });   // sinir YOK: hicbiri dusmez
+    hediyeKuyruk.push({ ad, kademe: hediyeKademe(ev.gift), elmas: Number(ev.gift && (ev.gift.diamonds || ev.gift.value)) || 0, sira: hediyeSira++ });   // sinir YOK: hicbiri dusmez
   });
   /** 100 ms'lik saatte cagrilir. En yuksek kademe once, kademe icinde ilk gelen once.
    *  3'ten fazla bekleyen varsa ayni kademedekiler tek satirda birlesir (en fazla 3 ad),
@@ -1475,18 +1475,21 @@
     if (!hediyeKuyruk.length) return;
     const simdi = performance.now();
     const kalabalik = hediyeKuyruk.length > 3;
-    if (simdi - hediyeSon < (kalabalik ? 900 : 1600)) return;
+    if (simdi - hediyeSon < (kalabalik ? 800 : 1600)) return;
     hediyeSon = simdi;
     let en = 0;
     for (const h of hediyeKuyruk) if (h.kademe > en) en = h.kademe;
-    const grup = [];
+    // Satirin basi: en yuksek kademedeki EN BUYUK hediye (esitlikte ilk gelen); gerisi kademe icinde ilk gelen once.
+    let bas = -1;
+    hediyeKuyruk.forEach((h, i) => { if (h.kademe === en && (bas < 0 || h.elmas > hediyeKuyruk[bas].elmas)) bas = i; });
+    const grup = hediyeKuyruk.splice(bas, 1);
     for (let i = 0; i < hediyeKuyruk.length && grup.length < (kalabalik ? 3 : 1); i++) {
       if (hediyeKuyruk[i].kademe === en) { grup.push(hediyeKuyruk[i]); hediyeKuyruk.splice(i, 1); i--; }
     }
     const parcalar = ['🎁 '];
     grup.forEach((h, i) => { if (i) parcalar.push(', '); parcalar.push({ kim: h.ad }); });
     parcalar.push(grup.length > 1 ? ' — teşekkürler' : ' hediye gönderdi — teşekkürler');
-    Spiker.satir(parcalar, { oncelik: 4, sure: kalabalik ? 1000 : 1900 });
+    Spiker.satir(parcalar, { oncelik: 4, sure: kalabalik ? 850 : 1900 });
   }
   setInterval(hediyeAkit, 100);
 
