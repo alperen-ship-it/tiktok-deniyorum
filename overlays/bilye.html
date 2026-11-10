@@ -1481,7 +1481,7 @@
   }
   setInterval(hediyeAkit, 100);
 
-  window.__dbg = () => ({ durum, R, b: bilyeler.map((b) => [b.ad, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.p), b.bitti]) });  // DBG-SIL
+  window.__dbg = () => ({ geo: { pegler, duvarlar, etaplar }, durum, R, b: bilyeler.map((b) => [b.ad, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.p), b.bitti]) });  // DBG-SIL
   // ---- basla ---------------------------------------------------------------
   boyutla();
   pistUret();

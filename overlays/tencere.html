@@ -168,12 +168,16 @@ const KUTLAMA_SN = num('kutlama', 10);        // bitis karti suresi
 const TITREME_SN = 3;                         // "TITRIYOR"
 const FINIS_GEC = 0.9;                        // patlamadan kart
 const BOT_AKTIF = q.get('bot') !== '0';
-const BOT_ARALIK = num('botaralik', 33);      // bot basi ortalama odun araligi (sn)
-const KISISEL_TAVAN = 30;                     // bir izleyicinin tur basi en cok eklegi basinc
+// ---- C4 (yeni): ISI DEPOSU. Hepsi ayarlanabilir sabit. ----
+const ODUN_BOY = 14;                          // bir odunun en cok ekledigi basinc
+const DEPO_HIZ = 1.5, DEPO_MAX = 14, DEPO_BAS = 7;   // ortak depo: sn'de dolum, tavan, tur basi
+const TAVAN_PAY = 160, TAVAN_MIN = 12, TAVAN_MAKS = 45;   // kisisel tavan = clamp(TAVAN_PAY / A, MIN, MAKS)
+const BOT_HEDEF = 6;                          // bot + gercek katilimci hedefi (6 gercek ve ustunde bot yok)
+const BOT_ARALIK = num('botaralik', 10), BOT_ARALIK_GERCEK = 6.2;   // bot odun araligi ort. (sn); gercek izleyici etkinken kisa
 const HEDIYE_TAVAN = 25;                      // hediyelerin tur basi en cok eklegi basinc
 const ESIK = [33, 66];
 const JETON_MAX = 3, JETON_SN = 4;
-const SIZMA_SN = 4, SIZMA_HIZ = 1.5;
+const SIZMA_SN = 10, SIZMA_HIZ = 0.5;
 const HEDIYE_KAPI = 95;
 const YEMEKLER = ['kuru fasulye', 'nohut', 'etli pilav', 'dolma', 'aşure'];
 
@@ -259,7 +263,8 @@ const simdi = () => performance.now();
 let L = 0;                                  // oyun saati (sn): gercek dt * HIZ
 let durum = 'oyun';                         // oyun | titreme | patladi | pisti
 let tur = 0, P = 0, Ps = 0, esik = 0, kalanSn = TUR_SN, titremeKal = 0, kutlamaT = 0;
-let sonOdunT = -1e9, hediyeBasinc = 0, ilkOdunVar = false;
+let sonOdunT = -1e9, hediyeBasinc = 0, ilkOdunVar = false, depo = DEPO_BAS;
+const kisiselTavan = (A) => Math.max(TAVAN_MIN, Math.min(TAVAN_MAKS, TAVAN_PAY / Math.max(1, A)));
 let finisYapildi = false, sonOdunSatiri = false, sonuc = null, sonOdunKisi = null;
 const kor = { bitis: 0, kimden: '' };       // koruk: L cinsinden bitis
 const bekleyenHediye = [];                  // P>=95 iken gelenler: sonraki tura
@@ -576,16 +581,13 @@ function odunAt(d, w, tip) {
   if (ilk && !d.bot) { /* katilimci sayisi A buradan artar */ }
   let eklenen = 0;
   if (durum === 'oyun') {
-    const A = Math.max(6, katilimcilar().length);
-    const baz = 55 / A * w;
-    const kutuKalan = KISISEL_TAVAN - d.pay;
-    const carpan = (kor_kalan() > 0 && hediyeBasinc < HEDIYE_TAVAN) ? 1.5 : 1;
-    let add = Math.min(baz * carpan, Math.max(0, kutuKalan), 100 - P);
-    if (carpan > 1) {
-      const bonus = Math.max(0, add - Math.min(add, baz));
-      const izin = Math.max(0, HEDIYE_TAVAN - hediyeBasinc);
-      if (bonus > izin) add = Math.min(baz, add) + izin;
-      hediyeBasinc += Math.max(0, add - Math.min(add, baz));
+    const tavan = kisiselTavan(katilimcilar().length);
+    const baz = Math.max(0, Math.min(ODUN_BOY, depo, tavan - d.pay, 100 - P));   // ortak depodan
+    depo -= baz;
+    let add = baz;
+    if (kor_kalan() > 0 && hediyeBasinc < HEDIYE_TAVAN && baz > 0) {         // korukten gelen ek: hediye payi, depodan degil
+      const bonus = Math.max(0, Math.min(baz * 0.5, HEDIYE_TAVAN - hediyeBasinc, tavan - d.pay - baz, 100 - P - baz));
+      add += bonus; hediyeBasinc += bonus;
     }
     d.pay += add; P = Math.min(100, P + add); eklenen = add;
   }
@@ -714,7 +716,7 @@ function sarkiBasla(ilk) {
   for (const f of diskler) f.el.remove(); diskler = [];
   tur++;
   durum = 'oyun'; P = 0; Ps = 0; esik = 0; kalanSn = TUR_SN; titremeKal = 0; kutlamaT = 0; sonOdunT = L;
-  hediyeBasinc = 0; ilkOdunVar = false; kor.bitis = 0; kor.kimden = ''; sonuc = null; sonOdunKisi = null; usta = null;
+  hediyeBasinc = 0; depo = DEPO_BAS; ilkOdunVar = false; kor.bitis = 0; kor.kimden = ''; sonuc = null; sonOdunKisi = null; usta = null;
   lid.mod = 'yerinde'; lidG.visible = true; odunlar.length = 0; buhar.length = 0;
   for (const d of [...vm.values()]) {
     d.odun = 0; d.pay = 0; d.jeton = JETON_MAX; d.jetonT = L; d.begeniAcc = 0; d.ilkT = 0;
@@ -749,13 +751,13 @@ function botDuzenle() {
   let gercek = 0;
   for (const d of vm.values()) if (!d.bot && L - d.sonAktif < 45 && (d.odun > 0 || d.figur)) gercek++;
   botGercek = gercek;
-  const hedef = gercek === 0 ? 6 : gercek < 4 ? 4 - gercek : 0;
+  const hedef = Math.max(0, BOT_HEDEF - gercek);
   while (botAktif.size < hedef) {
     let i = 0; while (botAktif.has(Kimlik.bot(i).kid)) i++;
     const b = Kimlik.bot(i);
     let d = vm.get(b.kid);
     if (!d) { d = yeniIzleyici(b.kid, b.ad, '', true); vm.set(b.kid, d); }
-    d.botT = L + 3 + Math.random() * BOT_ARALIK * 0.8;
+    d.botT = L - Math.log(1 - Math.random()) * 8;
     botAktif.add(b.kid); figurKur(d);
   }
   while (botAktif.size > hedef) {
@@ -767,7 +769,7 @@ function botTik() {
   if (durum !== 'oyun' && durum !== 'titreme') return;
   for (const kid of botAktif) {
     const d = vm.get(kid); if (!d || L < d.botT) continue;
-    d.botT = L + BOT_ARALIK * (botGercek ? 0.62 : 1) * (0.55 + Math.random() * 0.9);
+    d.botT = L - Math.log(1 - Math.random()) * (botGercek ? BOT_ARALIK_GERCEK : BOT_ARALIK);
     odunAt(d, Math.random() < 0.15 ? 1.5 : 1, null);
   }
 }
@@ -880,6 +882,7 @@ setInterval(() => {
   if (durum === 'oyun' || durum === 'titreme') for (const d of vm.values()) if (d.begeniAcc >= 10) begeniIsle(d);
   if (durum === 'oyun') {
     kalanSn -= dt;
+    depo = Math.min(DEPO_MAX, depo + DEPO_HIZ * dt);
     if (L - sonOdunT > SIZMA_SN && P > 0) {                       // sessizlikte sizar; son duduk esigi taban
       const taban = esik >= 2 ? ESIK[1] : esik >= 1 ? ESIK[0] : 0;
       P = Math.max(taban, P - SIZMA_HIZ * dt);
@@ -949,7 +952,7 @@ window.Tencere = Object.freeze({
       katilanlar: l, hediyeBasinc: +hediyeBasinc.toFixed(2),
       koruk: { kalan: +kor_kalan().toFixed(1) },
       ustaAsci: usta ? { kid: usta.kid, ad: usta.ad } : null,
-      oyunSaati: +L.toFixed(1), esik, bekleyenHediye: bekleyenHediye.length, sayfaJs: propOlcum(),
+      depo: +depo.toFixed(2), kisiselTavan: +kisiselTavan(katilimcilar().length).toFixed(2), oyunSaati: +L.toFixed(1), esik, bekleyenHediye: bekleyenHediye.length, sayfaJs: propOlcum(),
     };
   },
 });
