@@ -93,7 +93,7 @@
 
   /* -- iki taraf: SAHNE ust 300px -- */
   html.tt-dikey #konuKutu {
-    position: absolute; left: 0; top: 0; width: 960px; height: 300px; box-sizing: border-box;
+    position: absolute; left: 0; top: 0; width: var(--dk-sahne-w); height: 300px; box-sizing: border-box;
     padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none;
   }
   html.tt-dikey #konuUst {
@@ -103,7 +103,7 @@
   html.tt-dikey #konu { display: none; }
   html.tt-dikey #kartlar {
     display: flex; gap: 20px;
-    position: absolute; left: 0; top: 44px; width: 960px; height: 250px;
+    position: absolute; left: 0; top: 44px; width: var(--dk-sahne-w); height: 250px;
   }
   html.tt-dikey .kart {
     flex: 1; min-width: 0; box-sizing: border-box;
@@ -122,17 +122,17 @@
 
   /* -- halat: SAHNE orta 120px, tam 960 -- */
   html.tt-dikey #metreKutu {
-    position: absolute; left: 0; top: 300px; width: 960px; height: 120px; box-sizing: border-box;
+    position: absolute; left: 0; top: 300px; width: var(--dk-sahne-w); height: 120px; box-sizing: border-box;
     padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none;
   }
-  html.tt-dikey #metre { width: 960px; height: 120px; border: 0; border-radius: 22px; background: #191434; }
+  html.tt-dikey #metre { width: var(--dk-sahne-w); height: 120px; border: 0; border-radius: 22px; background: #191434; }
   html.tt-dikey .yan { width: 100% !important; padding: 0; transition: transform .45s cubic-bezier(0.16, 1, 0.3, 1); }
   html.tt-dikey #yanA { left: 0; z-index: 1; transform: scaleX(var(--a, .5)); transform-origin: left center; }
   html.tt-dikey #yanB { right: 0; }
   html.tt-dikey .yan > * { display: none; }
   html.tt-dikey #sinir {
     left: 0; top: 0; bottom: 0; width: 8px; border-radius: 4px;
-    transform: translateX(calc(var(--a, .5) * 960px - 4px));
+    transform: translateX(calc(var(--a, .5) * var(--dk-sahne-w) - 4px));
     transition: transform .45s cubic-bezier(0.16, 1, 0.3, 1);
   }
   html.tt-dikey .uc { display: block; position: absolute; top: 50%; margin-top: -40px; font-size: 64px; line-height: 80px; z-index: 2; }
@@ -141,7 +141,7 @@
 
   /* -- MVP: SAHNE alt 250px, iki sutun -- */
   html.tt-dikey #mvpler {
-    position: absolute; left: 0; top: 422px; width: 960px; height: 250px; gap: 20px;
+    position: absolute; left: 0; top: 422px; width: var(--dk-sahne-w); height: 250px; gap: 20px;
   }
   html.tt-dikey .mvpKutu { display: flex; flex-direction: column; padding: 4px 4px 4px; height: 250px; box-sizing: border-box; }
   html.tt-dikey .mvpBaslik { flex: none; font-size: 30px; letter-spacing: .5px; padding: 0 10px 2px; white-space: nowrap; }
