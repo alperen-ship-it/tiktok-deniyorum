@@ -553,8 +553,10 @@
         t.ad = k.ad; t.galibiyet += 1; t.puan += Math.round(k.puan);
         tablo.set(kid, t);
       }
-      localStorage.setItem('tt-pk-tablo',
-        JSON.stringify([...tablo.entries()].sort((a, b) => b[1].puan - a[1].puan).slice(0, 150)));
+      try {
+        localStorage.setItem('tt-pk-tablo',
+          JSON.stringify([...tablo.entries()].sort((a, b) => b[1].puan - a[1].puan).slice(0, 150)));
+      } catch { /* depolama yok */ }
 
       if (mvp && !Kimlik.botMu(mvp[0])) {
         TT.soyle(`⚔️ ${kaz.emoji} ${kaz.ad} kazandı! MVP: @${uidler.get(mvp[0]) || mvp[1].ad} 🏆`);
