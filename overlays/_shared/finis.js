@@ -61,6 +61,12 @@
       if (el.scrollWidth <= el.clientWidth) return px;
     }
     el.style.fontSize = kucuk + 'px';
+    // ayractan (_ . -) sonra <wbr>: once ayractan bolunur, sonra harf ortasindan. textContent ayni.
+    const parca = el.textContent.match(/[^_.\-]*[_.\-]+|[^_.\-]+/g) || [];
+    if (parca.length > 1) {
+      el.textContent = '';
+      parca.forEach((x, i) => { if (i) el.appendChild(document.createElement('wbr')); el.appendChild(document.createTextNode(x)); });
+    }
     el.classList.add('sar');
     return kucuk;
   }

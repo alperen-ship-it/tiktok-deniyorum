@@ -87,7 +87,12 @@
    * Yasak bolgeler (A2): y<240; x<60 ve x>1020 (yazi yok); x<540 & y>1250
    * (TikTok yorumlari); y>1760 (giris kutusu, hediye dugmesi).
    */
-  const DIKEY = !cfg.yatay;
+  // Dikey kabuk YALNIZ oyun sayfalarinda (#kok.tt-oyun; tt.js body sonunda
+  // yuklendigi icin #kok bu noktada vardir). Eski overlay'ler (durum, boss,
+  // chat, alerts...) ONCEKI davranisi aynen korur: tt-yatay (?v=1 ise
+  // tt-vertical), 1920x1080 olcegi, eski olu-bolge degiskenleri.
+  const OYUN = !!document.querySelector('#kok.tt-oyun');
+  const DIKEY = OYUN && !cfg.yatay;
   const TUVAL = DIKEY ? { w: 1080, h: 1920 } : { w: 1920, h: 1080 };
   const KUTU = Object.freeze({
     ust:     Object.freeze({ x: 60,  y: 252,  w: 960, h: 128 }),
@@ -112,9 +117,15 @@
   function yonBelirle(root, olayYolla) {
     // ?v=1 ESKI overlay'ler (alerts, chat, race...) icin: onlar tt-vertical
     // sinifina gore yazilmisti. Oyunlar bunu kullanmaz.
-    root.classList.toggle('tt-yatay', !DIKEY);
-    root.classList.toggle('tt-dikey', DIKEY);
-    root.classList.toggle('tt-vertical', cfg.vertical);
+    if (OYUN) {
+      root.classList.toggle('tt-yatay', !DIKEY);
+      root.classList.toggle('tt-dikey', DIKEY);
+      root.classList.toggle('tt-vertical', cfg.vertical);
+    } else {
+      // eski davranis: ?v=1 yoksa yatay
+      root.classList.toggle('tt-yatay', !cfg.vertical);
+      root.classList.toggle('tt-vertical', cfg.vertical);
+    }
 
     const w = innerWidth, h = innerHeight;
     const olcek = Math.min(w / TUVAL.w, h / TUVAL.h);
@@ -566,8 +577,16 @@
         if (el.scrollWidth <= el.clientWidth) return px;
       }
       el.style.fontSize = kucuk + 'px';
+      util.yumusakKir(el);
       el.classList.add('sar');
       return kucuk;
+    },
+    /** Ad ayractan (_ . -) sonra <wbr> ile bolunebilsin; textContent AYNI kalir (innerHTML yok). */
+    yumusakKir(el) {
+      const parca = el.textContent.match(/[^_.\-]*[_.\-]+|[^_.\-]+/g) || [];
+      if (parca.length < 2) return;
+      el.textContent = '';
+      parca.forEach((x, i) => { if (i) el.appendChild(document.createElement('wbr')); el.appendChild(document.createTextNode(x)); });
     },
     /** 1234 -> "1.2B" (Turkce kisaltma) */
     short(n) {
