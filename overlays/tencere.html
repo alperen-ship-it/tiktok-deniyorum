@@ -57,9 +57,9 @@
   #barEt { position: absolute; left: 0; top: 70px; width: 960px; height: 34px; }
   #barEt span { position: absolute; top: 0; font-size: 30px; line-height: 34px; font-weight: 800; color: var(--soluk); transform: translateX(-50%); white-space: nowrap; }
   #sonlarBas { position: absolute; left: 0; top: 112px; font-size: 30px; line-height: 34px; font-weight: 900; letter-spacing: .5px; color: var(--soluk); }
-  #sonlar { position: absolute; left: 0; top: 152px; width: 960px; height: 344px; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 84px; gap: 8px 14px; overflow: hidden; }
+  #sonlar { position: absolute; left: 0; top: 152px; width: 960px; height: 344px; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: auto; align-content: start; gap: 8px 14px; overflow: hidden; }
   .son {
-    box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 12px; overflow: hidden;
+    box-sizing: border-box; display: flex; min-height: 84px; align-items: center; gap: 10px; padding: 0 12px; overflow: hidden;
     background: var(--panel); border: 4px solid var(--cizgi); border-left: 12px solid var(--renk, #6b5fb8); border-radius: 16px;
   }
   .son .ad { flex: 1; min-width: 0; font-size: 54px; font-weight: 900; line-height: 1; white-space: nowrap; overflow: hidden; }
@@ -168,7 +168,7 @@ const KUTLAMA_SN = num('kutlama', 10);        // bitis karti suresi
 const TITREME_SN = 3;                         // "TITRIYOR"
 const FINIS_GEC = 0.9;                        // patlamadan kart
 const BOT_AKTIF = q.get('bot') !== '0';
-const BOT_ARALIK = num('botaralik', 26);      // bot basi ortalama odun araligi (sn)
+const BOT_ARALIK = num('botaralik', 33);      // bot basi ortalama odun araligi (sn)
 const KISISEL_TAVAN = 30;                     // bir izleyicinin tur basi en cok eklegi basinc
 const HEDIYE_TAVAN = 25;                      // hediyelerin tur basi en cok eklegi basinc
 const ESIK = [33, 66];
@@ -344,7 +344,7 @@ function figurKur(d) {
 function etiketleriYaz() {
   etKirli = false;
   const l = holderlar().sort((a, b) => b.sonAktif - a.sonAktif);
-  const liste = l.map((d, i) => ({ kid: d.kid, ad: d.ad, oncelik: d === usta ? 100 : (i < 8 ? 60 - i : 0), avatarUrl: diskUrl(d), altin: d.kepce }));
+  const liste = l.map((d, i) => ({ kid: d.kid, ad: d.kepce ? '🥄 ' + d.ad : d.ad, oncelik: d === usta ? 100 : (i < 8 ? 60 - i : 0), avatarUrl: diskUrl(d), altin: d.kepce }));
   try { s.etiket.ayarla(liste); } catch (e) { /* tamam */ }
 }
 
@@ -379,7 +379,7 @@ function panoYaz() {
     const dk = document.createElement('span'); dk.className = 'disk';
     dk.style.backgroundImage = 'url("' + diskUrl(d).replace(/["\\\n\r]/g, '') + '")';
     const ad = document.createElement('span'); ad.className = 'ad'; ad.textContent = d.ad;
-    const at = document.createElement('span'); at.className = 'adet'; at.textContent = '🔥' + Math.round(d.odun);
+    const at = document.createElement('span'); at.className = 'adet'; at.textContent = (d.kepce ? '🥄' : '') + '🔥' + Math.round(d.odun);
     r.append(dk, ad, at); ic.appendChild(r);
     TT.adSigdir(ad, 54, 40);
   }
@@ -393,11 +393,12 @@ function sonlarYaz() {
     const d = vm.get(kid); if (!d || n >= 8) continue; n++;
     const c = document.createElement('div'); c.className = 'son'; c.style.setProperty('--renk', d.renk); c.dataset.kid = kid;
     const ad = document.createElement('span'); ad.className = 'ad'; ad.textContent = d.ad;
-    const at = document.createElement('span'); at.className = 'adet'; at.textContent = '🔥' + Math.round(d.odun);
+    const at = document.createElement('span'); at.className = 'adet'; at.textContent = (d.kepce ? '🥄' : '') + '🔥' + Math.round(d.odun);
     c.append(ad, at); el.appendChild(c);
     TT.adSigdir(ad, 54, 40);
     if (d.zipla) { c.classList.add('zipla'); d.zipla = false; }
   }
+  while (el.children.length > 1 && el.scrollHeight > el.clientHeight + 1) el.removeChild(el.lastChild);
 }
 function sonlariIsaretle(d) {
   const i = sonlarSira.indexOf(d.kid); if (i >= 0) sonlarSira.splice(i, 1);
@@ -537,10 +538,18 @@ function propGuncelle(T, dt) {
   if (korukG.visible) { const f = 0.5 + 0.5 * Math.sin(T * 9); korukGov.scale.set(1 - 0.22 * f, 1, 1 + 0.12 * f); korukSap.position.x = -0.55 + 0.15 * f; }
 }
 let sonCiz = simdi();
+const propMs = new Float32Array(240); let propI = 0, propN = 0;
 function cizDongu(now) {
   requestAnimationFrame(cizDongu);
   const dt = Math.min(0.1, (now - sonCiz) / 1000); sonCiz = now;
+  const t0 = simdi();
   try { propGuncelle(now / 1000, dt); } catch (e) { console.error(e); }
+  propMs[propI % 240] = simdi() - t0; propI++; if (propN < 240) propN++;
+}
+function propOlcum() {
+  if (!propN) return { jsMs: 0, jsMsP95: 0 };
+  const a = Array.from(propMs.subarray(0, propN)).sort((x, y) => x - y);
+  return { jsMs: +(a.reduce((x, y) => x + y, 0) / propN).toFixed(3), jsMsP95: +a[Math.min(propN - 1, Math.floor(propN * 0.95))].toFixed(3) };
 }
 requestAnimationFrame(cizDongu);
 
@@ -730,10 +739,12 @@ function sarkiBasla(ilk) {
 // BOTLAR (C6)
 // ==========================================================================
 const botAktif = new Set();
+let botGercek = 0;                         // son sayimda etkin gercek izleyici
 function botDuzenle() {
   if (!BOT_AKTIF) { for (const kid of [...botAktif]) botAktif.delete(kid); return; }
   let gercek = 0;
   for (const d of vm.values()) if (!d.bot && L - d.sonAktif < 45 && (d.odun > 0 || d.figur)) gercek++;
+  botGercek = gercek;
   const hedef = gercek === 0 ? 6 : gercek < 4 ? 4 - gercek : 0;
   while (botAktif.size < hedef) {
     let i = 0; while (botAktif.has(Kimlik.bot(i).kid)) i++;
@@ -752,7 +763,7 @@ function botTik() {
   if (durum !== 'oyun' && durum !== 'titreme') return;
   for (const kid of botAktif) {
     const d = vm.get(kid); if (!d || L < d.botT) continue;
-    d.botT = L + BOT_ARALIK * (0.55 + Math.random() * 0.9);
+    d.botT = L + BOT_ARALIK * (botGercek ? 0.62 : 1) * (0.55 + Math.random() * 0.9);
     odunAt(d, Math.random() < 0.15 ? 1.5 : 1, null);
   }
 }
@@ -771,9 +782,9 @@ function tesekkurIsle() {
   if (t < tesekkurKilit || !tesekkurKuyruk.length) return;
   tesekkurKuyruk.sort((a, b) => (b.k.guc - a.k.guc) || (a.n - b.n));
   const g = tesekkurKuyruk.shift();
-  const sure = tesekkurKuyruk.length > 6 ? 800 : tesekkurKuyruk.length > 2 ? 1100 : 1700;
+  const sure = tesekkurKuyruk.length > 8 ? 650 : tesekkurKuyruk.length > 4 ? 850 : tesekkurKuyruk.length > 1 ? 1100 : 1700;
   try { ULTI.duyur(g.ad, g.k, sure); } catch (e) { /* */ }
-  tesekkurKilit = t + sure + 360;
+  tesekkurKilit = t + sure + 330;
   tesekkurKuyruk.forEach((x, i) => { x.n = i; });
 }
 const GIFT_K = {
@@ -811,7 +822,7 @@ function hediyeAl(ev) {
   else bekleyenHediye.push({ d: { kid: d.kid, ad: d.ad }, tur: tip === 'kepce' ? 'cifte' : tip });
   if (bekleyenHediye.length > 60) bekleyenHediye.shift();
   const not = uygulanabilir ? (tip === 'odun' ? ' — ateşe odun' : ' — körük çalışıyor') : ' — hediyen sıradaki tura gider';
-  soyle(['🎁 ', { kim: d.ad }, ' sağ ol!' + not], { oncelik: Math.min(3, k.guc + 1), sure: 3400 });
+  soyle(['🎁 ', { kim: d.ad }, ' sağ ol!' + not], { oncelik: 3, sure: 3400 });
   if (tip === 'kepce') soyle(['🥄 ', { kim: d.ad }, ' ALTIN KEPÇE'], { oncelik: 3, sure: 3000 });
   d.sonAktif = L; panoKirli = true;
 }
@@ -929,7 +940,7 @@ window.Tencere = Object.freeze({
       katilanlar: l, hediyeBasinc: +hediyeBasinc.toFixed(2),
       koruk: { kalan: +kor_kalan().toFixed(1) },
       ustaAsci: usta ? { kid: usta.kid, ad: usta.ad } : null,
-      oyunSaati: +L.toFixed(1), esik, bekleyenHediye: bekleyenHediye.length,
+      oyunSaati: +L.toFixed(1), esik, bekleyenHediye: bekleyenHediye.length, sayfaJs: propOlcum(),
     };
   },
 });
