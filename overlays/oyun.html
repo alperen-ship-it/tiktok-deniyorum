@@ -104,6 +104,7 @@
     //           @isim ya da numara = dansa kaldir. Varsayilan siraya ALINMADI;
     //           ?oyunlar=...,halay ile acilir.
     halay: { dosya: 'halay.html', ad: 'Halay', ikon: '💃' },
+    tencere: { dosya: 'tencere.html', ad: 'Düdüklü', ikon: '🍲' },
   };
   const SIRA = (q.get('oyunlar') || 'bilye,bilgi,pk,at')
     .split(',').map((s) => s.trim()).filter((s) => OYUNLAR[s]);

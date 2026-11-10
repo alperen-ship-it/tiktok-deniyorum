@@ -469,6 +469,8 @@
     }
   }
   yuvaKaristir();
+  /** i. bilyenin yuvasi: ilk n yuva icinde karisik (az kisi ayni kumede baslar, kimse one dusmez). */
+  function yuvaDizi(n) { return yuvaSira.filter((v) => v < n); }
   /** n bilye icin baslangic izgara noktalari (sutun-sutun, soldan saga). */
   function yuvalar(n, r) {
     const sp = r * 2 + 3, out = [];
@@ -483,13 +485,14 @@
     bitirenler = [];
     R = rHesapla(katilanlar.size);
     const yv = DIKEY ? yuvalar(katilanlar.size, R) : null;
+    const yd = DIKEY ? yuvaDizi(katilanlar.size) : null;
     let i = 0;
     for (const [kid, ad] of katilanlar) {
       // Ust bantta rastgele dagit, hafif yatay hiz ver — her yaris farkli olsun
       const kim = Kimlik.al(kid);   // kalici skin: ayni izleyici her yayinda ayni bilye
       let x = 90 + Math.random() * (EN - 180), y = 60 + Math.random() * 160;
       if (DIKEY) {
-        const y0 = yv[yuvaSira[i] % yv.length] || yv[i % yv.length];
+        const y0 = yv[yd[i]] || yv[i % yv.length];
         x = y0.x; y = y0.y;
       }
       bilyeler.push({
@@ -534,7 +537,7 @@
         // Pist 'hafif egimli' kabul: satir yonunde sabit suruc (zeminin gorsel egimi kucuk,
         // gercek egim bilyeyi kabartilarin ustunden tasimaya yetmiyordu). Herkese ayni; hediye/yazi etkisiz.
         const hiz = etaplar[etapBul(b.p)];
-        b.vx += ((b.r || 0) % 2 === 0 ? 1 : -1) * SURUS * (1 + yardim) * (hiz && hiz.ad === 'HIZ TÜNELİ' ? 2.2 : 1) * dt;
+        b.vx += ((b.r || 0) % 2 === 0 ? 1 : -1) * SURUS * Math.pow(R / R_TASARIM, 0.6) * (1 + yardim) * (hiz && hiz.ad === 'HIZ TÜNELİ' ? 2.2 : 1) * dt;
       }
       b.x += b.vx * dt;
       b.y += b.vy * dt;
@@ -812,6 +815,12 @@
   function adSatirlari(ad, enMax) {
     ctx.font = ETIKET_FONT;
     if (ctx.measureText(ad).width <= enMax) return [ad];
+    if (!/[_.\-\s]/.test(ad)) {                       // tek parca ad: esit uzunlukta satirlara bol
+      const hf = [...ad], n = Math.ceil(ctx.measureText(ad).width / enMax), k = Math.ceil(hf.length / n);
+      const out = [];
+      for (let i = 0; i < hf.length; i += k) out.push(hf.slice(i, i + k).join(''));
+      return out;
+    }
     const parca = ad.match(/[^_.\-\s]*[_.\-\s]+|[^_.\-\s]+/g) || [ad];
     const satirlar = []; let cur = '';
     const ekle = (t) => {
@@ -821,12 +830,12 @@
       }
     };
     for (const p of parca) {
-      if (!cur || ctx.measureText(cur + p).width <= enMax) cur += p;
-      else if (ctx.measureText(p).width <= enMax) { satirlar.push(cur); cur = p; }
-      else { ekle(p); }
+      if (ctx.measureText(cur + p).width <= enMax) cur += p;
+      else if (cur && ctx.measureText(p).width <= enMax) { satirlar.push(cur); cur = p; }
+      else ekle(p);                                   // tek parca bile sigmiyor: harf harf bol
     }
     if (cur) satirlar.push(cur);
-    return satirlar.slice(0, 3);
+    return satirlar;
   }
 
   function etiketleriCiz(dt) {
@@ -887,10 +896,10 @@
     ctx.scale(olcek, olcek);
     if (durum === 'katilim') {
       // bekleyen misketler baslangic izgarasinda (yuva = katilim sirasi, yuva sirasi karisik)
-      const n = katilanlar.size, r = rHesapla(n), yv = yuvalar(n, r);
+      const n = katilanlar.size, r = rHesapla(n), yv = yuvalar(n, r), yd = yuvaDizi(n);
       let i = 0;
       for (const kid of katilanlar.keys()) {
-        const y0 = yv[yuvaSira[i] % yv.length] || yv[i % yv.length];
+        const y0 = yv[yd[i]] || yv[i % yv.length];
         if (y0) Kimlik.ciz(ctx, kid, y0.x, y0.y, r * 2.15);
         i++;
       }
@@ -1346,6 +1355,7 @@
       akis('👇 <b>BİR ŞEY YAZ</b> — sıradaki yarışta senin misketin de olsun',
            { oncelik: 2, sure: 4200 });
     } else {
+      if (DIKEY) cagriYaz('yarış sürüyor');
       akis(`🚦 <b>START</b> — ${katilanlar.size} bilye yarışıyor`);
     }
   }
@@ -1355,7 +1365,7 @@
     const simdi = performance.now();
     sayacSn -= Math.min(1, (simdi - sayacT) / 1000);     // saat bazli (setInterval kaymasi sayilmaz)
     sayacT = simdi;
-    if (durum === 'katilim') cagriYaz(`katılım açık · ${Math.max(0, Math.ceil(sayacSn))} sn`);
+    if (DIKEY && durum === 'katilim') cagriYaz(`katılım açık · ${Math.max(0, Math.ceil(sayacSn))} sn`);
     hediyeAkit();
     if (durum === 'katilim' && sayacSn <= 0) yarisBasla();
     else if (durum === 'bitti' && sayacSn <= 0) katilimaDon();
@@ -1459,7 +1469,6 @@
     Spiker.satir(['🎁 ', { kim: ad }, ' hediye gönderdi — teşekkürler'], { oncelik: 3, sure: 1900 });
   }
 
-  window.__dbg = () => ({ pegler: pegler.filter((p) => p.y < 130 && p.x < 400), duvar: duvarlar.filter((d) => d.y1 < 130 && Math.min(d.x1, d.x2) < 400 && d.x1 !== d.x2 || (d.x1 === d.x2 && d.y1 < 130 && d.x1 > 0 && d.x1 < 400)), etaplar: etaplar.map((e) => e.ad), durum, R, b: bilyeler.map((b) => [b.ad, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.p), b.bitti]) });  // DBG-SIL
   // ---- basla ---------------------------------------------------------------
   boyutla();
   pistUret();

@@ -122,6 +122,30 @@
                      ton({ f: 1320, sure: 0.13, tip: 'sine', gecikme: 0.08 }); },
     hosgeldin: () => { ton({ f: 660, sure: 0.1, tip: 'triangle', hacim: 0.45 });
                        ton({ f: 990, sure: 0.14, tip: 'triangle', hacim: 0.4, gecikme: 0.09 }); },
+    // --- DUDUKLU (tencere.html) — yalniz EKLEME ---
+    // fokur: iki alcak sine "blup"
+    fokur:   () => { ton({ f: 180, f2: 230, sure: 0.09, tip: 'sine', hacim: 0.5 });
+                     ton({ f: 150, f2: 210, sure: 0.11, tip: 'sine', hacim: 0.45, gecikme: 0.1 }); },
+    // duduk: 1900 -> 2500 Hz sine, 0.5 sn, tremolo (14 Hz LFO ile genlik titresimi)
+    duduk:   () => {
+      const t0 = ctx.currentTime, s = 0.5;
+      const osc = ctx.createOscillator(), trem = ctx.createGain(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1900, t0);
+      osc.frequency.exponentialRampToValueAtTime(2500, t0 + s);
+      trem.gain.value = 0.62;
+      lfo.type = 'sine'; lfo.frequency.value = 14; lg.gain.value = 0.38;
+      lfo.connect(lg); lg.connect(trem.gain);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.38, t0 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + s);
+      osc.connect(trem); trem.connect(g); g.connect(ana);
+      osc.start(t0); osc.stop(t0 + s + 0.02);
+      lfo.start(t0); lfo.stop(t0 + s + 0.02);
+    },
+    // patla: testere disi 220 -> 40 Hz suprulme + kare dalga tik
+    patla:   () => { ton({ f: 220, f2: 40, sure: 0.55, tip: 'sawtooth', hacim: 0.5 });
+                     ton({ f: 900, f2: 200, sure: 0.05, tip: 'square', hacim: 0.4 }); },
   };
 
   /**
@@ -227,6 +251,13 @@
                'A5', 'G5', 'F#5', 'D#5', 'D5', '.', 'D5', '.'],
       vurus:  ['x', '.', 't', 't', 'x', '.', 't', '.',
                'x', '.', 't', 't', 'x', 't', 't', '.'],
+    },
+    // Dudukulu: kaynayan tencere — kisa, zipzip, hafif gerilimli (Ses.muzikTempo basinca gore hizlandirir)
+    tencere: {
+      bpm: 104, dalga: 'triangle',
+      bas:    ['E2', '.', 'E2', '.', 'B2', '.', 'A2', '.'],
+      melodi: ['E4', 'G4', 'B4', 'G4', 'A4', 'B4', 'D5', 'B4'],
+      vurus:  ['x', '.', 'x', 'x', '.', 'x', 'x', '.'],
     },
   };
 
