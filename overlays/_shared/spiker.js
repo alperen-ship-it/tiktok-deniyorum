@@ -9,6 +9,13 @@
  *   Spiker.kur(document.getElementById('akis'));
  *   Spiker.soyle('⚡ <b>emre</b> öne geçti', { oncelik: 2, anahtar: 'lider' });
  *   Spiker.sec(['%s uçuyor!', '%s farkı açıyor!'], 'emre')  -> rastgele kalip
+ *
+ * Izleyici adi iceren satirlari DOM'la kur: Spiker.satir(['⚡ ', {kim: ad}, ' öne geçti'])
+ * — ad textContent ile yazilir (ham HTML yok). Parca: duz metin | {kim} | {b}.
+ *
+ * DIKEY kabukta (PLAN-DIKEY A6): kutu SPIKER 960x64, TEK satir, 36px; adlar
+ * (.kim) 40px. Satir kutuya sigmazsa once 30px'e iner, sonra iki satira sarar —
+ * adin sonuna "…" asla konmaz.
  */
 (function (global) {
   'use strict';
@@ -26,6 +33,28 @@
    * @param {object} [o]    {oncelik: 1..3, anahtar: tekrarlama kilidi, sure: ms}
    */
   function soyle(html, o) {
+    return ekle({ html }, o);
+  }
+
+  /** Parcalardan (metin | {kim} | {b}) DOM kurarak soyle — ad textContent. */
+  function satir(parcalar, o) {
+    const f = document.createDocumentFragment();
+    for (const p of parcalar || []) {
+      if (typeof p === 'string') { f.append(document.createTextNode(p)); continue; }
+      if (p && p.kim != null) {
+        const sp = document.createElement('span');
+        sp.className = 'kim'; sp.textContent = String(p.kim);
+        f.append(sp);
+      } else if (p && p.b != null) {
+        const b = document.createElement('b');
+        b.textContent = String(p.b);
+        f.append(b);
+      }
+    }
+    return ekle({ dugum: f }, o);
+  }
+
+  function ekle(icerik, o) {
     if (!el) return;
     const { oncelik = 1, anahtar = null, sure = 3200 } = o || {};
     const t = performance.now();
@@ -36,7 +65,7 @@
       sonAnahtar.set(anahtar, t);
     }
 
-    const m = { html, oncelik, sure };
+    const m = { ...icerik, oncelik, sure };
     if (!gosterilen || oncelik > gosterilen.oncelik) {
       goster(m);
     } else if (kuyruk.length < 2) {
@@ -47,7 +76,12 @@
 
   function goster(m) {
     gosterilen = m;
-    el.innerHTML = `<div class="satir">${m.html}</div>`;
+    el.textContent = '';
+    const d = document.createElement('div');
+    d.className = 'satir';
+    if (m.dugum) d.append(m.dugum); else d.innerHTML = m.html;
+    el.appendChild(d);
+    sigdir(d);
     clearTimeout(zamanlayici);
     zamanlayici = setTimeout(() => {
       gosterilen = null;
@@ -55,6 +89,15 @@
       const sonraki = kuyruk.shift();
       if (sonraki) goster(sonraki);
     }, m.sure);
+  }
+
+  /** Dikey kabuk: satiri 960px'e sigdir. 36px -> 30px -> iki satir. Kesme yok. */
+  function sigdir(d) {
+    if (!(global.TT && global.TT.dikey)) return;
+    if (d.scrollWidth <= d.clientWidth) return;
+    d.classList.add('kucuk');
+    if (d.scrollWidth <= d.clientWidth) return;
+    d.classList.add('sar');
   }
 
   /** Kalip dizisinden rastgele sec, %s yerine adi koy. Ayni cumleyi arka
@@ -67,5 +110,5 @@
     return kaliplar[i].replace('%s', ad);
   }
 
-  global.Spiker = { kur, soyle, sec };
+  global.Spiker = { kur, soyle, satir, sec };
 })(window);

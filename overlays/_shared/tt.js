@@ -13,6 +13,8 @@
  *   ?bg=green        arka plan rengi — pencere yakalamada seffaflik yok, chroma key icin
  *                    green | magenta | blue | black | #RRGGBB
  *   ?scale=1.4       tum overlay'i buyut/kucult
+ *   ?yatay=1         ESKI 1920x1080 yatay duzen (donmus; bir surum icin). Varsayilan: dikey 1080x1920
+ *   ?guvenli=1       TikTok'un kendi arayuzunun kapladigi 4 yasak bolgeyi kirmizi golgele
  *   ?debug=1         sag altta baglanti gostergesi + konsol logu
  *   ?port=8787      kopru portu (varsayilan 8787)
  *
@@ -70,7 +72,65 @@
       sol: q.get('dzsol'),
     },
     guvenli: flag('guvenli'),
+    // Varsayilan DIKEY 1080x1920. Yatay yalnizca ?yatay=1 ile (donmus, tek surum).
+    yatay: flag('yatay'),
   };
+
+  // -------------------------------------------------------------------------
+  // DIKEY KABUK — tasarim alani 1080x1920 ve sabit kutular (PLAN-DIKEY A1-A3)
+  // -------------------------------------------------------------------------
+  /*
+   * Tek kaynak burasi + base.css'teki --dk-* degiskenleri (ayni sayilar; iki
+   * yer birbirine uymazsa test sayfasi hata verir). Oyunlar bu sayilari kendi
+   * icine gommesin: TT.KUTU'dan okusun.
+   *
+   * Yasak bolgeler (A2): y<240; x<60 ve x>1020 (yazi yok); x<540 & y>1250
+   * (TikTok yorumlari); y>1760 (giris kutusu, hediye dugmesi).
+   */
+  const DIKEY = !cfg.yatay;
+  const TUVAL = DIKEY ? { w: 1080, h: 1920 } : { w: 1920, h: 1080 };
+  const KUTU = Object.freeze({
+    ust:     Object.freeze({ x: 60,  y: 252,  w: 960, h: 128 }),
+    komut:   Object.freeze({ x: 60,  y: 392,  w: 960, h: 84 }),
+    sahne:   Object.freeze({ x: 60,  y: 488,  w: 960, h: 672 }),
+    akis:    Object.freeze({ x: 60,  y: 1170, w: 960, h: 64 }),
+    pano:    Object.freeze({ x: 560, y: 1250, w: 460, h: 490 }),
+    solAlt:  Object.freeze({ x: 60,  y: 1250, w: 480, h: 490 }),
+    kazanan: Object.freeze({ x: 60,  y: 488,  w: 960, h: 746 }),
+  });
+  const YASAK = Object.freeze([
+    Object.freeze({ ad: 'ust',    x: 0,    y: 0,    w: 1080, h: 240 }),
+    Object.freeze({ ad: 'sol',    x: 0,    y: 240,  w: 60,   h: 1520 }),
+    Object.freeze({ ad: 'sag',    x: 1020, y: 240,  w: 60,   h: 1520 }),
+    Object.freeze({ ad: 'yorum',  x: 60,   y: 1250, w: 480,  h: 510 }),
+    Object.freeze({ ad: 'alt',    x: 0,    y: 1760, w: 1080, h: 160 }),
+  ]);
+
+  // -------------------------------------------------------------------------
+  // Yon ve olcek
+  // -------------------------------------------------------------------------
+  function yonBelirle(root, olayYolla) {
+    // ?v=1 ESKI overlay'ler (alerts, chat, race...) icin: onlar tt-vertical
+    // sinifina gore yazilmisti. Oyunlar bunu kullanmaz.
+    root.classList.toggle('tt-yatay', !DIKEY);
+    root.classList.toggle('tt-dikey', DIKEY);
+    root.classList.toggle('tt-vertical', cfg.vertical);
+
+    const w = innerWidth, h = innerHeight;
+    const olcek = Math.min(w / TUVAL.w, h / TUVAL.h);
+    root.style.setProperty('--tt-olcek', String(olcek));
+    root.style.setProperty('--tt-dx', ((w - TUVAL.w * olcek) / 2).toFixed(2) + 'px');
+    root.style.setProperty('--tt-dy', ((h - TUVAL.h * olcek) / 2).toFixed(2) + 'px');
+
+    if (olayYolla) {
+      global.dispatchEvent(new CustomEvent('tt-yon', {
+        detail: { yatay: !DIKEY, dikey: DIKEY, oran: w / Math.max(1, h), olcek },
+      }));
+    }
+  }
+  // Oyun sayfalarinin satir-ici betikleri DOMContentLoaded'dan once calisir:
+  // sinif ve olcek en bastan dogru olsun.
+  yonBelirle(document.documentElement, false);
 
   // -------------------------------------------------------------------------
   // Arka plan / olcek
@@ -82,34 +142,14 @@
     // saniyede 5 kareye dusuruyor. lite modda hepsini kapatiyoruz.
     if (cfg.lite) root.classList.add('tt-lite');
 
-    // --- Yon: elle degil, OLCEREK belirle ---------------------------------
-    // LIVE Studio'nun dual layout'unda ayni Link kaynagi hem dikey hem yatay
-    // sahnede gorunuyor ve icerigini degistiremiyorsun — sadece kutunun
-    // boyutu degisiyor. O yuzden sayfa kendi oranina bakip uyum saglamali.
-    // ?v=1 / ?y=1 ile zorlanabilir; verilmezse otomatik.
-    function yonBelirle() {
-      // ARTIK SADECE YATAY. Oyunlar sabit 1920x1080 bir tasarim alanina
-      // ciziliyor ve tek bir scale ile ekrana sigdiriliyor. Boylece her sey
-      // piksel cinsinden tasarlanabiliyor; yuzde matematigi ve iki ayri
-      // yerlesim dali gerekmiyor.
-      //
-      // Eski dikey/yatay olcumu ?v=1 ile hala zorlanabiliyor cunku ESKI
-      // overlay'ler (alerts, chat, race...) o siniflara gore yazilmisti;
-      // yeni oyunlar tt-sabit kullaniyor.
-      const zorlaDikey = cfg.vertical;
-      const oran = innerWidth / Math.max(1, innerHeight);
-      const yatay = !zorlaDikey;
-      root.classList.toggle('tt-yatay', yatay);
-      root.classList.toggle('tt-vertical', !yatay);
-
-      // 1920x1080 tasarim alanini ekrana sigdiran tek olcek
-      const olcek = Math.min(innerWidth / 1920, innerHeight / 1080);
-      root.style.setProperty('--tt-olcek', String(olcek));
-
-      global.dispatchEvent(new CustomEvent('tt-yon', { detail: { yatay, oran, olcek } }));
-    }
-    yonBelirle();
-    addEventListener('resize', yonBelirle);
+    // --- Yon: DIKEY varsayilan, ?yatay=1 ile eski yatay -------------------
+    // Oyunlar sabit bir tasarim alanina (dikey 1080x1920, yatay 1920x1080)
+    // ciziliyor ve tek bir scale ile ekrana sigdiriliyor; pencere 9:16
+    // degilse ortalanip kenarlarda bosluk kaliyor (letterbox).
+    // --tt-dx/--tt-dy: tuvalin pencere icindeki sol-ust kosesi (px) — #kok
+    // disinda (body'ye) eklenen katmanlar (ULTI bandi, konfeti) bununla hizalanir.
+    yonBelirle(root, true);
+    addEventListener('resize', () => yonBelirle(root, true));
 
     // Perde en arkada dursun: body'nin ilk cocugu olarak ekliyoruz
     if (cfg.perde && !document.getElementById('tt-perde')) {
@@ -544,13 +584,30 @@
   // Olu bolge kilavuzu (?guvenli=1)
   // -------------------------------------------------------------------------
   /**
-   * TikTok'un canli yayin arayuzunun kapladigi bolgeleri tarali kirmiziyla,
-   * kullanilabilir alani kesikli mavi cerceveyle gosterir.
+   * TikTok'un canli yayin arayuzunun kapladigi bolgeleri tarali kirmiziyla
+   * gosterir (dikeyde 4 yasak bolge; yatayda eski kilavuz).
    * Yerlesim ayarlarken ac, yayina almadan once KAPAT.
    */
   function kilavuzCiz() {
     const k = document.createElement('div');
     k.id = 'tt-guvenli-kilavuz';
+
+    if (DIKEY) {
+      // Dikey: tuvalle (1080x1920) ayni olcekte, YALNIZCA dort yasak bolge,
+      // yazisiz — kirmizinin icine giren her sey yanlis yerde demektir.
+      k.classList.add('dikey');
+      const tuval = document.createElement('div');
+      tuval.className = 'tuval';
+      for (const z of YASAK) {
+        const d = document.createElement('div');
+        d.className = 'dz dz-' + z.ad;
+        d.style.cssText = `left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px`;
+        tuval.appendChild(d);
+      }
+      k.appendChild(tuval);
+      document.body.appendChild(k);
+      return;
+    }
 
     const bolgeler = [
       { stil: 'top:0;left:0;right:0;height:var(--dz-ust)', ad: 'ÜST — yayıncı bilgisi, en çok hediye gönderenler' },
@@ -728,7 +785,10 @@
       serit.appendChild(d);
     }
 
-    document.body.append(perde, serit);
+    // Dikeyde perde SAHNE kutusuna oturur: #kok'un icine konur (transform'lu
+    // atadan olcek ve konum bedava gelir). Yatayda eskisi gibi tam ekran.
+    const ana = (DIKEY && document.getElementById('kok')) || document.body;
+    ana.append(perde, serit);
 
     /** Kopru "yayin bekleniyor" mu diyor, bagli mi — perdenin ust satiri. */
     function durumYaz(d) {
@@ -839,12 +899,13 @@
       const simdi = Date.now();
       if (global.Ses) Ses.cal('hosgeldin');
 
+      // SPIKER satirindan, ad textContent ile (ham HTML yok).
       if (global.Spiker) {
         if (ev.ilk) {
-          Spiker.soyle(`👋 <span class="kim">${ad}</span> <b>İLK KEZ KATILDI</b> — hoş geldin!`,
+          Spiker.satir(['👋 ', { kim: ad }, ' ', { b: 'İLK KEZ KATILDI' }, ' — hoş geldin!'],
                        { oncelik: 3, anahtar: 'karsilama', sure: 4600 });
         } else {
-          Spiker.soyle(`🔁 <span class="kim">${ad}</span> geri döndü — tekrar hoş geldin`,
+          Spiker.satir(['🔁 ', { kim: ad }, ' geri döndü — tekrar hoş geldin'],
                        { oncelik: 2, anahtar: 'karsilama', sure: 4000 });
         }
       }
@@ -854,19 +915,24 @@
   }
 
   // -------------------------------------------------------------------------
-  // Katilim sutunu — sagdaki bos seride "ne yapacagini" yazar
+  // KOMUT seridi (#katilCagri) — "ne yazacaksin"
   // -------------------------------------------------------------------------
   /*
    * Oyunlarin hepsinde ayni sorun vardi: yeni gelen izleyici ekranda guzel
-   * bir sey goruyor ama KATILABILECEGINI anlamiyor. Basliktaki komut cipi
-   * bunu tasiyor ama kucuk ve ust kosede.
+   * bir sey goruyor ama KATILABILECEGINI anlamiyor. Bu serit tek is yapiyor:
+   * "💬 YAZ →" + o oyunun gercek komutu. Dikeyde YATAY bir serit (kutu KOMUT:
+   * 60,392,960x84); eskiden sagdaki 360px'lik sutundu. Yatayda (?yatay=1)
+   * eski sutun yerlesimi CSS'te korunuyor, ayni elemanlar.
    *
-   * Bu sutun tek is yapiyor: "OYUNA KATILMAK ICIN MESAJ AT" + o oyunun
-   * gercek komutu. Oyun basina kod yazmamak icin buraya kondu — dort oyun
-   * da tt.js yukledigi icin hepsinde otomatik cikiyor. Komut metnini
-   * oyunun kendi #komutMetin'inden aynaliyor, yani oyun komutu
-   * degistirdiginde burasi da degisiyor.
+   * Komut metnini oyunun kendi #komutMetin'inden aynaliyor; oyun komutu
+   * degistirdiginde burasi da degisiyor. Oyun komut vermiyorsa serit bosta
+   * metnini gosterir. ?katil=0 ile kapanir.
+   *
+   * Idleri korunan: kcKomut, kcIzSay, kcSonYazan (kcSonYazan artik gorunmez;
+   * son yazanin adi SPIKER satirindan soylenir).
    */
+  const KC_BOS = 'OYUNA KATILMAK İÇİN MESAJ AT';
+
   function katilimSutunu() {
     if (q.get('katil') === '0') { document.documentElement.classList.add('tt-kcyok'); return; }
     const kok = document.getElementById('kok');
@@ -875,19 +941,31 @@
 
     const el = document.createElement('div');
     el.id = 'katilCagri';
-    el.innerHTML =
-      '<div class="kcUst">Oyuna katılmak için</div>' +
-      '<div class="kcDev">MESAJ<br>AT</div>' +
-      '<div class="kcOk">💬 ⬇</div>' +
-      '<div class="kcAyrac"></div>' +
-      '<div class="kcNe">ne yazacaksın</div>' +
-      '<div class="kcKomut" id="kcKomut">—</div>' +
-      '<div class="kcAyrac"></div>' +
-      '<div class="kcIzleyici" id="kcIzleyici"><span id="kcIzSay">—</span> <span>İZLEYİCİ</span></div>' +
-      '<div class="kcSonYazan" id="kcSonYazan" style="display:none"></div>';
+    if (DIKEY) {
+      el.innerHTML =
+        '<div class="kcIpucu">💬 YAZ →</div>' +
+        '<div class="kcKomut" id="kcKomut">—</div>' +
+        '<div class="kcIzleyici" id="kcIzleyici"><span id="kcIzSay">—</span> <span>İZLEYİCİ</span></div>' +
+        '<div class="kcSonYazan" id="kcSonYazan" style="display:none"></div>';
+    } else {
+      // ?yatay=1: eski 360px'lik sag sutun, eskisi gibi
+      el.innerHTML =
+        '<div class="kcUst">Oyuna katılmak için</div>' +
+        '<div class="kcDev">MESAJ<br>AT</div>' +
+        '<div class="kcOk">💬 ⬇</div>' +
+        '<div class="kcAyrac"></div>' +
+        '<div class="kcNe">ne yazacaksın</div>' +
+        '<div class="kcKomut" id="kcKomut">—</div>' +
+        '<div class="kcAyrac"></div>' +
+        '<div class="kcIzleyici" id="kcIzleyici"><span id="kcIzSay">—</span> <span>İZLEYİCİ</span></div>' +
+        '<div class="kcSonYazan" id="kcSonYazan" style="display:none"></div>';
+    }
     kok.appendChild(el);
     kcTazele();
     izleyiciIzle();
+    // Yazi tipi yuklenince olculer degisir: sigdirmayi yeniden yap.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(kcTazele);
+    addEventListener('tt-yon', kcTazele);
   }
 
   /* Canli izleyici sayisi. Kopru 'viewers' olayini zaten yayiyor; sayiyi
@@ -910,16 +988,35 @@
       if (!Number.isFinite(n) || n < 5) return;
       say.textContent = n >= 1000 ? (Math.round(n / 100) / 10) + 'B' : String(n);
       kutu.style.display = '';
+      kcTazele();                    // sayi komut metninin yerini daraltir
     });
   }
 
-  /** Oyunun komut metnini katilim sutununa aynala. */
+  /** KOMUT seridine sigdir: 46px'ten 30px'e in, sigmazsa SARSIN (kesme yok). */
+  function kcSigdir(hedef) {
+    const kap = hedef.parentElement;
+    if (!kap || !DIKEY) return;
+    hedef.classList.remove('sar');
+    for (let px = 46; px >= 30; px -= 2) {
+      hedef.style.fontSize = px + 'px';
+      if (hedef.scrollWidth <= hedef.clientWidth) return;
+    }
+    hedef.classList.add('sar');
+  }
+
+  /** Oyunun komut metnini KOMUT seridine aynala; yoksa bosta metni. */
   function kcTazele() {
     const kaynak = document.getElementById('komutMetin');
     const hedef = document.getElementById('kcKomut');
-    if (!kaynak || !hedef) return;
-    const metin = kaynak.textContent.trim();
-    if (metin && hedef.textContent !== metin) hedef.textContent = metin;
+    const sar = document.getElementById('katilCagri');
+    if (!hedef) return;
+    const metin = kaynak ? kaynak.textContent.trim() : '';
+    // Yatay (donmus) eski davranis: komut yoksa mevcut metin kalir.
+    if (!DIKEY) { if (metin && hedef.textContent !== metin) hedef.textContent = metin; return; }
+    const yaz = metin || KC_BOS;
+    if (sar) sar.classList.toggle('bos', !metin);
+    if (hedef.textContent !== yaz) hedef.textContent = yaz;
+    kcSigdir(hedef);
   }
 
   /*
@@ -933,10 +1030,12 @@
     if (!hedef) return;
     new MutationObserver(() => {
       kcTazele();
-      if (!cip) return;
-      cip.classList.remove('degisti');
-      void cip.offsetWidth;              // animasyonu yeniden tetikle
-      cip.classList.add('degisti');
+      for (const e of [cip, document.getElementById('kcKomut')]) {
+        if (!e) continue;
+        e.classList.remove('degisti');
+        void e.offsetWidth;              // animasyonu yeniden tetikle
+        e.classList.add('degisti');
+      }
     }).observe(hedef, { childList: true, characterData: true, subtree: true });
   }
 
@@ -972,17 +1071,31 @@
     });
   }
 
-  /* Katilim sutununda SON YAZANI goster. Iki isi birden yapiyor:
+  /* SON YAZANI goster. Iki isi birden yapiyor:
      (1) yeni gelen, birinin az once yazdigini goruyor — "burada yaziliyor"
          sinyali, ki sessiz bir oda tam tersini soyluyordu;
-     (2) yazan kisi kendi adini iri puntoda goruyor. */
+     (2) yazan kisi kendi adini iri puntoda goruyor.
+     Dikeyde ayri bir sutun yok: SPIKER satirindan (40px ad) soylenir; en
+     dusuk oncelik, oyunun kendi anlatimini ezmez. kcSonYazan gizli duruyor
+     ama ad orada da (textContent) — eski kimlige bakan kod bozulmasin. */
   function sonYazanGoster(user, kid) {
-    const el = document.getElementById('kcSonYazan');
-    if (!el) return;
     const ad = (user && (user.nickname || user.uniqueId)) || 'birisi';
-    const oz = global.Profil ? Profil.ozet(kid) : '';
-    el.innerHTML = `<span class="kcsAd">${ad}</span>` + (oz ? `<span class="kcsAlt">${oz}</span>` : '');
-    el.style.display = '';
+    const el = document.getElementById('kcSonYazan');
+    if (!DIKEY) {
+      // Yatay (donmus): sag sutunda ad + alt satir, eskisi gibi (DOM ile).
+      if (!el) return;
+      const oz = global.Profil ? Profil.ozet(kid) : '';
+      el.textContent = '';
+      const a = document.createElement('span'); a.className = 'kcsAd'; a.textContent = ad;
+      el.appendChild(a);
+      if (oz) { const z = document.createElement('span'); z.className = 'kcsAlt'; z.textContent = oz; el.appendChild(z); }
+      el.style.display = '';
+      return;
+    }
+    if (el) el.textContent = ad;
+    if (global.Spiker) {
+      Spiker.satir(['✍️ ', { kim: ad }, ' yazdı'], { oncelik: 1, anahtar: 'sonyazan', sure: 2600 });
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -1036,6 +1149,14 @@
     cfg, on, off,
     /** Su an yatay duzende miyiz? Oyunlar yerlesimi buna gore ayarlayabilir. */
     get yatay() { return document.documentElement.classList.contains('tt-yatay'); },
+    /** Dikey 1080x1920 kabuk mu (varsayilan)? */
+    dikey: DIKEY,
+    /** Tasarim alani {w,h}: dikeyde 1080x1920, ?yatay=1'de 1920x1080. */
+    TUVAL,
+    /** Sabit kutular (tasarim pikseli), PLAN-DIKEY A3: ust, komut, sahne, akis, pano, solAlt, kazanan. */
+    KUTU,
+    /** Dort yasak bolge (tasarim pikseli): yalnizca arka plan olabilir. */
+    YASAK,
     /** Ilk yorum gelene kadar "nasil oynanir" perdesi goster. */
     uyanis,
     /** Gorsel varsa gorsel, yoksa emoji ile cizen sprite yardimcisi. */

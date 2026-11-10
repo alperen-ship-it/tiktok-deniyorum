@@ -46,19 +46,22 @@
    * aninda sozu yarim birakmak demek — ustelik TikTok kullanici adlari
    * cogunlukla 10-20 karakter, yani bu istisna degil NORMAL durum.
    *
-   * Cozum: ellipsis yerine yaziyi kucult. 88px'ten baslayip kutuya girene
-   * kadar in, 40px'te dur (telefonda ~8px — hala listedeki 46px isimlerden
-   * buyuk). Sadece o tabanda bile sigmayan ad kesilir.
+   * Cozum: ellipsis yerine yaziyi kucult, tabana inince de SAR (ikinci satir).
+   * Dikey kabukta (PLAN-DIKEY A6) 110px'ten baslar, 56px'e kadar iner; 56px'te
+   * de sigmayan (cok genis harfli, 28 karakterlik) ad satira bolunur. Eskiden
+   * bu sarma yalnizca halay sayfasinda yerel bir yamaydi; artik her oyunda.
+   * Yatayda (?yatay=1) eski aralik: 88 -> 40px, sonra sar.
    */
   function sigdir(el, enBuyuk, enKucuk) {
-    const buyuk = enBuyuk || 88, kucuk = enKucuk || 40;
-    el.style.fontSize = buyuk + 'px';
-    // Kutu genisligi: max-width %90 uygulanmis haliyle clientWidth.
-    for (let px = buyuk; px > kucuk; px -= 2) {
+    const dikey = !!(global.TT && global.TT.dikey);
+    const buyuk = enBuyuk || (dikey ? 110 : 88), kucuk = enKucuk || (dikey ? 56 : 40);
+    el.classList.remove('sar');
+    for (let px = buyuk; px >= kucuk; px -= 2) {
       el.style.fontSize = px + 'px';
       if (el.scrollWidth <= el.clientWidth) return px;
     }
     el.style.fontSize = kucuk + 'px';
+    el.classList.add('sar');
     return kucuk;
   }
 
@@ -96,18 +99,32 @@
    * izleyicinin gozu ismi degil parcaciklari takip ediyor.
    */
   F.kart = function (el, o) {
-    const gorsel = o.url
-      ? `<div class="fkGorsel" style="background-image:url(${o.url})"></div>`
-      : `<div class="kupa">${o.kupa || '🏆'}</div>`;
-    el.innerHTML = `<div class="fkIc">
-      ${gorsel}
-      <div class="kimAd"></div>
-      <div class="altYazi"></div>
-    </div>`;
+    // DOM ile kur (innerHTML yok): url ve metinler enterpolasyon gormez.
+    el.textContent = '';
+    const ic = document.createElement('div');
+    ic.className = 'fkIc';
+    if (o.url) {
+      const g = document.createElement('div');
+      g.className = 'fkGorsel';
+      g.style.backgroundImage = 'url("' + String(o.url).replace(/["\\\n\r]/g, '') + '")';
+      ic.appendChild(g);
+    } else {
+      const k = document.createElement('div');
+      k.className = 'kupa';
+      k.textContent = o.kupa || '🏆';
+      ic.appendChild(k);
+    }
+    const adKap = document.createElement('div');
+    adKap.className = 'kimAd';
+    const altKap = document.createElement('div');
+    altKap.className = 'altYazi';
+    ic.append(adKap, altKap);
+    el.appendChild(ic);
     const adEl = el.querySelector('.kimAd');
     const altEl = el.querySelector('.altYazi');
     // textContent: isim zaten TT.zararsiz()'dan geciyor ama burada da
     // enterpolasyon yok — tek kaynakli guvenlik yerine iki katman.
+    // (Kart KAZANAN kutusunda: dikeyde 60,488 960x746 — #kazanan CSS'i.)
     // Zamanlayicilar tutuluyor: kart erken kapanirsa (oyun gecisi, iframe
     // yenilenmesi) bekleyen ses/konfeti BASKA bir ekranin uzerine dusmesin.
     sahneyiIptal();

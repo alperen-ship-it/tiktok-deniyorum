@@ -26,18 +26,43 @@
   const RENKLER = ['#f6c94f', '#ff6b5e', '#8b5cf6', '#f4f1ff', '#7ed957', '#3fb9ff'];
   let tuval = null, ctx = null, parcalar = [], donuyor = false;
 
+  /*
+   * Konfeti tuvali #kok kutusuna oturur (PLAN-DIKEY A6), pencereye degil:
+   * 9:16 olmayan bir pencerede letterbox kenarlarina konfeti dusmesin.
+   * Ic cozunurluk TASARIM pikseli (dikey 1080x1920 / yatay 1920x1080), CSS
+   * boyutu olceklenmis kutu — parcacik boyutlari ve hizlar her olcekte ayni.
+   * Dikeyde ayrica yasak bolgelerin disina KIRPILIR (tt.js TT.YASAK): konfeti
+   * TikTok'un kendi arayuzunun altinda kalan yere dusmesin, oralarda yalnizca
+   * arka plan degissin.
+   */
+  let tasarim = { w: 1920, h: 1080 };
+
+  function tuvalYerles() {
+    const kok = document.getElementById('kok');
+    const T = (global.TT && global.TT.TUVAL) || { w: innerWidth, h: innerHeight };
+    tasarim = T;
+    if (tuval.width !== T.w) tuval.width = T.w;       // atama tuvali siler: yalniz degisince
+    if (tuval.height !== T.h) tuval.height = T.h;
+    const r = kok ? kok.getBoundingClientRect() : { left: 0, top: 0, width: innerWidth, height: innerHeight };
+    const st = tuval.style;
+    st.left = r.left + 'px'; st.top = r.top + 'px';
+    st.width = r.width + 'px'; st.height = r.height + 'px';
+  }
+
   function tuvalKur() {
     if (tuval) return;
     tuval = document.createElement('canvas');
-    tuval.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:80';
+    tuval.style.cssText = 'position:fixed;pointer-events:none;z-index:80';
     document.body.appendChild(tuval);
     ctx = tuval.getContext('2d');
+    addEventListener('resize', tuvalYerles);
+    addEventListener('tt-yon', tuvalYerles);
   }
 
   function konfeti(o) {
     o = o || {};
     tuvalKur();
-    tuval.width = innerWidth; tuval.height = innerHeight;
+    tuvalYerles();
     const adet = Math.round((o.adet || 44) * (lite() ? 0.5 : 1));
     const kx = (o.x != null ? o.x : 0.5) * tuval.width;
     const ky = (o.y != null ? o.y : 0.38) * tuval.height;
@@ -51,12 +76,22 @@
         vy: Math.sin(aci) * hiz,
         don: Math.random() * 6.28,
         donHiz: (Math.random() - 0.5) * 0.35,
-        en: 7 + Math.random() * 7,
+        en: (7 + Math.random() * 7) * ((global.TT && global.TT.dikey) ? 1.6 : 1),   // dikey: telefonda ~2.8x kucuk
         renk: RENKLER[i % RENKLER.length],
         omur: 1,
       });
     }
     if (!donuyor) { donuyor = true; requestAnimationFrame(adim); }
+  }
+
+  /** Dikeyde izinli bolge: yasak bolgelerin disi (tek cokgen). */
+  function kirp() {
+    if (!(global.TT && global.TT.dikey)) return;
+    ctx.beginPath();
+    ctx.moveTo(60, 240); ctx.lineTo(1020, 240); ctx.lineTo(1020, 1760);
+    ctx.lineTo(540, 1760); ctx.lineTo(540, 1250); ctx.lineTo(60, 1250);
+    ctx.closePath();
+    ctx.clip();
   }
 
   /* Kare degil ZAMAN tabanli. Onceden her sey "kare basina" ilerliyordu:
@@ -68,6 +103,8 @@
     const k = sonT ? Math.min(3, (t - sonT) / (1000 / 60)) : 1;
     sonT = t;
     ctx.clearRect(0, 0, tuval.width, tuval.height);
+    ctx.save();
+    kirp();
     parcalar = parcalar.filter((p) => p.omur > 0 && p.y < tuval.height + 30);
     for (const p of parcalar) {
       p.vy += 0.34 * k;                // yercekimi
@@ -85,6 +122,7 @@
       ctx.fillRect(-p.en / 2, -p.en / 3.4, p.en, p.en / 1.7);
       ctx.restore();
     }
+    ctx.restore();
     if (parcalar.length) requestAnimationFrame(adim);
     else { donuyor = false; sonT = 0; ctx.clearRect(0, 0, tuval.width, tuval.height); }
   }

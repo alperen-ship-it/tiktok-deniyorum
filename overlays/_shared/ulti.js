@@ -84,6 +84,38 @@
       html.tt-lite #ulti-bant .u-ad { text-shadow: none; -webkit-text-stroke: 3px rgba(0,0,0,.8); paint-order: stroke fill; }
       html.tt-vertical #ulti-bant .u-ad { font-size: 38px; letter-spacing: -1px; }
       html.tt-vertical #ulti-bant .u-kim { font-size: 17px; }
+
+      /* ---- DIKEY KABUK (PLAN-DIKEY A6) ----
+         Bant tuvalin (1080x1920) TAM genisliginde, dikey merkezi y=316
+         (UST kutusunun ortasi; oyun SAHNE'sine hic girmez). Pencere 9:16
+         degilse --tt-dx/--tt-dy (tt.js) tuvalin yerini verir. Tum boyutlar
+         --tt-olcek ile carpilir (eskiden carpilmiyordu). Ad 64px, etiket 30px;
+         ad uzunsa 40px'e kadar iner, sonra SARAR — "…" yok. Yaziyla bant
+         arasinda 60px kenar payi: yazi x 60..1020 icinde kalir.
+         Oyun sayfalari eskiden "html #ulti-bant {top:..}" ile bunu eziyordu:
+         html.tt-dikey onekiyle ozgullugu yukseltiyoruz. */
+      html.tt-dikey #ulti-bant {
+        --o: var(--tt-olcek, 1);
+        left: var(--tt-dx, 0px); right: auto;
+        width: calc(1080px * var(--o));
+        top: calc(var(--tt-dy, 0px) + 316px * var(--o));
+        padding: calc(6px * var(--o)) calc(60px * var(--o));
+        border-top-width: calc(3px * var(--o)); border-bottom-width: calc(3px * var(--o));
+        display: none; flex-direction: column; align-items: center; justify-content: center;
+      }
+      html.tt-dikey #ulti-bant.gorunur { display: flex; }
+      html.tt-dikey #ulti-bant .u-kim {
+        order: 2; width: 100%; margin: 0;
+        font-size: calc(var(--u-kim-px, 64) * 1px * var(--o)); font-weight: 900; letter-spacing: -1px;
+        line-height: 1.05; opacity: 1; color: #fff;
+        white-space: nowrap; overflow: hidden; text-overflow: clip;
+      }
+      html.tt-dikey #ulti-bant .u-kim.sar { white-space: normal; overflow-wrap: anywhere; line-height: 1; }
+      html.tt-dikey #ulti-bant .u-ad {
+        order: 1; font-size: calc(30px * var(--o)); letter-spacing: 1px; line-height: 1.1;
+        white-space: nowrap;
+      }
+      html.tt-dikey #ulti-bant .u-emoji { font-size: calc(30px * var(--o)); vertical-align: baseline; margin: 0 calc(8px * var(--o)); }
     `;
     document.head.appendChild(css);
 
@@ -93,6 +125,18 @@
       '<div class="u-kim"></div>' +
       '<div class="u-ad"><span class="u-emoji"></span><span class="u-metin"></span><span class="u-emoji"></span></div>';
     document.body.appendChild(bant);
+  }
+
+  /** Gonderenin adi (.u-kim): dikeyde 64px'ten 40px'e iner, sigmazsa sarar. */
+  function adSigdir() {
+    if (!(window.TT && window.TT.dikey)) return;
+    const kim = bant.querySelector('.u-kim');
+    kim.classList.remove('sar');
+    for (let px = 64; px >= 40; px -= 2) {
+      bant.style.setProperty('--u-kim-px', px);
+      if (kim.scrollWidth <= kim.clientWidth) return;
+    }
+    kim.classList.add('sar');
   }
 
   function siradaki() {
@@ -109,6 +153,7 @@
 
     bant.classList.remove('cikiyor');
     bant.classList.add('gorunur');
+    adSigdir();
 
     setTimeout(() => {
       bant.classList.add('cikiyor');
@@ -180,6 +225,9 @@
         .kombo-dis.dolu .kombo-ic { background: linear-gradient(90deg, #ffd93d, #ff8c3b); }
         .kombo-dis.dolu { animation: komboPat .4s ease; }
         @keyframes komboPat { 50% { transform: scale(1.06); } }
+        /* dikey: 30px altinda yazi yok */
+        html.tt-dikey .kombo-dis { height: 44px; border-radius: 22px; }
+        html.tt-dikey .kombo-yazi { font-size: 30px; letter-spacing: 1px; }
       `;
       document.head.appendChild(s);
     }
