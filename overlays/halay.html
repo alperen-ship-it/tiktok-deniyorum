@@ -205,7 +205,8 @@
 
   #katilCagri .kcsAlt { font-size: var(--tip-kucuk); }
   #kazanan .kimAd.sar { white-space: normal; overflow-wrap: anywhere; text-overflow: clip; line-height: 1; }
-  #kazanan { z-index: 6; }
+  /* Tur sonu karti TAM opak: arkadaki 3D etiketleri, cosku seridi ve spiker satiri gorunmesin. */
+  #kazanan { z-index: 6; background: #120d30; }
 </style>
 </head>
 <body>
@@ -234,7 +235,7 @@
   <div id="domGorunum" data-seviye="0">
     <div id="dgUst">
       <div id="dgSayi">%0</div>
-      <div id="dgSag"><div id="dgSeviye">AĞIR</div><div id="dgEtiket">ortak coşku · 3D kapalı</div></div>
+      <div id="dgSag"><div id="dgSeviye">AĞIR</div><div id="dgEtiket">ortak coşku</div></div>
     </div>
     <div id="dgYol"><div id="dgDolu"></div></div>
     <div id="dgTahta"></div>
@@ -799,11 +800,25 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
   propKur();
 
   // ---- kamera ------------------------------------------------------------------
+  /** 'dusuk' basamakta cekirdek 150'den en cok 60 figur cizer: en dis CIZILEN figurun halkasi (500 ms'de bir). */
+  let cizDisT = 0, cizDisR = 0;
+  function cizilenDisHalka() {
+    const t = simdi();
+    if (t - cizDisT < 500) return cizDisR;
+    cizDisT = t;
+    const gizli = new Set(S3.figur.gizli ? S3.figur.gizli() : []);
+    const say = [0, 0, 0];       // halka basina CIZILEN figur; birkac oncelikli figur (yeni gelen, etiketliler) halka sayilmaz
+    for (const d of dans.values()) if (d.fig && d.halka != null && !gizli.has(d.kid)) say[d.halka]++;
+    let r = 0;
+    for (let i = 1; i < say.length; i++) if (say[i] >= 8) r = i;
+    return (cizDisR = r);
+  }
   let kamR = KADRAJ_R[0], kamIstek = 0, kamAzT = 0, kamKirli = true;
   function kameraTik(dt) {
     if (kalite === 'yok') return;
     let en = 0;
-    for (let i = 0; i < halkaSay.length; i++) if (halkaSay[i] > 0) en = i;
+    if (kalite === 'dusuk') en = cizilenDisHalka();   // dusukte yalniz CIZILEN figurler: en dis CIZILEN halkaya kadrajla
+    else for (let i = 0; i < halkaSay.length; i++) if (halkaSay[i] > 0) en = i;
     if (KAMERA_SABIT) { en = 2; kamIstek = 2; }
     if (en > kamIstek) { kamIstek = en; kamAzT = 0; }
     else if (en < kamIstek) { if (!kamAzT) kamAzT = simdi(); else if (simdi() - kamAzT > 15000) { kamIstek = en; kamAzT = 0; } }
@@ -825,9 +840,20 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
    * diski tasir (oncelik 0). Cakisanlari cekirdek eler.
    */
   let sonGelen = null, etSon = 0;
+  let etMod = '';                 // 'acik' | 'avatar' (afis/ulti suresince yalniz disk) | 'kart' (tur sonu karti: temiz)
+  function etiketModu() {
+    if (kazananEl.classList.contains('acik')) return 'kart';
+    const u = document.getElementById('ulti-bant');
+    if ((altAktif && altAktif.tur === 'anons') || (u && u.classList.contains('gorunur'))) return 'avatar';
+    return 'acik';
+  }
   function etiketTik(t) {
-    if (kalite === 'yok' || t - etSon < 300) return;
+    if (kalite === 'yok') return;
+    const mod = etiketModu();
+    if (mod === etMod && t - etSon < 300) return;
     etSon = t;
+    if (mod === 'kart') { if (etMod !== 'kart') S3.etiket.ayarla([]); etMod = mod; return; }
+    etMod = mod;
     const onc = new Map();
     const koy = (kid, p) => { if (kid && dans.has(kid) && !onc.has(kid)) onc.set(kid, p); };
     koy(basKid, 100);
@@ -840,7 +866,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     const liste = [];
     for (const d of dans.values()) {
       if (!d.fig) continue;
-      liste.push({ kid: d.kid, ad: d.ad, oncelik: onc.get(d.kid) || 0, altin: d.kid === basKid || altinlar.has(d.kid),
+      liste.push({ kid: d.kid, ad: d.ad, oncelik: mod === 'avatar' ? 0 : (onc.get(d.kid) || 0), altin: d.kid === basKid || altinlar.has(d.kid),
         avatarUrl: d.avatarTamam ? d.avatarUrl : Kimlik.al(d.kid).url });
     }
     S3.etiket.ayarla(liste);
@@ -1432,7 +1458,6 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
       // MEYDAN GOSTERISI (>= 1000): 8 sn halkalar hizlica ters doner, herkesin kollari havada; halay basi sirasina EK.
       meydanBasla();
       anonsEkle({ ust: '🎪 MEYDAN GÖSTERİSİ', ad: d.ad, alt: 'halkalar hızlandı · kollar havada · 8 sn', sure: 3000, renk: 'var(--oyun-renk)' });
-      balonSistem(d, ['🎁', 'meydan']);
     } else if (uzadi) {
       // tur uzadi: adi zaten plakada / sirada; kendi danscisinda ve seritte soyle
       const kalan = hemen ? Math.ceil((hediyeBas.bitis - t) / 1000) : Math.round(bekleyen.sure);
