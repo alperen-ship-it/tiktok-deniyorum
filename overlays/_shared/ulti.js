@@ -102,6 +102,12 @@
         padding: calc(6px * var(--o)) calc(60px * var(--o));
         border-top-width: calc(3px * var(--o)); border-bottom-width: calc(3px * var(--o));
         display: none; flex-direction: column; align-items: center; justify-content: center;
+        /* UST kutusunu (y 252..380) tamamen ortsun: yari saydam ve kenarlari
+           saydam gradyan, basligin ikonunu/sayacini bandin yanindan ve
+           arkasindan gosteriyordu (onizlemede iki yazi ust uste). */
+        box-sizing: border-box;
+        min-height: calc(128px * var(--o));
+        background: var(--cizgi, #191434);
       }
       html.tt-dikey #ulti-bant.gorunur { display: flex; }
       html.tt-dikey #ulti-bant .u-kim {
