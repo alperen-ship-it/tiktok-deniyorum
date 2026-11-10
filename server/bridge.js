@@ -1118,7 +1118,7 @@ async function startLive(username) {
       log('   2) TIKFINITY — imzalamayi kendisi hallediyor, bizim overlay\'ler');
       log('      onun yerel WebSocket\'ini zaten konusuyor. Kopruye gerek kalmaz:');
       log('        tikfinity.zerody.one -> Desktop uygulamasini kur, hesabina bagla');
-      log('        sonra overlay\'i ac:  overlays/chat.html?src=tikfinity');
+      log('        sonra overlay\'i ac:  overlays/oyun.html?src=tikfinity&lite=1');
       log('        (TikFinity ws://127.0.0.1:21213 uzerinden yayin yapiyor)');
       log('');
       log('   3) Ucretli EulerStream plani — aylik ucret.');
@@ -1220,7 +1220,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
      (?v=1 / ?y=1 -> yonelimi elle zorla; normalde gerekmez)
 
    >> OBS icin (Tarayici Kaynagi) — seffaflik dogrudan calisir <<
-     ${base}/overlays/oyun.html?lite=1   (1920x1080, tek link)
+     ${base}/overlays/oyun.html?lite=1   (dikey 1080x1920, tek link)
 
    localtest.me acilmiyorsa (modem DNS-rebind korumasi):
      tools\\hosts-ekle.ps1 dosyasini yonetici olarak calistir,

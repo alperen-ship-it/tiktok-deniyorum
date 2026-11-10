@@ -480,10 +480,13 @@
     return out;
   }
 
+  // Kalabalik pakette bilyeler birbirini ittigi icin tur kisaliyordu: suruc 4->24 kisi arasinda %15'e kadar azalir.
+  let kalabalikCarpan = 1;
   function bilyeKur() {
     bilyeler = [];
     bitirenler = [];
     R = rHesapla(katilanlar.size);
+    kalabalikCarpan = DIKEY ? 1 - 0.0075 * (Math.min(katilanlar.size, 24) - 4 > 0 ? Math.min(katilanlar.size, 24) - 4 : 0) : 1;
     const yv = DIKEY ? yuvalar(katilanlar.size, R) : null;
     const yd = DIKEY ? yuvaDizi(katilanlar.size) : null;
     let i = 0;
@@ -537,7 +540,7 @@
         // Pist 'hafif egimli' kabul: satir yonunde sabit suruc (zeminin gorsel egimi kucuk,
         // gercek egim bilyeyi kabartilarin ustunden tasimaya yetmiyordu). Herkese ayni; hediye/yazi etkisiz.
         const hiz = etaplar[etapBul(b.p)];
-        b.vx += ((b.r || 0) % 2 === 0 ? 1 : -1) * SURUS * Math.pow(R / R_TASARIM, 0.6) * (1 + yardim) * (hiz && hiz.ad === 'HIZ TÜNELİ' ? 2.2 : 1) * dt;
+        b.vx += ((b.r || 0) % 2 === 0 ? 1 : -1) * SURUS * Math.pow(R / R_TASARIM, 0.6) * kalabalikCarpan * (1 + yardim) * (hiz && hiz.ad === 'HIZ TÜNELİ' ? 2.2 : 1) * dt;
       }
       b.x += b.vx * dt;
       b.y += b.vy * dt;
