@@ -185,6 +185,7 @@
   const R_TASARIM = 22;          // dikey pistin bosluklari bu yaricapa gore tasarlandi
   const YERCEKIMI = DIKEY ? 1200 : 780;   // 1100'de yaris 23 sn suruyordu; etap anonslari yetismiyordu
   // Dikey yilan pist olculeri
+  const SURUS = 0.13 * YERCEKIMI;   // dikey: satir yonu suruc ivmesi (px/sn^2)
   const SATIR = 5, SATIR_P = 124, SATIR_D = 48, SATIR_BAS = 100, BOSLUK = 84;
   const XE = 960 - BOSLUK;       // satirin zemininin bittigi x (cift satir) / basladigi mesafe
   const YARIM_UZ = 480;          // bir etap = yarim satir
@@ -292,64 +293,57 @@
   function satirBul(x, y) { for (let i = 0; i < SATIR - 1; i++) if (y < zemY(i, x)) return i; return SATIR - 1; }
   function ilerle(b) {
     if (!DIKEY) return b.y;
-    const r = satirBul(b.x, b.y);
+    const r = b.r = satirBul(b.x, b.y);
     return r * 960 + (r % 2 === 0 ? b.x : 960 - b.x);
   }
   const DK_BITIS_S = 840;        // son satirda bitis cizgisi (satir ici mesafe)
   // Yerel yardimci: satir r'de, mesafe s'de, tavan-zemin araligi h ve zemin ustu yuksekligi f*h
   function dkNokta(r, s, f) { const x = sX(r, s), z = zemY(r, x), t = tavY(r, x); return { x, y: z - f * (z - t), h: z - t, z, t }; }
-  // Dikey bir engel duvari (ince): iki ucu zemin/tavana yaslanabilir
-  function dkBaf(r, s, tavandan, boyOran, ek) {
+  const KAPAT = 2 * R_TASARIM + 10;   // bilyenin altindan/ustunden gecebilecegi en dar aralik
+  /* Zeminde YURUYEN bilye icin: zemine oturan engel bilyenin tirmanabilecegi kadar alcak
+     olmali (kabarti), yukseltiler ise TAVANDAN sarkar ve altindan gecilir. */
+  function dkSarkik(r, s, yaricap, derinlik) {
     const n = dkNokta(r, s, 0);
-    const uz = Math.max(0, Math.min(n.h * 0.66, n.h - (2 * R_TASARIM + 14), ek == null ? 1e9 : ek)) * (boyOran || 1);
-    if (uz < 8) return;
-    if (tavandan) duvarlar.push({ x1: n.x, y1: n.t, x2: n.x, y2: n.t + uz });
-    else duvarlar.push({ x1: n.x, y1: n.z, x2: n.x, y2: n.z - uz });
+    const alt = Math.min(derinlik, n.h - KAPAT);          // sarkik ucun tavandan inebilecegi en fazla
+    if (alt < 12) return false;
+    const rad = Math.min(yaricap, alt / 2);
+    duvarlar.push({ x1: n.x, y1: n.t, x2: n.x, y2: n.t + alt - rad });   // sap
+    pegler.push({ x: n.x, y: n.t + alt - rad, r: rad });
+    return true;
+  }
+  function dkKabarti(r, s, yaricap) {
+    const n = dkNokta(r, s, 0);
+    pegler.push({ x: n.x, y: n.z - yaricap * 0.15, r: yaricap });
+  }
+  function dkTavanDuvar(r, s, derinlik) {            // tavandan inen dikey duvar; zemin tarafi acik
+    const n = dkNokta(r, s, 0);
+    const uz = Math.min(derinlik, n.h - KAPAT);
+    if (uz < 10) return;
+    duvarlar.push({ x1: n.x, y1: n.t, x2: n.x, y2: n.t + uz });
   }
 
   const DK_ETAP = {
-    // her biri (r, s0) = bu etabin ilk 100 px'i bos (dusus/giris), son 100 px'i bos
+    // (r, s0): etabin ilk ve son ~100 px'i bos (dusus/giris)
     'ÇİVİ TARLASI'(r, s0) {
-      let k = 0;
-      for (let s = s0 + 110; s <= s0 + 370; s += 66, k++) {
-        for (const f of [0.34, 0.7]) {
-          const n = dkNokta(r, s + (f > 0.5 ? 33 : 0), f);
-          if (n.h < 96) continue;
-          pegler.push({ x: n.x, y: n.y, r: 7 });
-        }
+      for (let s = s0 + 110, k = 0; s <= s0 + 380; s += 62, k++) {
+        if (k % 2 === 0) dkKabarti(r, s, 9); else dkSarkik(r, s, 8, 40);
       }
     },
     'ZİKZAK RAMPA'(r, s0) {
-      let k = 0;
-      for (let s = s0 + 120; s <= s0 + 380; s += 86, k++) dkBaf(r, s, k % 2 === 0, 1);
+      // alcalan tavan: yatay tavan duvarlari kademeli iner (sikisma-acilma)
+      for (let s = s0 + 130, k = 0; s <= s0 + 370; s += 120, k++) dkTavanDuvar(r, s, 60 + k * 30);
     },
     'DAR BOĞAZ'(r, s0) {
-      for (const s of [s0 + 150, s0 + 300]) {
-        const n = dkNokta(r, s, 0);
-        const agiz = 2 * R_TASARIM + 12;
-        const yarim = Math.max(0, (n.h - agiz) / 2);
-        if (yarim < 8) continue;
-        // agiz tam ortada: tavandan ve zeminden iki duvar
-        duvarlar.push({ x1: n.x, y1: n.t, x2: n.x, y2: n.t + yarim });
-        duvarlar.push({ x1: n.x, y1: n.z, x2: n.x, y2: n.z - yarim });
-      }
+      for (const s of [s0 + 170, s0 + 330]) dkTavanDuvar(r, s, 999);   // bogaz: yalniz KAPAT kadar aralik
     },
     'DEĞİRMEN'(r, s0) {
-      let k = 0;
-      for (let s = s0 + 120; s <= s0 + 370; s += 82, k++) {
-        const n = dkNokta(r, s, k % 2 === 0 ? 0.72 : 0.28);
-        if (n.h < 90) continue;
-        pegler.push({ x: n.x, y: n.y, r: 11 });
+      for (let s = s0 + 120, k = 0; s <= s0 + 380; s += 70, k++) {
+        if (k % 2 === 0) dkSarkik(r, s, 12, 54); else dkKabarti(r, s, 12);
       }
     },
-    'HIZ TÜNELİ'() { /* bos: misketler birbirinden ayrilir */ },
+    'HIZ TÜNELİ'() { /* bos ve hizlandirici: adim() bu etapta suruc kuvvetini artirir */ },
     'SARKAÇLAR'(r, s0) {
-      let k = 0;
-      for (let s = s0 + 130; s <= s0 + 370; s += 100, k++) {
-        const n = dkNokta(r, s, k % 2 === 0 ? 0.3 : 0.7);
-        if (n.h < 100) continue;
-        pegler.push({ x: n.x, y: n.y, r: 14 });
-      }
+      for (let s = s0 + 130; s <= s0 + 380; s += 100) dkSarkik(r, s, 17, 66);
     },
     'SON DÜZLÜK'() { /* bos: bitis cizgisine kadar duz */ },
   };
@@ -539,6 +533,12 @@
       const yardim = gerilik > 0.1 ? Math.min(0.5, (gerilik - 0.1) * 3) : 0;
 
       b.vy += YERCEKIMI * (1 + yardim) * dt;
+      if (DIKEY) {
+        // Pist 'hafif egimli' kabul: satir yonunde sabit suruc (zeminin gorsel egimi kucuk,
+        // gercek egim bilyeyi kabartilarin ustunden tasimaya yetmiyordu). Herkese ayni; hediye/yazi etkisiz.
+        const hiz = etaplar[etapBul(b.p)];
+        b.vx += ((b.r || 0) % 2 === 0 ? 1 : -1) * SURUS * (1 + yardim) * (hiz && hiz.ad === 'HIZ TÜNELİ' ? 2.2 : 1) * dt;
+      }
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.vx *= sur; b.vy *= sur;

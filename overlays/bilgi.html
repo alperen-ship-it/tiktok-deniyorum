@@ -176,6 +176,8 @@
   html.tt-dikey #tabloIc .ad { line-height: 1.02; }
   html.tt-dikey #tabloIc .adet { font-size: 36px; min-width: 0; }
   html.tt-dikey #tabloIc .seri { font-size: 30px; }
+  html.tt-dikey #tabloKutu.cevap::before { content: '✍️ CEVAP VERENLER'; }
+  html.tt-dikey #tabloIc .sira .tik { flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; font-size: 30px; font-weight: 900; background: #7ed957; color: #191434; border: 3px solid var(--cizgi); }
   html.tt-dikey #tabloIc .sira.bos { font-size: 34px; line-height: 1.15; text-align: center; }
 </style>
 </head>
@@ -393,6 +395,7 @@
     document.getElementById('cagri').textContent = DIKEY ? 'ilk doğru en çok puan' : 'ilk doğru en çok puanı alır';
     sureSnEl.textContent = Math.ceil(kalanSn);
     sayacCiz();
+    panoCiz();
   }
 
   function cevabiAc() {
@@ -485,7 +488,7 @@
     soruSayisi++;
     destePos++;
     localStorage.setItem('tt-bilgi-no', String(soruSayisi));
-    tabloCiz();
+    panoCiz();
     document.getElementById('cagri').textContent = DIKEY ? '✔ cevap açıldı' : 'doğru cevap: ' + soru.c[soru.d];
 
     if (destePos >= TUR_SORU) turBitir();
@@ -561,8 +564,34 @@
     }
   }
 
+  /* PANO (dikey): soru sirasinda "CEVAP VERENLER" (yalniz ad + ✔; hangi sik
+     OLDUGU gosterilmez), cevap acilinca "TUR TABLOSU" ilk 6. Yatayda tablo hep gorunur. */
+  let panoZaman = 0;
+  function panoCiz() {
+    if (!DIKEY || durum === 'acik') { document.getElementById('tabloKutu').classList.remove('cevap'); tabloCiz(); return; }
+    document.getElementById('tabloKutu').classList.add('cevap');
+    tabloEl.textContent = '';
+    const son = [...cevaplar.values()].reverse().slice(0, 6);   // en yeni uste
+    if (!son.length) {
+      const bos = document.createElement('div'); bos.className = 'sira bos';
+      bos.textContent = 'şıkkı yaz, adın burada çıksın';
+      tabloEl.appendChild(bos);
+      return;
+    }
+    son.forEach((c) => {
+      const sira = document.createElement('div'); sira.className = 'sira';
+      const tik = document.createElement('div'); tik.className = 'tik'; tik.textContent = '✔';
+      const ad = document.createElement('div'); ad.className = 'ad'; ad.textContent = c.ad;
+      sira.append(tik, ad);
+      tabloEl.appendChild(sira);
+    });
+    tabloEl.querySelectorAll('.ad').forEach((el) => TT.adSigdir(el, 54, 40));
+    while (tabloEl.scrollHeight > tabloEl.clientHeight + 1 && tabloEl.children.length > 1) tabloEl.lastElementChild.remove();
+  }
+
   function sayacCiz() {
     document.getElementById('sayacBuyuk').textContent = cevaplar.size;
+    if (DIKEY && !panoZaman) panoZaman = setTimeout(() => { panoZaman = 0; if (durum === 'soru') panoCiz(); }, 120);
   }
 
   // ---- saat ----------------------------------------------------------------
@@ -679,7 +708,6 @@
 
   // ---- basla ---------------------------------------------------------------
   yeniSoru();
-  tabloCiz();
 
   TT.uyanis({
     baslik: 'BİLGİ YARIŞMASI',

@@ -7,73 +7,71 @@
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
-  /* Bu sayfa hem cekirdegin demosu hem yayincinin GPU kontrolu. 1080x1920 tasarim alani;
-     kabuk (S) dikey olcegi getirene kadar kendi olcegini hesaplar (--k-olcek). */
-  #katilCagri { display: none !important; }   /* eski/yeni kabugun KOMUT seridi: bu sayfa kendi seridini (#dKomut) cizer */
-  html, body { margin: 0; background: #17123a; overflow: hidden; }
-  #kok {
-    position: fixed; left: 50%; top: 50%; width: 1080px; height: 1920px; margin: -960px 0 0 -540px; padding: 0;
-    display: block; transform: scale(var(--k-olcek, 1)); transform-origin: center center; overflow: hidden;
-    background: #17123a; font-family: 'Outfit', system-ui, sans-serif; color: #fff;
-  }
-  #kok .kt { position: absolute; box-sizing: border-box; }
-  #dUst { left: 60px; top: 252px; width: 960px; height: 128px; display: flex; align-items: center; gap: 24px; }
-  #dUst .rozet { font-size: 96px; line-height: 1; }
-  #dUst .baslik { font-size: 48px; font-weight: 900; line-height: 1.05; }
-  #dUst .durum { font-size: 30px; font-weight: 700; color: #d9cffb; }
-  #dKomut { left: 60px; top: 392px; width: 960px; height: 84px; display: flex; align-items: center; gap: 18px;
-    background: rgba(23,18,58,.78); border-radius: 18px; padding: 0 24px; }
-  #dKomut .yaz { font-size: 34px; font-weight: 700; color: #cbbdf5; }
-  #dKomut .komut { font-size: 46px; font-weight: 900; }
-  /* SAHNE: 3D'nin cizildigi kutu (60,488,960,672). Okuma kutusu icinde, 34px. */
-  #dOkuma { left: 60px; top: 488px; width: 960px; box-sizing: border-box; padding: 10px 20px 12px; border-radius: 0 0 20px 20px;
+  /* Bu sayfa hem 3D cekirdegin demosu hem yayincinin GPU kontrolu. Kabuk: dikey #kok.tt-oyun
+     (ÜST, KOMUT, SPİKER kabugun). Kutular TT.KUTU'dan okunur ve asagida JS ile yerlestirilir. */
+  :root { --oyun-renk: #ffd25a; }
+  #okuma { position: absolute; box-sizing: border-box; padding: 10px 20px 12px; border-radius: 0 0 20px 20px;
     background: rgba(23,18,58,.94); font-size: 34px; font-weight: 700; line-height: 1.22; z-index: 3; }
-  #dOkuma b { font-weight: 900; color: #ffd25a; }
-  #dOkuma.gizli { display: none; }
-  #dAkis { left: 60px; top: 1170px; width: 960px; height: 64px; display: flex; align-items: center; font-size: 30px; font-weight: 700; color: #e7defc;
-    background: rgba(23,18,58,.7); border-radius: 14px; padding: 0 20px; white-space: nowrap; overflow: hidden; z-index: 3; }
-  #dPano { left: 560px; top: 1250px; width: 460px; height: 490px; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 58px; gap: 8px;
-    align-content: start; z-index: 4; }
-  #dPano .bas { grid-column: 1 / -1; font-size: 30px; font-weight: 900; color: #ffd25a; align-self: end; }
-  #dPano button { font: inherit; font-size: 30px; font-weight: 900; color: #fff; background: #3b2a7c; border: 3px solid #7a62d6;
-    border-radius: 14px; cursor: pointer; padding: 0 6px; }
-  #dPano button.act { background: #f5b92e; color: #1b1446; border-color: #ffe08a; }
-  /* DOM-only gorunum (kalite 'yok' / ?3d=0): sahne kutusunda buyuk coskuyla isim tahtasi */
-  #dDom { left: 60px; top: 560px; width: 960px; height: 560px; display: none; z-index: 2; text-align: center;
-    background: rgba(59,42,124,.55); border-radius: 28px; }
-  #dDom .big { font-size: 150px; font-weight: 900; line-height: 1.1; margin-top: 70px; color: #ffd25a; }
-  #dDom .alt { font-size: 34px; font-weight: 700; color: #e7defc; }
-  #dDom .tahta { margin: 24px 40px 0; font-size: 54px; font-weight: 900; }
-  #kok.sahne3d-yok #dDom { display: block; }
+  #okuma b { font-weight: 900; color: #ffd25a; }
+  #okuma.gizli { display: none; }
+  #pano { position: absolute; z-index: 4; display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; align-content: start; }
+  #pano .bas { grid-column: 1 / -1; font-size: 30px; font-weight: 900; color: #ffd25a; line-height: 34px; height: 34px; }
+  #pano button { font: inherit; font-size: 30px; font-weight: 900; color: #fff; background: #3b2a7c; border: 3px solid #7a62d6;
+    border-radius: 12px; cursor: pointer; padding: 0 2px; height: 42px; line-height: 1; white-space: nowrap; overflow: hidden; }
+  #pano button.a3 { grid-column: span 3; } #pano button.a4 { grid-column: span 4; }
+  #pano button.act { background: #f5b92e; color: #1b1446; border-color: #ffe08a; }
+  /* DOM-only gorunum (kalite 'yok' / ?3d=0): SAHNE'de buyuk sayi + isim tahtasi. 3D varken gizli. */
+  #domGorunum { position: absolute; display: none; z-index: 2; text-align: center; background: rgba(59,42,124,.55); border-radius: 28px; box-sizing: border-box; }
+  #domGorunum .big { font-size: 150px; font-weight: 900; line-height: 1.1; margin-top: 150px; color: #ffd25a; }
+  #domGorunum .alt { font-size: 34px; font-weight: 700; color: #e7defc; }
+  #domGorunum .tahta { margin: 24px 40px 0; font-size: 54px; font-weight: 900; }
+  #kok.sahne3d-yok #domGorunum { display: block; }
 </style>
 </head>
 <body>
 <div id="kok" class="tt-oyun">
-  <div id="dUst" class="kt"><div class="rozet">🪩</div><div><div class="baslik">3D SAHNE DENEMESİ</div><div class="durum" id="durum">çekirdek başlatılıyor…</div></div></div>
-  <div id="dKomut" class="kt"><span class="yaz">💬 YAZ →</span><span class="komut">GPU KONTROLÜ</span></div>
-  <div id="dOkuma" class="kt"><div id="okKalite"></div><div id="okGpu"></div></div>
-  <div id="dDom" class="kt"><div class="big" id="domBuyuk">%0</div><div class="alt">3D kapalı — yalnız DOM görünümü</div><div class="tahta" id="domTahta"></div></div>
-  <div id="dAkis" class="kt"></div>
-  <div id="dPano" class="kt"></div>
+  <div id="ust" class="kutu">
+    <div id="rozet">🪩</div>
+    <div id="baslikSar">
+      <div id="baslik">3D Sahne Denemesi</div>
+      <div id="cagri">çekirdek başlatılıyor…</div>
+    </div>
+    <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">GPU KONTROLÜ</span></div>
+    <div id="sayac">
+      <div id="sayacBuyuk">0</div>
+      <div id="sayacKucuk">figür</div>
+    </div>
+  </div>
+
+  <div id="okuma"><div id="okKalite"></div><div id="okGpu"></div><div id="okSimge"></div></div>
+  <div id="domGorunum"><div class="big" id="domBuyuk">%0</div><div class="alt">3D kapalı — yalnız DOM görünümü</div><div class="tahta" id="domTahta"></div></div>
+  <div id="pano"></div>
+  <div id="akis"></div>
 </div>
 
 <script src="_shared/tt.js"></script>
+<script src="_shared/spiker.js"></script>
 <script type="module">
 import { Sahne3D, THREE } from './_shared/sahne3d.js';
 
 const q = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
-function olcekle() { document.documentElement.style.setProperty('--k-olcek', String(Math.min(innerWidth / 1080, innerHeight / 1920))); }
-olcekle(); addEventListener('resize', olcekle);
+const KUTU = (window.TT && TT.KUTU) || { sahne: { x: 60, y: 488, w: 960, h: 672 }, pano: { x: 560, y: 1250, w: 460, h: 490 } };
+function yerles(el, b) { el.style.left = b.x + 'px'; el.style.top = b.y + 'px'; el.style.width = b.w + 'px'; }
+yerles($('okuma'), KUTU.sahne);
+{ const d = $('domGorunum'); yerles(d, KUTU.sahne); d.style.top = (KUTU.sahne.y + 100) + 'px'; d.style.height = (KUTU.sahne.h - 100) + 'px'; }
+{ const p = $('pano'); yerles(p, KUTU.pano); p.style.height = KUTU.pano.h + 'px'; }
+Spiker.kur($('akis'));
 
-// ---- parametreler: ?kisi=N  ?avatar=<url>  ?isim=N  ?hareket=  ?tema=  (+ core: ?3d=0 ?kalite= &kilit=1)
+// ---- parametreler: ?kisi=N  ?avatar=<url>  ?isim=N  ?tema=  ?hareket=  ?simge=hey|emoji|tablo|serbest|disemoji|bes|gec
+//      (cekirdek: ?3d=0  ?kalite=tam|orta|dusuk  &kilit=1)
 const KISI = Math.max(0, Math.min(150, q.has('kisi') ? (Number(q.get('kisi')) || 0) : q.has('n') ? (Number(q.get('n')) || 0) : 50));
 const TEMA = q.get('tema') === 'ocakbasi' ? 'ocakbasi' : 'meydan';
-const AVATAR = q.get('avatar');                  // tek URL: her figur icin (404 testi)
+const AVATAR = q.get('avatar');
 const ISIM_UZUN = Number(q.get('isim')) || 0;
 
 const s = Sahne3D.kur({ kap: $('kok'), tema: TEMA, enCokFigur: 150 });
-window.__sahne3d = s;                            // test kancasi (cekirdek de ayarlar)
+window.__sahne3d = s;
 
 // ---- gorunen adlar (test: 3, 12, 20, 28 karakter)
 const ADLAR = ['Ece', 'Mehmet Ali', 'Zeynep_Nur_Kaya_1905', 'Kübra_Nur_Demirtaş_Şahin_34', 'Ömer', 'Gülşen', 'Çağlar', 'İbrahim_Halil', 'Ayşe', 'Yiğit', 'Selin', 'Barış'];
@@ -90,9 +88,10 @@ function demoAvatar(i) {                         // data: URL, ag yok
 }
 const demoAv = []; for (let i = 0; i < 8; i++) demoAv.push(demoAvatar(i));
 
-// ---- halkalar: 24/40/86'nin oranlari, azinda dengeli dagit
+// ---- halkalar: 24/40/86'nin oranlari
 const RAD = [2.0, 3.4, 6.2], AGIRLIK = [24, 40, 86];
-let figurKid = [];
+let figurKid = [];                               // demo figurleri
+const katilanlar = [];                           // olaylarla gelenler (en yeni sonda): { kid, ad }
 function yerlestir(n) {
   for (const k of figurKid) s.figur.cikar(k);
   figurKid = [];
@@ -107,7 +106,7 @@ function yerlestir(n) {
     s.figur.yerlestir(kid, { halka: h, sira: sr }, { sureMs: 500 + (id % 7) * 60 });
   }
   if (figurKid.length) s.figur.isaret('f0', ['hale', 'mendil']);
-  etiketle();
+  etiketle(); sayacYaz();
 }
 function etiketle() {
   const l = [];
@@ -118,60 +117,91 @@ function etiketle() {
     else if (i % Math.max(1, Math.floor(figurKid.length / 8)) === 0) e.oncelik = 50 - i % 7;
     l.push(e);
   });
+  katilanlar.forEach((k, j) => l.push({ kid: k.kid, ad: k.ad, oncelik: 200 + j, avatarUrl: AVATAR ? AVATAR : demoAv[j % demoAv.length], altin: false }));   // en yeni gelenler en onde
   s.etiket.ayarla(l);
 }
+function sayacYaz() { $('sayacBuyuk').textContent = String(figurKid.length + katilanlar.length); }
 const HRK = ['adim', 'zipla', 'kollar', 'at', 'mendil'];
 function hareketVer(tip) { figurKid.forEach((kid, i) => { if (i % 3 === 0) s.figur.hareket(kid, tip); }); }
 
-// ---- demo dekor: sahne ortasi (platform + davul), sayfanin kendi THREE'siyle
-{
-  const tahta = new THREE.MeshLambertMaterial({ color: 0x8a5a3a }), deri = new THREE.MeshLambertMaterial({ color: 0xf3e6cc }), koyu = new THREE.MeshLambertMaterial({ color: 0x5a3320 });
-  const pl = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.45, 0.18, 28), tahta); pl.position.y = 0.09; s.sahne.add(pl);
-  const kenar = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.05, 6, 28), new THREE.MeshLambertMaterial({ color: 0xffd25a })); kenar.rotation.x = Math.PI / 2; kenar.position.y = 0.19; s.sahne.add(kenar);
-  const gov = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.3, 20), koyu); gov.position.set(0, 0.34, -0.55); s.sahne.add(gov);
-  const yuz = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.02, 20), deri); yuz.position.set(0, 0.5, -0.55); s.sahne.add(yuz);
-  const kk = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.025, 6, 20), new THREE.MeshLambertMaterial({ color: 0xd8344a })); kk.rotation.x = Math.PI / 2; kk.position.set(0, 0.5, -0.55); s.sahne.add(kk);
+// ---- olaylar: gelen herkes halkaya girer, adi (yalniz ad) etiketlenir. Sohbet metni HIC gosterilmez.
+function katil(u) {
+  if (!u) return;
+  const ad = String(u.nickname || u.uniqueId || '').trim(); if (!ad) return;
+  const kid = 'u' + String(u.id || u.uniqueId || ad);
+  if (katilanlar.some((k) => k.kid === kid)) return;
+  if (s.figur.sayi() >= 150 && figurKid.length) s.figur.cikar(figurKid.pop());
+  if (!s.figur.ekle(kid, { renk: RENKLER[katilanlar.length % RENKLER.length] })) return;
+  s.figur.yerlestir(kid, { halka: 2, sira: 3 * katilanlar.length + 1 }, { sureMs: 900 });
+  katilanlar.push({ kid, ad }); if (katilanlar.length > 6) { s.figur.cikar(katilanlar.shift().kid); }
+  etiketle(); sayacYaz();
+  Spiker.satir(['👋 ', { kim: ad }, ' halkaya girdi'], { oncelik: 1, sure: 2500 });
+}
+if (window.TT) {
+  TT.on('chat', (ev) => katil(ev.user));
+  TT.on('like', (ev) => katil(ev.user));
+  TT.on('follow', (ev) => katil(ev.user));
+  TT.on('gift', (ev) => { if (ev.gift && ev.gift.streaking) return; katil(ev.user); });
 }
 
-// ---- kontrol paneli (PANO kutusu)
-const pano = $('dPano');
-function dugme(ad, fn, id) { const b = document.createElement('button'); b.textContent = ad; if (id) b.id = id; b.addEventListener('click', fn); pano.appendChild(b); return b; }
+// ---- s.simge denemesi: tablo bir kez kaydedilir; ilk s.simge() cagrisindan sonra kilitlenir
+try { s.simge.tablo({ sirada: '✓ sıradasın', bekle: '⏳', fokur: 'FOKUR!' }); } catch (e) { /* kilitli */ }
+let simgeSay = 0;
+function hedefKid() { const l = figurKid.concat(katilanlar.map((k) => k.kid)); return l.length ? l[(simgeSay++ * 7 + 1) % l.length] : 'f0'; }
+function simgeSonuc(ad, deger) { $('okSimge').textContent = 'simge · ' + ad + ' → ' + deger; }
+const SIMGE_ISLER = {
+  hey()      { return ['HEY (nida)', s.simge(hedefKid(), ['HEY'])]; },
+  emoji()    { return ['🔥 (izinli emoji)', s.simge(hedefKid(), ['🔥', '👏'], { renk: '#ffd25a' })]; },
+  tablo()    { return ['sirada + 42 (tablo anahtari + sayi)', s.simge(hedefKid(), ['sirada', 42])]; },
+  serbest()  { return ['serbest metin', s.simge(hedefKid(), ['merhaba dunya'])]; },
+  disemoji() { return ['izin dışı emoji', s.simge(hedefKid(), ['🦄'])]; },
+  bes()      { return ['5 parça', s.simge(hedefKid(), ['HEY', 'HOP', 'HOPPA', 'OLEY', '🔥'])]; },
+  gec()      { let v; try { s.simge.tablo({ gec: 'x' }); v = 'KABUL EDİLDİ (hata!)'; } catch (e) { v = 'hata fırlattı (doğru)'; } return ['geç tablo()', v]; },
+};
+function simgeDene(ad) { const f = SIMGE_ISLER[ad]; if (!f) return; const [a, d] = f(); simgeSonuc(a, d); }
+
+// ---- kontrol paneli (PANO kutusu 560,1250,460x490)
+const pano = $('pano');
+function dugme(ad, fn, sinif, id) { const b = document.createElement('button'); b.textContent = ad; b.className = sinif; if (id) b.id = id; b.addEventListener('click', fn); pano.appendChild(b); return b; }
 function baslik(t) { const d = document.createElement('div'); d.className = 'bas'; d.textContent = t; pano.appendChild(d); }
 const kisiDugme = {};
 baslik('KİŞİ');
-[12, 50, 100, 150].forEach((n) => { kisiDugme[n] = dugme(String(n), () => { yerlestir(n); isaretKisi(n); }); });
+[12, 50, 100, 150].forEach((n) => { kisiDugme[n] = dugme(String(n), () => { yerlestir(n); isaretKisi(n); }, 'a3'); });
 baslik('HAREKET');
-['ADIM', 'ZIPLA', 'KOLLAR', 'AT', 'MENDİL'].forEach((t, i) => dugme(t, () => hareketVer(HRK[i])));
-dugme('BİLGİ', () => $('dOkuma').classList.toggle('gizli'));
+['ADIM', 'ZIPLA', 'KOLLAR', 'AT', 'MENDİL'].forEach((t, i) => dugme(t, () => hareketVer(HRK[i]), 'a4'));
+dugme('BİLGİ', () => $('okuma').classList.toggle('gizli'), 'a4');
 baslik('KALİTE');
-['tam', 'orta', 'dusuk', 'yok'].forEach((k) => dugme(k.toUpperCase(), () => { s.kalite = k; }, 'k_' + k));
-dugme('SIFIRLA', () => s.kaliteSifirla());
+['tam', 'orta', 'dusuk', 'yok'].forEach((k) => dugme(k.toUpperCase(), () => { s.kalite = k; }, 'a4', 'k_' + k));
+dugme('SIFIRLA', () => s.kaliteSifirla(), 'a4');
+baslik('SİMGE');
+dugme('HEY', () => simgeDene('hey'), 'a4'); dugme('🔥', () => simgeDene('emoji'), 'a4'); dugme('T+42', () => simgeDene('tablo'), 'a4');
+dugme('ÇÖP', () => simgeDene('serbest'), 'a3'); dugme('🦄', () => simgeDene('disemoji'), 'a3'); dugme('5×', () => simgeDene('bes'), 'a3'); dugme('GEÇ', () => simgeDene('gec'), 'a3');
 function isaretKisi(n) { for (const k in kisiDugme) kisiDugme[k].classList.toggle('act', Number(k) === n); }
 
 // ---- 'kalite' olayi: DOM-only gorunumu
 function domGuncelle() {
-  const adlar = figurKid.slice(0, 5).map((_, i) => adVer(i));
-  $('domTahta').textContent = adlar.join(' · ');
-  $('domBuyuk').textContent = '%' + Math.min(100, Math.round(figurKid.length / 1.5));
+  const adlar = figurKid.slice(0, 5).map((_, i) => adVer(i)).concat(katilanlar.map((k) => k.ad));
+  $('domTahta').textContent = adlar.slice(0, 6).join(' · ');
+  $('domBuyuk').textContent = '%' + Math.min(100, Math.round((figurKid.length + katilanlar.length) / 1.5));
 }
-s.dinle('kalite', (d) => { $('durum').textContent = 'kalite: ' + d.kalite + (d.sebep ? ' (' + d.sebep + ')' : ''); if (d.kalite === 'yok') domGuncelle(); });
+s.dinle('kalite', (d) => { $('cagri').textContent = 'kalite: ' + d.kalite + (d.sebep ? ' (' + d.sebep + ')' : ''); if (d.kalite === 'yok') domGuncelle(); });
 
-// ---- canli okuma
+// ---- canli okuma (SAHNE icinde, 34px): kalite, GPU, ortalama kare suresi
 function okuma() {
   const o = s.olcum();
   const fps = o.kareMs > 0 ? Math.round(1000 / o.kareMs) : 0;
-  $('okKalite').innerHTML = '';
-  const b = document.createElement('b'); b.textContent = 'KALİTE ' + o.kalite; $('okKalite').appendChild(b);
-  $('okKalite').appendChild(document.createTextNode(' · kare ortalaması ' + o.kareMs.toFixed(1) + ' ms (' + fps + ' fps) · ' + o.figur + ' figür'));
+  const k = $('okKalite'); k.textContent = '';
+  const b = document.createElement('b'); b.textContent = 'KALİTE ' + o.kalite; k.appendChild(b);
+  k.appendChild(document.createTextNode(' · kare ' + o.kareMs.toFixed(1) + ' ms (' + fps + ' fps)' + (o.yazilim ? ' · yazılım' : '')));
   $('okGpu').textContent = 'GPU: ' + (o.webgl || 'WebGL yok');
-  $('dAkis').textContent = 'çağrı ' + o.cizimCagrisi + ' · üçgen ' + Math.round(o.ucgen / 1000) + 'k · js ' + o.jsMs.toFixed(1) + '/' + o.jsMsP95.toFixed(1) + ' ms · ' + o.pikselOrani + 'x';
   if (s.kalite === 'yok') domGuncelle();
 }
 setInterval(okuma, 500); okuma();
 
 yerlestir(KISI); isaretKisi(KISI);
 if (q.get('hareket') && HRK.includes(q.get('hareket'))) setTimeout(() => hareketVer(q.get('hareket')), 1500);
-window.__demo = { yerlestir, hareketVer, etiketle, adVer, get kidler() { return figurKid; } };
+if (q.get('simge')) setTimeout(() => simgeDene(q.get('simge')), 1500);
+window.__demo = { yerlestir, hareketVer, etiketle, adVer, simgeDene, get kidler() { return figurKid; } };
 </script>
 </body>
 </html>
