@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D Sahne Denemesi — GPU kontrolü</title>
+<link rel="stylesheet" href="_shared/base.css">
+<link rel="stylesheet" href="_shared/oyun-tema.css">
+<style>
+  /* Bu sayfa hem cekirdegin demosu hem yayincinin GPU kontrolu. 1080x1920 tasarim alani;
+     kabuk (S) dikey olcegi getirene kadar kendi olcegini hesaplar (--k-olcek). */
+  #katilCagri { display: none !important; }   /* eski/yeni kabugun KOMUT seridi: bu sayfa kendi seridini (#dKomut) cizer */
+  html, body { margin: 0; background: #17123a; overflow: hidden; }
+  #kok {
+    position: fixed; left: 50%; top: 50%; width: 1080px; height: 1920px; margin: -960px 0 0 -540px; padding: 0;
+    display: block; transform: scale(var(--k-olcek, 1)); transform-origin: center center; overflow: hidden;
+    background: #17123a; font-family: 'Outfit', system-ui, sans-serif; color: #fff;
+  }
+  #kok .kt { position: absolute; box-sizing: border-box; }
+  #dUst { left: 60px; top: 252px; width: 960px; height: 128px; display: flex; align-items: center; gap: 24px; }
+  #dUst .rozet { font-size: 96px; line-height: 1; }
+  #dUst .baslik { font-size: 48px; font-weight: 900; line-height: 1.05; }
+  #dUst .durum { font-size: 30px; font-weight: 700; color: #d9cffb; }
+  #dKomut { left: 60px; top: 392px; width: 960px; height: 84px; display: flex; align-items: center; gap: 18px;
+    background: rgba(23,18,58,.78); border-radius: 18px; padding: 0 24px; }
+  #dKomut .yaz { font-size: 34px; font-weight: 700; color: #cbbdf5; }
+  #dKomut .komut { font-size: 46px; font-weight: 900; }
+  /* SAHNE: 3D'nin cizildigi kutu (60,488,960,672). Okuma kutusu icinde, 34px. */
+  #dOkuma { left: 60px; top: 488px; width: 960px; box-sizing: border-box; padding: 10px 20px 12px; border-radius: 0 0 20px 20px;
+    background: rgba(23,18,58,.94); font-size: 34px; font-weight: 700; line-height: 1.22; z-index: 3; }
+  #dOkuma b { font-weight: 900; color: #ffd25a; }
+  #dOkuma.gizli { display: none; }
+  #dAkis { left: 60px; top: 1170px; width: 960px; height: 64px; display: flex; align-items: center; font-size: 30px; font-weight: 700; color: #e7defc;
+    background: rgba(23,18,58,.7); border-radius: 14px; padding: 0 20px; white-space: nowrap; overflow: hidden; z-index: 3; }
+  #dPano { left: 560px; top: 1250px; width: 460px; height: 490px; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 58px; gap: 8px;
+    align-content: start; z-index: 4; }
+  #dPano .bas { grid-column: 1 / -1; font-size: 30px; font-weight: 900; color: #ffd25a; align-self: end; }
+  #dPano button { font: inherit; font-size: 30px; font-weight: 900; color: #fff; background: #3b2a7c; border: 3px solid #7a62d6;
+    border-radius: 14px; cursor: pointer; padding: 0 6px; }
+  #dPano button.act { background: #f5b92e; color: #1b1446; border-color: #ffe08a; }
+  /* DOM-only gorunum (kalite 'yok' / ?3d=0): sahne kutusunda buyuk coskuyla isim tahtasi */
+  #dDom { left: 60px; top: 560px; width: 960px; height: 560px; display: none; z-index: 2; text-align: center;
+    background: rgba(59,42,124,.55); border-radius: 28px; }
+  #dDom .big { font-size: 150px; font-weight: 900; line-height: 1.1; margin-top: 70px; color: #ffd25a; }
+  #dDom .alt { font-size: 34px; font-weight: 700; color: #e7defc; }
+  #dDom .tahta { margin: 24px 40px 0; font-size: 54px; font-weight: 900; }
+  #kok.sahne3d-yok #dDom { display: block; }
+</style>
+</head>
+<body>
+<div id="kok" class="tt-oyun">
+  <div id="dUst" class="kt"><div class="rozet">🪩</div><div><div class="baslik">3D SAHNE DENEMESİ</div><div class="durum" id="durum">çekirdek başlatılıyor…</div></div></div>
+  <div id="dKomut" class="kt"><span class="yaz">💬 YAZ →</span><span class="komut">GPU KONTROLÜ</span></div>
+  <div id="dOkuma" class="kt"><div id="okKalite"></div><div id="okGpu"></div></div>
+  <div id="dDom" class="kt"><div class="big" id="domBuyuk">%0</div><div class="alt">3D kapalı — yalnız DOM görünümü</div><div class="tahta" id="domTahta"></div></div>
+  <div id="dAkis" class="kt"></div>
+  <div id="dPano" class="kt"></div>
+</div>
+
+<script src="_shared/tt.js"></script>
+<script type="module">
+import { Sahne3D, THREE } from './_shared/sahne3d.js';
+
+const q = new URLSearchParams(location.search);
+const $ = (id) => document.getElementById(id);
+function olcekle() { document.documentElement.style.setProperty('--k-olcek', String(Math.min(innerWidth / 1080, innerHeight / 1920))); }
+olcekle(); addEventListener('resize', olcekle);
+
+// ---- parametreler: ?kisi=N  ?avatar=<url>  ?isim=N  ?hareket=  ?tema=  (+ core: ?3d=0 ?kalite= &kilit=1)
+const KISI = Math.max(0, Math.min(150, q.has('kisi') ? (Number(q.get('kisi')) || 0) : q.has('n') ? (Number(q.get('n')) || 0) : 50));
+const TEMA = q.get('tema') === 'ocakbasi' ? 'ocakbasi' : 'meydan';
+const AVATAR = q.get('avatar');                  // tek URL: her figur icin (404 testi)
+const ISIM_UZUN = Number(q.get('isim')) || 0;
+
+const s = Sahne3D.kur({ kap: $('kok'), tema: TEMA, enCokFigur: 150 });
+window.__sahne3d = s;                            // test kancasi (cekirdek de ayarlar)
+
+// ---- gorunen adlar (test: 3, 12, 20, 28 karakter)
+const ADLAR = ['Ece', 'Mehmet Ali', 'Zeynep_Nur_Kaya_1905', 'Kübra_Nur_Demirtaş_Şahin_34', 'Ömer', 'Gülşen', 'Çağlar', 'İbrahim_Halil', 'Ayşe', 'Yiğit', 'Selin', 'Barış'];
+const RENKLER = ['#f5a3e6', '#ffd25a', '#4ec2c0', '#ff7a6b', '#9be26b', '#8fb4ff', '#ff9f43', '#c59bff'];
+function adVer(i) {
+  if (ISIM_UZUN) { const k = 'ĞÜŞİÖÇABCDEFGHJKLMNPRSTUVYZ'; let t = ''; for (let c = 0; c < ISIM_UZUN; c++) t += k[(i + c) % k.length]; return t; }
+  return ADLAR[i % ADLAR.length] + (i >= ADLAR.length ? ' ' + i : '');
+}
+function demoAvatar(i) {                         // data: URL, ag yok
+  const c = document.createElement('canvas'); c.width = c.height = 96; const x = c.getContext('2d');
+  x.fillStyle = RENKLER[(i * 3) % RENKLER.length]; x.fillRect(0, 0, 96, 96);
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.arc(48, 40, 18, 0, 6.3); x.fill(); x.beginPath(); x.ellipse(48, 96, 34, 28, 0, 0, 6.3); x.fill();
+  return c.toDataURL('image/png');
+}
+const demoAv = []; for (let i = 0; i < 8; i++) demoAv.push(demoAvatar(i));
+
+// ---- halkalar: 24/40/86'nin oranlari, azinda dengeli dagit
+const RAD = [2.0, 3.4, 6.2], AGIRLIK = [24, 40, 86];
+let figurKid = [];
+function yerlestir(n) {
+  for (const k of figurKid) s.figur.cikar(k);
+  figurKid = [];
+  const sayilar = AGIRLIK.map((a) => Math.floor(n * a / 150));
+  let kalan = n - sayilar.reduce((a, b) => a + b, 0); for (let h = 2; kalan > 0; h = (h + 2) % 3, kalan--) sayilar[h]++;
+  if (n >= 150) { sayilar[0] = 24; sayilar[1] = 40; sayilar[2] = 86; }
+  s.halka.ayarla(RAD.map((r, h) => ({ yaricap: r, kapasite: Math.max(1, sayilar[h]), yon: h % 2 ? -1 : 1 })));
+  let id = 0;
+  for (let h = 0; h < 3; h++) for (let sr = 0; sr < sayilar[h]; sr++, id++) {
+    const kid = 'f' + id; figurKid.push(kid);
+    s.figur.ekle(kid, { renk: RENKLER[id % RENKLER.length], baslik: id % 2 ? 'yazma' : 'kasket', bot: id % 23 === 5 });
+    s.figur.yerlestir(kid, { halka: h, sira: sr }, { sureMs: 500 + (id % 7) * 60 });
+  }
+  if (figurKid.length) s.figur.isaret('f0', ['hale', 'mendil']);
+  etiketle();
+}
+function etiketle() {
+  const l = [];
+  figurKid.forEach((kid, i) => {
+    const e = { kid, ad: adVer(i), oncelik: 0, avatarUrl: AVATAR ? AVATAR : demoAv[i % demoAv.length] };
+    if (i === 0) { e.oncelik = 100; e.altin = true; }
+    else if (i === figurKid.length - 1) e.oncelik = 90;
+    else if (i % Math.max(1, Math.floor(figurKid.length / 8)) === 0) e.oncelik = 50 - i % 7;
+    l.push(e);
+  });
+  s.etiket.ayarla(l);
+}
+const HRK = ['adim', 'zipla', 'kollar', 'at', 'mendil'];
+function hareketVer(tip) { figurKid.forEach((kid, i) => { if (i % 3 === 0) s.figur.hareket(kid, tip); }); }
+
+// ---- demo dekor: sahne ortasi (platform + davul), sayfanin kendi THREE'siyle
+{
+  const tahta = new THREE.MeshLambertMaterial({ color: 0x8a5a3a }), deri = new THREE.MeshLambertMaterial({ color: 0xf3e6cc }), koyu = new THREE.MeshLambertMaterial({ color: 0x5a3320 });
+  const pl = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.45, 0.18, 28), tahta); pl.position.y = 0.09; s.sahne.add(pl);
+  const kenar = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.05, 6, 28), new THREE.MeshLambertMaterial({ color: 0xffd25a })); kenar.rotation.x = Math.PI / 2; kenar.position.y = 0.19; s.sahne.add(kenar);
+  const gov = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.3, 20), koyu); gov.position.set(0, 0.34, -0.55); s.sahne.add(gov);
+  const yuz = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.02, 20), deri); yuz.position.set(0, 0.5, -0.55); s.sahne.add(yuz);
+  const kk = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.025, 6, 20), new THREE.MeshLambertMaterial({ color: 0xd8344a })); kk.rotation.x = Math.PI / 2; kk.position.set(0, 0.5, -0.55); s.sahne.add(kk);
+}
+
+// ---- kontrol paneli (PANO kutusu)
+const pano = $('dPano');
+function dugme(ad, fn, id) { const b = document.createElement('button'); b.textContent = ad; if (id) b.id = id; b.addEventListener('click', fn); pano.appendChild(b); return b; }
+function baslik(t) { const d = document.createElement('div'); d.className = 'bas'; d.textContent = t; pano.appendChild(d); }
+const kisiDugme = {};
+baslik('KİŞİ');
+[12, 50, 100, 150].forEach((n) => { kisiDugme[n] = dugme(String(n), () => { yerlestir(n); isaretKisi(n); }); });
+baslik('HAREKET');
+['ADIM', 'ZIPLA', 'KOLLAR', 'AT', 'MENDİL'].forEach((t, i) => dugme(t, () => hareketVer(HRK[i])));
+dugme('BİLGİ', () => $('dOkuma').classList.toggle('gizli'));
+baslik('KALİTE');
+['tam', 'orta', 'dusuk', 'yok'].forEach((k) => dugme(k.toUpperCase(), () => { s.kalite = k; }, 'k_' + k));
+dugme('SIFIRLA', () => s.kaliteSifirla());
+function isaretKisi(n) { for (const k in kisiDugme) kisiDugme[k].classList.toggle('act', Number(k) === n); }
+
+// ---- 'kalite' olayi: DOM-only gorunumu
+function domGuncelle() {
+  const adlar = figurKid.slice(0, 5).map((_, i) => adVer(i));
+  $('domTahta').textContent = adlar.join(' · ');
+  $('domBuyuk').textContent = '%' + Math.min(100, Math.round(figurKid.length / 1.5));
+}
+s.dinle('kalite', (d) => { $('durum').textContent = 'kalite: ' + d.kalite + (d.sebep ? ' (' + d.sebep + ')' : ''); if (d.kalite === 'yok') domGuncelle(); });
+
+// ---- canli okuma
+function okuma() {
+  const o = s.olcum();
+  const fps = o.kareMs > 0 ? Math.round(1000 / o.kareMs) : 0;
+  $('okKalite').innerHTML = '';
+  const b = document.createElement('b'); b.textContent = 'KALİTE ' + o.kalite; $('okKalite').appendChild(b);
+  $('okKalite').appendChild(document.createTextNode(' · kare ortalaması ' + o.kareMs.toFixed(1) + ' ms (' + fps + ' fps) · ' + o.figur + ' figür'));
+  $('okGpu').textContent = 'GPU: ' + (o.webgl || 'WebGL yok');
+  $('dAkis').textContent = 'çağrı ' + o.cizimCagrisi + ' · üçgen ' + Math.round(o.ucgen / 1000) + 'k · js ' + o.jsMs.toFixed(1) + '/' + o.jsMsP95.toFixed(1) + ' ms · ' + o.pikselOrani + 'x';
+  if (s.kalite === 'yok') domGuncelle();
+}
+setInterval(okuma, 500); okuma();
+
+yerlestir(KISI); isaretKisi(KISI);
+if (q.get('hareket') && HRK.includes(q.get('hareket'))) setTimeout(() => hareketVer(q.get('hareket')), 1500);
+window.__demo = { yerlestir, hareketVer, etiketle, adVer, get kidler() { return figurKid; } };
+</script>
+</body>
+</html>
