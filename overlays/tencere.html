@@ -86,10 +86,10 @@
   #panoIc .adet { font-size: 30px; min-width: 0; }
   #panoIc .sira.ilk { background: rgba(246, 201, 79, .12); }
   #panoIc .sira.bos { font-size: 30px; }
-  .uc { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; will-change: transform; }
+  .uc { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform; z-index: 4; }
 
   /* ---- bitis karti ---- */
-  #kazanan { z-index: 6; }
+  #kazanan { z-index: 6; background: #12082e; }
   #kazanan .sonOdun { font-size: 30px; font-weight: 800; color: var(--soluk); margin-top: 14px; padding: 0 24px; overflow-wrap: anywhere; }
 </style>
 </head>
@@ -265,7 +265,7 @@ let durum = 'oyun';                         // oyun | titreme | patladi | pisti
 let tur = 0, P = 0, Ps = 0, esik = 0, kalanSn = TUR_SN, titremeKal = 0, kutlamaT = 0;
 let sonOdunT = -1e9, hediyeBasinc = 0, ilkOdunVar = false, depo = DEPO_BAS;
 const kisiselTavan = (A) => Math.max(TAVAN_MIN, Math.min(TAVAN_MAKS, TAVAN_PAY / Math.max(1, A)));
-let finisYapildi = false, sonOdunSatiri = false, sonuc = null, sonOdunKisi = null;
+let kartAcik = false, finisYapildi = false, sonOdunSatiri = false, sonuc = null, sonOdunKisi = null;
 const kor = { bitis: 0, kimden: '' };       // koruk: L cinsinden bitis
 const bekleyenHediye = [];                  // P>=95 iken gelenler: sonraki tura
 const vm = new Map();                       // kid -> izleyici
@@ -347,9 +347,10 @@ function figurKur(d) {
   etKirli = true;
 }
 function etiketleriYaz() {
+  if (kartAcik) return;                    // bitis karti acikken etiket yok; yeni turda geri gelir
   etKirli = false;
   const l = holderlar().sort((a, b) => b.sonAktif - a.sonAktif);
-  const liste = l.map((d, i) => ({ kid: d.kid, ad: d.kepce ? '🥄 ' + d.ad : d.ad, oncelik: d === usta ? 100 : (i < 8 ? 60 - i : 0), avatarUrl: diskUrl(d), altin: d.kepce }));
+  const liste = l.map((d, i) => ({ kid: d.kid, ad: d.kepce ? '🥄 ' + d.ad : d.ad, oncelik: d === usta ? 100 : (i < 4 ? 60 - i : 0), avatarUrl: diskUrl(d), altin: d.kepce }));
   try { s.etiket.ayarla(liste); } catch (e) { /* tamam */ }
 }
 
@@ -596,7 +597,6 @@ function odunAt(d, w, tip) {
   if (d.figur) { s.figur.hareket(d.kid, 'at'); odunFirlat(d); }
   if (tip === 'fokur') { rattle = 1; cal('fokur', 400); if (L - d.sonBalon > 0.8) { simge(d.kid, ['fokur'], { renk: '#f2b32e', sureMs: 1600 }); d.sonBalon = L; } }
   else if (tip === 'begeni') { if (L - d.sonBalon > 0.8) { simge(d.kid, ['❤️'], { sureMs: 1400 }); d.sonBalon = L; } }
-  else if (eklenen >= 0.5 && L - d.sonBalon > 1.2) { simge(d.kid, ['🔥', Math.max(1, Math.round(eklenen))], { sureMs: 1400 }); d.sonBalon = L; }
   sonlariIsaretle(d);
   panoKirli = true; etKirli = true;
   if (ilk) {
@@ -691,7 +691,8 @@ function kutlamaBaslat(tip) {            // tip: 'patladi' | 'pisti'
   numaraYaz(); sagYaz();
 }
 function finisGoster() {
-  finisYapildi = true;
+  finisYapildi = true; kartAcik = true;
+  try { s.etiket.ayarla([]); } catch (e) { /* tamam */ }
   const r = sonuc;
   const nok = r.tip === 'patladi' ? 'patladı' : 'kıvamında pişti';
   if (!r.usta) { Finis.kart(kazananEl, { kupa: '🍲', isim: 'DÜDÜKLÜ', alt: 'ocak sönük kaldı — yaz, ateşi yak' }); return; }
@@ -714,7 +715,8 @@ function sarkiBasla(ilk) {
   // sureci koru
   Finis.kapat(kazananEl);
   for (const f of diskler) f.el.remove(); diskler = [];
-  tur++;
+  if (!ilk) { try { s.kaliteSifirla(); } catch (e) { /* tamam */ } }
+  tur++; kartAcik = false;
   durum = 'oyun'; P = 0; Ps = 0; esik = 0; kalanSn = TUR_SN; titremeKal = 0; kutlamaT = 0; sonOdunT = L;
   hediyeBasinc = 0; depo = DEPO_BAS; ilkOdunVar = false; kor.bitis = 0; kor.kimden = ''; sonuc = null; sonOdunKisi = null; usta = null;
   lid.mod = 'yerinde'; lidG.visible = true; odunlar.length = 0; buhar.length = 0;
@@ -786,11 +788,18 @@ function tesekkur(ad, k) {
 function tesekkurIsle() {
   const t = simdi();
   if (t < tesekkurKilit || !tesekkurKuyruk.length) return;
-  tesekkurKuyruk.sort((a, b) => (b.k.guc - a.k.guc) || (a.n - b.n));
+  tesekkurKuyruk.sort((a, b) => (b.k.guc - a.k.guc) || (a.n - b.n));       // en buyuk kademe once
   const g = tesekkurKuyruk.shift();
-  const sure = tesekkurKuyruk.length > 8 ? 650 : tesekkurKuyruk.length > 4 ? 850 : tesekkurKuyruk.length > 1 ? 1100 : 1700;
-  try { ULTI.duyur(g.ad, g.k, sure); } catch (e) { /* */ }
-  tesekkurKilit = t + sure + 330;
+  const adlar = [g.ad];
+  if (tesekkurKuyruk.length >= 3) {                                          // 3'ten fazla bekliyorsa ayni kademeyi tek satirda topla (en cok 3 ad)
+    for (let i = 0; i < tesekkurKuyruk.length && adlar.length < 3;) {
+      if (tesekkurKuyruk[i].k.guc === g.k.guc) adlar.push(tesekkurKuyruk.splice(i, 1)[0].ad); else i++;
+    }
+  }
+  const n = tesekkurKuyruk.length;
+  const sure = n > 8 ? 600 : n > 4 ? 800 : n > 1 ? 1100 : 1700;
+  try { ULTI.duyur(adlar.join(' · '), g.k, sure); } catch (e) { /* */ }
+  tesekkurKilit = t + sure + 250;
   tesekkurKuyruk.forEach((x, i) => { x.n = i; });
 }
 const GIFT_K = {

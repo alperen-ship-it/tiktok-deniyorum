@@ -111,7 +111,7 @@ Herkesin birlikte oynadığı ortak oyun: büyük bir düdüklü tencereyi **hep
 - Tek kişi tencereyi tek başına patlatamaz: kişi başına bir üst sınır var.
 - Oda boşken 🤖 botlar yardım eder (gerçek izleyici gelince geri çekilir, kazanan olamazlar).
 - Hediye basınca sınırlı bir destek ekler; tencereyi patlatan son itiş asla hediye olmaz. Adı teşekkürle görünür.
-- Bir tur en çok yaklaşık 2,5 dakika sürer; patlamasa bile tencere "kıvamında pişti" ile biter.
+- Tencere genelde 1–1,5 dakikada patlar; patlamazsa tur en geç yaklaşık 2,5 dakikada "kıvamında pişti" ile biter.
 
 **Nasıl açılır:** `oyun.html?lite=1&oyunlar=bilye,bilgi,pk,at,tencere` (ikisini birden: `...,at,halay,tencere`).
 Kaynak: `overlays/tencere.html`.
@@ -121,6 +121,7 @@ Kaynak: `overlays/tencere.html`.
 ## Yayın notları
 
 - Oyunlar artık dikey (1080×1920). Geçici olarak eski yatay düzene dönmek için (yalnızca misket, bilgi, kapışma ve at yarışı) adrese `&yatay=1` ekle; tepe ve kalan zaten yataydır.
+- Yayındayken kontrol paneli sekmesini kapat: panelin önizlemeleri de bilgisayarın ekran kartını kullanır.
 - Yayında sesinle ya da kameranla sen de ol: oyunlar kendi kendine döner ama sohbetle konuşan bir yayıncı hem izleyiciye hem platform kurallarına daha yakın durur (öneridir, TikTok'un kendi metnini doğrulamadık).
 - Oda boşken oynayan demo botların adı 🤖 ile işaretlidir; puan tablosuna girmezler.
 - Bahis mekaniği yok: hediye ödülü büyütmez; koşudaki hediye yalnızca mesajla da verilebilen tavanlı tezahürata eklenir. Teşekkür bandında ismi görünür.

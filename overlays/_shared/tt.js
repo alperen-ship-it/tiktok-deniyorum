@@ -93,6 +93,7 @@
   // tt-vertical), 1920x1080 olcegi, eski olu-bolge degiskenleri.
   // data-yatay: DONUSTURULMEMIS oyun sayfasi dikeyden cikar (eski yatay davranis); sayfa dikeye cevrilince bu oznitelik SILINIR.
   const OYUN = !!document.querySelector('#kok.tt-oyun:not([data-yatay])');
+  const YATAYOYUN = !!document.querySelector('#kok.tt-oyun[data-yatay]');
   const DIKEY = OYUN && !cfg.yatay;
   const TUVAL = DIKEY ? { w: 1080, h: 1920 } : { w: 1920, h: 1080 };
   const KUTU = Object.freeze({
@@ -124,7 +125,9 @@
       root.classList.toggle('tt-vertical', cfg.vertical);
     } else {
       // eski davranis: ?v=1 yoksa yatay
-      root.classList.toggle('tt-yatay', !cfg.vertical);
+      // data-yatay oyun sayfalarinin #kok/#ust... kurallari oyun-tema.css'te html.tt-yatay
+      // altinda: ?v=1'de de tt-yatay KALIR (tt-vertical ile birlikte); eski overlay'lerde kalkar.
+      root.classList.toggle('tt-yatay', !cfg.vertical || YATAYOYUN);
       root.classList.toggle('tt-vertical', cfg.vertical);
     }
 

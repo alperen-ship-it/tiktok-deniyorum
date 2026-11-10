@@ -116,6 +116,7 @@
     border: 1px solid #39405a; color: var(--cyan); font-size: 14px; font-weight: 600; vertical-align: 2px;
   }
   .badge.yatay { color: #f59e0b; border-color: #6b4a12; }
+  .onizle { position: absolute; inset: 0; width: 100%; border: 0; border-radius: 0; font-size: 16px; font-weight: 600; background: transparent; }
   .preview.yatay { aspect-ratio: 16 / 9; width: 100%; }
   .preview.yatay iframe { width: 1280px; height: 720px; }
   .preview iframe {
@@ -366,7 +367,9 @@
         <h2>${o.name}${o.hub ? '<span class="badge">3D</span>' : ''}</h2>
         <div class="desc">${o.desc}</div>
       </div>
-      <div class="preview${o.yatay ? ' yatay' : ''}"><iframe src="${url}?mock=1&rate=2" loading="lazy"></iframe></div>
+      <div class="preview${o.yatay ? ' yatay' : ''}">${o.hub
+        ? `<button class="onizle" data-onizle="${url}?mock=1&rate=2">▶ önizle</button>`
+        : `<iframe src="${url}?mock=1&rate=2" loading="lazy"></iframe>`}</div>
       <div class="opts">${o.opts}</div>
       <div class="foot">
         <input class="url" readonly value="${kopya}">
@@ -404,6 +407,13 @@
       navigator.clipboard.writeText(c.dataset.copy)
         .then(() => flash('Adres kopyalandı'))
         .catch(() => flash('Kopyalanamadı — elle seç'));
+    }
+    const on = e.target.closest('[data-onizle]');
+    if (on) {
+      const fr = document.createElement('iframe');
+      fr.src = on.dataset.onizle;
+      on.replaceWith(fr);
+      fitPreviews();
     }
     const op = e.target.closest('[data-open]');
     if (op) open(op.dataset.open, '_blank');
