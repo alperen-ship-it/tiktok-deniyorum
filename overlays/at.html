@@ -120,14 +120,79 @@
     color: #a89ce0; padding: 0 4px 5px;
   }
 
-  /* ULTI bandi (hediye tesekkuru): shared/ulti.js kucuk yaziyi 22px/17px
-     birakiyor; sayfa telefonda ~4.9x kuculur, isim en az 26px olmali. */
-  /* ulti.js stili sonradan (bantKur) enjekte ediliyor: ayni ozgullukte kaybederiz, o yuzden html onekli. */
-  html #ulti-bant { top: calc(84px * var(--tt-olcek, 1)); }
-  html #ulti-bant .u-kim, html.tt-vertical #ulti-bant .u-kim { font-size: 34px; }
-  html.tt-vertical #ulti-bant .u-ad { font-size: 54px; letter-spacing: -2px; }
+  /* ULTI bandi: eski yatay duzende ulti.js'nin kucuk yazilari telefonda cok
+     kuculuyordu; bu kurallar YALNIZ html.tt-yatay'da kalir. Dikeyde bant
+     ulti.js'nin kendi html.tt-dikey kurallariyla gelir (top/boyut ezilmez). */
+  html.tt-yatay #ulti-bant { top: calc(84px * var(--tt-olcek, 1)); }
+  html.tt-yatay #ulti-bant .u-kim, html.tt-yatay.tt-vertical #ulti-bant .u-kim { font-size: 34px; }
+  html.tt-yatay.tt-vertical #ulti-bant .u-ad { font-size: 54px; letter-spacing: -2px; }
 
+  #fazIc { display: flex; flex-direction: column; gap: 7px; flex: 1; min-height: 0; overflow: hidden; }
   #geriSayimSar { display: flex; align-items: center; gap: 10px; }
+
+  /* =====================================================================
+     DIKEY (1080x1920) — PLAN-DIKEY B "at". Tum yeni kurallar html.tt-dikey
+     altinda; yatay kurallar yukarida oldugu gibi.
+     SAHNE 960x672: 8 kulvar x 84px (kenarlik/bosluk yok, toplam 672).
+     Kulvarin sol 300px'i: numara 56px + at adi 40px; at kalan 660px'te kosar.
+     PANO 460x490 (--dk-pano-*): faza gore tahta / canli sira / sonuc, lobide
+     tahta ile EN IYI TAHMINCILER 8 sn aralikla doner.
+     ===================================================================== */
+  html.tt-dikey #orta { flex: 1; min-height: 0; display: block; }
+  html.tt-dikey #sahaKutu {
+    height: 100%; padding: 0; gap: 0; border: 0; border-radius: 0;
+    background: transparent; box-shadow: none;
+  }
+  html.tt-dikey .kulvar { border-width: 2px; border-radius: 10px; }
+  html.tt-dikey .kulvar::after { width: 14px; }
+  html.tt-dikey .kInfo { width: 300px; gap: 10px; padding: 0 8px; border-right-width: 2px; }
+  html.tt-dikey .kNo { width: 56px; height: 56px; border-radius: 14px; font-size: 40px; border-width: 3px; }
+  html.tt-dikey .kForma, html.tt-dikey .kGalibiyet { display: none; }
+  html.tt-dikey .kAd { font-size: 40px; letter-spacing: -.5px; }
+  html.tt-dikey .kAt { left: 312px; }
+  html.tt-dikey .kAt .govde { font-size: 56px; }
+  /* Tezahurat cubugu: genislik yerine transform (yalniz transform/opacity canlanir) */
+  html.tt-dikey .kTez {
+    left: 300px; right: 14px; width: auto; height: 8px;
+    transform: scaleX(0); transform-origin: left center; transition: transform .25s linear;
+  }
+
+  html.tt-dikey #ray {
+    position: absolute; width: auto; display: block;
+    left: var(--dk-pano-x); top: var(--dk-pano-y);
+    width: var(--dk-pano-w); height: var(--dk-pano-h);
+  }
+  html.tt-dikey #fazKutu { height: 100%; padding: 6px 8px; gap: 4px; box-sizing: border-box; }
+  html.tt-dikey #liderlikKutu { display: none; }
+  html.tt-dikey #fazBaslik { font-size: 30px; padding: 0 4px; line-height: 1.1; letter-spacing: .6px; }
+  html.tt-dikey #fazIc { gap: 6px; }
+  html.tt-dikey #fazIc.izgara {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(4, minmax(0, 1fr)); grid-auto-flow: column; gap: 4px 6px;
+  }
+  html.tt-dikey .fSatir { gap: 8px; padding: 5px 10px; border-radius: 12px; }
+  html.tt-dikey .fSatir .fNo { width: 34px; height: 34px; font-size: 30px; border-width: 2px; border-radius: 9px; }
+  html.tt-dikey .fSatir .fAd { font-size: 40px; line-height: 1.05; text-overflow: clip; }
+  html.tt-dikey .fSatir .fAd.sar { white-space: normal; overflow-wrap: anywhere; }
+  html.tt-dikey .fSatir .fAd.izl { text-transform: none; font-weight: 800; }
+  html.tt-dikey .fSatir .fSag, html.tt-dikey .fSatir .fKucuk { font-size: 30px; }
+  html.tt-dikey .fSatir.bos { font-size: 30px; padding: 14px 10px; text-align: center; }
+  html.tt-dikey .fSatir.pod { padding: 3px 10px; }
+  html.tt-dikey .fSatir.izl { padding: 4px 10px; }
+  /* Tahta hucresi: 3 satir (no+ad / carpan+kisi / galibiyet+form) */
+  html.tt-dikey .hucre {
+    display: flex; flex-direction: column; justify-content: center; gap: 0; min-width: 0;
+    background: rgba(0, 0, 0, .32); border-radius: 12px; padding: 3px 8px; overflow: hidden;
+  }
+  html.tt-dikey .hucre .h1 { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  html.tt-dikey .hucre .fNo { flex: none; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+    font-size: 30px; font-weight: 900; color: #17123a; border: 2px solid var(--cizgi); }
+  html.tt-dikey .hucre .fAd { flex: 1; min-width: 0; font-size: 40px; line-height: 1.05; font-weight: 900;
+    text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: clip; letter-spacing: -.5px; }
+  html.tt-dikey .hucre .h2 { font-size: 30px; font-weight: 900; color: var(--altin); line-height: 1.05; white-space: nowrap;
+    font-variant-numeric: tabular-nums; }
+  html.tt-dikey .hucre .h3 { font-size: 30px; font-weight: 800; color: #a89ce0; line-height: 1.05; white-space: nowrap;
+    font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -161,7 +226,7 @@
     <div id="ray">
       <div id="fazKutu" class="kutu">
         <div id="fazBaslik">ÇARPAN TAHTASI</div>
-        <div id="fazIc" style="display:flex;flex-direction:column;gap:7px;flex:1;min-height:0;overflow:hidden"></div>
+        <div id="fazIc"></div>
       </div>
       <div id="liderlikKutu" class="kutu"></div>
     </div>
@@ -256,6 +321,26 @@
   const kazananEl = document.getElementById('kazanan');
   Spiker.kur(document.getElementById('akis'));
 
+  // Dikey kabuk mu (TT.dikey): yalniz yerlesim/boyut farki; oyun mantigi ayni.
+  const DIKEY = !!TT.dikey;
+  /** DOM yardimcisi: izleyici metni YALNIZ textContent ile girer. */
+  function h(tag, cls, txt) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function cipEl(kid, px) {
+    const e = h('span');
+    e.style.cssText = `display:inline-block;flex:none;width:${px}px;height:${px}px;background-size:contain;vertical-align:middle`;
+    e.style.backgroundImage = 'url(' + Kimlik.al(kid).url + ')';
+    return e;
+  }
+  /** Dikeyde ad satirini kutuya sigdir: 54px -> 40px -> sar (asla "…"). */
+  function adSigdir(el) { if (DIKEY) TT.adSigdir(el, 54, 40); }
+  /** Dikeyde ust durum satirina sigsin diye kisa metin. */
+  const cagriMetni = (uzun, kisa) => (DIKEY ? kisa : uzun);
+
   // ---- kulvarlar -----------------------------------------------------------
   const atEl = [], tezEl = [], formEl = [];
   ATLAR.forEach((a, i) => {
@@ -288,11 +373,11 @@
 
   // BASLA, .kAt'in CSS'teki left degeriyle AYNI olmali (336px bilgi kutusu
   // + 12px pay). Ikisi ayrisirsa atlar kulvarda kaymis basliyor.
-  const BASLA = 348, BITIS_PAY = 34;
+  const BASLA = DIKEY ? 312 : 348, BITIS_PAY = 34, AT_EN = DIKEY ? 56 : 46;
   function atlariYerlestir() {
     for (let i = 0; i < ATLAR.length; i++) {
       const en = atEl[i].parentNode.clientWidth;
-      const yol = Math.max(0, en - BASLA - BITIS_PAY - 46);
+      const yol = Math.max(0, en - BASLA - BITIS_PAY - AT_EN);
       atEl[i].style.transform = `translateX(${(ilerleme[i] * yol).toFixed(1)}px)`;
     }
   }
@@ -323,11 +408,54 @@
     </div>`;
   }
 
+  // ---- dikey PANO (460x490) ------------------------------------------------
+  const MADALYA = ['🥇', '🥈', '🥉'];
+  function noEl(i, cls) {
+    const n = h('div', cls || 'fNo', String(i + 1));
+    n.style.background = ATLAR[i].renk;
+    return n;
+  }
+  /** Izleyici satiri (ad textContent): cip + ad + sag deger. Dikeyde ad 54->40->sar. */
+  function izlSatir(kid, ad, sag, rank) {
+    const r = h('div', 'fSatir izl');
+    if (rank != null) {
+      const n = h('div', 'fNo', String(rank + 1));
+      n.style.background = ['#ffd23f', '#d8dbe6', '#e29a5a', '#6b5fb8', '#6b5fb8'][rank];
+      n.style.color = rank > 2 ? '#fff' : '#17123a';
+      r.append(n);
+    }
+    r.append(cipEl(kid, DIKEY ? 36 : 30));
+    const a = h('div', DIKEY ? 'fAd izl' : 'fAd', ad);
+    r.append(a, h('div', 'fSag', sag));
+    return r;
+  }
+  /** PANO'ya sigmayan son izleyici satirlarini at (en az 1 kalir). */
+  function sigdirListe(ust) {
+    const sat = [...fazIcEl.querySelectorAll('.fSatir.izl')];
+    sat.forEach((r) => adSigdir(r.querySelector('.fAd')));
+    while (sat.length > 1 && fazIcEl.scrollHeight > fazIcEl.clientHeight + 1) sat.pop().remove();
+  }
+
   function rayOran() {
     fazBaslikEl.textContent = 'ÇARPAN TAHTASI';
     const o = oranlar();
     const say = new Array(ATLAR.length).fill(0);
     for (const b of bahisler.values()) say[b.at]++;
+    if (DIKEY) {
+      fazIcEl.className = 'izgara';
+      fazIcEl.replaceChildren(...ATLAR.map((a, i) => {
+        const c = h('div', 'hucre'), r1 = h('div', 'h1');
+        const ad = h('div', 'fAd', a.ad);
+        r1.append(noEl(i), ad);
+        const son = veriAt.son[i].slice(0, 3);
+        c.append(r1,
+          h('div', 'h2', (o[i] ? 'x' + o[i].toFixed(1) : '—') + (say[i] ? ' · ' + say[i] + '👤' : '')),
+          h('div', 'h3', '🏆 ' + galibiyet[i] + (son.length ? ' · ' + son.join('-') : '')));
+        return c;
+      }));
+      fazIcEl.querySelectorAll('.hucre .fAd').forEach((e) => TT.adSigdir(e, 40, 30));
+      return;
+    }
     fazIcEl.innerHTML = ATLAR.map((a, i) =>
       fSatir(i, o[i] ? 'x' + o[i].toFixed(1) : '—', say[i] ? say[i] + '👤' : '')
     ).join('');
@@ -335,7 +463,17 @@
 
   function rayPozisyon() {
     fazBaslikEl.textContent = 'CANLI POZİSYON';
-    const sira = ATLAR.map((a, i) => i).sort((x, y) => ilerleme[y] - ilerleme[x]);
+    let sira = ATLAR.map((a, i) => i).sort((x, y) => ilerleme[y] - ilerleme[x]);
+    if (DIKEY) {
+      fazIcEl.className = '';
+      fazIcEl.replaceChildren(...sira.slice(0, 4).map((i, poz) => {
+        const r = h('div', 'fSatir');
+        r.append(h('div', 'fSag', (poz + 1) + '.'), noEl(i), h('div', 'fAd', ATLAR[i].ad),
+          h('div', 'fKucuk', Math.round(ilerleme[i] * 100) + '%'));
+        return r;
+      }));
+      return;
+    }
     fazIcEl.innerHTML = sira.map((i, poz) =>
       fSatir(i, (poz + 1) + '.', Math.round(ilerleme[i] * 100) + '%')
     ).join('');
@@ -344,30 +482,51 @@
   function rayOdeme(kazananAt, dagitilan, sira) {
     fazBaslikEl.textContent = 'SONUÇ & ÖDÜLLER';
     // Podyum: tam siralama geldiyse ilk 3, gelmediyse sadece kazanan
-    const MADALYA = ['🥇', '🥈', '🥉'];
-    const podyum = (sira || [kazananAt]).slice(0, 3)
-      .map((atIdx, p) => fSatir(atIdx, MADALYA[p] || '')).join('');
-    const odeme = dagitilan.length
-      ? dagitilan.slice(0, 5).map((d) =>
-          `<div class="fSatir">${Kimlik.cip(d.kid, 30)}<div class="fAd">${esc(d.ad)}</div><div class="fSag">+${d.kazanc}</div></div>`
-        ).join('')
-      : '<div class="fSatir bos">kimse bilemedi — sıradaki koşuda dene</div>';
-    fazIcEl.innerHTML = podyum + odeme;
+    const ilk = (sira || [kazananAt]).slice(0, 3);
+    fazIcEl.className = '';
+    fazIcEl.replaceChildren();
+    ilk.forEach((atIdx, p) => {
+      if (DIKEY) {
+        const r = h('div', 'fSatir pod');
+        r.append(h('div', 'fSag', MADALYA[p] || ''), noEl(atIdx), h('div', 'fAd', ATLAR[atIdx].ad));
+        fazIcEl.append(r);
+      } else {
+        fazIcEl.insertAdjacentHTML('beforeend', fSatir(atIdx, MADALYA[p] || ''));
+      }
+    });
+    if (dagitilan.length) {
+      dagitilan.slice(0, 5).forEach((d) => fazIcEl.append(izlSatir(d.kid, d.ad, '+' + d.kazanc)));
+    } else {
+      fazIcEl.append(h('div', 'fSatir bos', 'kimse bilemedi — sıradaki koşuda dene'));
+    }
+    sigdirListe();
   }
 
-  function liderlikCiz() {
-    const list = [...puanlar.entries()]
+  function liderListe() {
+    return [...puanlar.entries()]
       .map(([kid, o]) => ({ kid, ...o }))
       .sort((a, b) => b.puan - a.puan).slice(0, 5);
-    liderlikEl.innerHTML = list.length
-      ? list.map((o, i) =>
-          `<div class="fSatir">
-            <div class="fNo" style="background:${['#ffd23f', '#d8dbe6', '#e29a5a', '#6b5fb8', '#6b5fb8'][i]};color:${i > 2 ? '#fff' : '#17123a'}">${i + 1}</div>
-            ${Kimlik.cip(o.kid, 30)}
-            <div class="fAd">${esc(o.ad)}</div>
-            <div class="fSag">${o.puan}</div>
-          </div>`).join('')
-      : '<div class="fSatir bos">ilk koşu sonrası dolacak</div>';
+  }
+  function liderSatirlari(list) {
+    return list.length
+      ? list.map((o, i) => izlSatir(o.kid, o.ad, String(o.puan), i))
+      : [h('div', 'fSatir bos', 'ilk koşu sonrası dolacak')];
+  }
+  /** Yatay: sag raydaki ayri kutu. */
+  function liderlikCiz() {
+    liderlikEl.replaceChildren(...liderSatirlari(liderListe()));
+  }
+  /** Dikey: lobide PANO'da tahta ile dönüşümlü. */
+  function rayLider() {
+    fazBaslikEl.textContent = 'EN İYİ TAHMİNCİLER';
+    fazIcEl.className = '';
+    fazIcEl.replaceChildren(...liderSatirlari(liderListe()));
+    sigdirListe();
+  }
+  // Lobi: dikeyde tahta ile liderlik 8 sn aralikla doner (liste bossa donmez).
+  let lobiSayfa = 0, lobiSn = 0;
+  function rayLobi() {
+    if (DIKEY && lobiSayfa === 1 && puanlar.size) rayLider(); else rayOran();
   }
 
   function sayacCiz() {
@@ -391,10 +550,10 @@
           bahisler.set(b.kid, { ad: b.ad, at: Math.floor(Math.random() * ATLAR.length) });
         }
       }
-      rayOran(); sayacCiz();
+      rayLobi(); sayacCiz();
     }
     if (demoTur) {
-      document.getElementById('cagri').textContent = 'koşu başlıyor — sıradakinde sen de tahmin yap';
+      document.getElementById('cagri').textContent = cagriMetni('koşu başlıyor — sıradakinde sen de tahmin yap', 'koşu başlıyor');
       Spiker.soyle('👇 <b>1 – 8 ARASI YAZ</b> — sıradaki koşuda tahminin geçerli', { oncelik: 2, sure: 4200 });
     }
     durum = 'yaris';
@@ -407,7 +566,7 @@
     tezahurat = ATLAR.map(() => 0);
     sahaEl.classList.add('kosuyor');
     Ses.muzik('at');
-    document.getElementById('cagri').textContent = 'koşu sürüyor — yaz & beğen, atına güç ver!';
+    document.getElementById('cagri').textContent = cagriMetni('koşu sürüyor — yaz & beğen, atına güç ver!', 'koşu sürüyor — yaz & beğen');
     Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> — ${bahisler.size} tahmin`, { oncelik: 3 });
   }
 
@@ -506,7 +665,7 @@
     localStorage.setItem('tt-at-veri', JSON.stringify(veriAt));
     formYaz();
     rayOdeme(sira[0], sonDagitilan, sira);   // podyumla yeniden ciz
-    tezEl.forEach((e) => { e.style.width = '0'; });
+    tezEl.forEach((e) => { if (DIKEY) e.style.transform = 'scaleX(0)'; else e.style.width = '0'; });
   }
 
   function kazananIslemleri(i) {
@@ -585,7 +744,8 @@
     atlariYerlestir();
     Finis.kapat(kazananEl);
     document.getElementById('cagri').textContent = 'tahmin açık';
-    rayOran(); sayacCiz();
+    lobiSayfa = 0; lobiSn = 0;
+    rayLobi(); sayacCiz();
     Spiker.soyle(`🏇 <b>${turNo}. KOŞU</b> — 1-${ATLAR.length} yaz, tahminini yap`, { oncelik: 2 });
   }
 
@@ -596,6 +756,10 @@
       else if (durum === 'bitti') bahseDon();
     }
     document.getElementById('geriSn').textContent = Math.max(0, Math.ceil(sayacSn));
+    if (DIKEY && durum === 'bahis') {
+      lobiSn += 0.25;
+      if (lobiSn >= 8) { lobiSn = 0; lobiSayfa ^= 1; rayLobi(); }
+    }
   }, 250);
 
   const DURUM_METNI = () => durum === 'bahis' ? '— tahminin geçerli' : '— tahminin sıradaki koşuda geçerli';
@@ -605,8 +769,7 @@
   TT.on('ilktemas', (e) => {
     const p = Profil.ekle(e.kid, isim(e.user), { mesaj: 1, xp: 2 });
     const oz = Profil.ozet(e.kid);
-    Spiker.soyle(`${Kimlik.cip(e.kid, 26)} <span class="kim">${esc(isim(e.user))}</span> ${DURUM_METNI()}` +
-         (oz ? ` <span class="ok">·</span> ${oz}` : ' <span class="ok">·</span> <b>İLK KEZ</b>'),
+    Spiker.satir([{ kim: isim(e.user) }, ' ' + DURUM_METNI() + ' · ', oz ? oz : { b: 'İLK KEZ' }],
          { oncelik: 2, anahtar: 'temas' });
     if (window.Ses) Ses.cal('katil', 150);
   });
@@ -651,7 +814,10 @@
 
   function tezCiz() {
     for (let i = 0; i < ATLAR.length; i++) {
-      tezEl[i].style.width = Math.min(100, tezahurat[i] * 8).toFixed(0) + '%';
+      const oran = Math.min(100, tezahurat[i] * 8);
+      // dikeyde yalniz transform canlanir (genislik degil)
+      if (DIKEY) tezEl[i].style.transform = 'scaleX(' + (oran / 100).toFixed(3) + ')';
+      else tezEl[i].style.width = oran.toFixed(0) + '%';
     }
   }
 
@@ -677,10 +843,9 @@
 
     const yeni = !bahisler.has(kid);
     bahisler.set(kid, { ad: isim(ev.user), at });
-    rayOran(); sayacCiz();
+    rayLobi(); sayacCiz();
     if (yeni) {
-      Spiker.soyle(`<span class="kim">${esc(isim(ev.user))}</span> ▸ <b style="color:${ATLAR[at].renk}">${ATLAR[at].ad}</b>`,
-        { oncelik: 1 });
+      Spiker.satir([{ kim: isim(ev.user) }, ' ▸ ', { b: ATLAR[at].ad }], { oncelik: 1 });
     }
   });
 
@@ -696,29 +861,31 @@
   TT.on('gift', (ev) => {
     if (ev.gift && ev.gift.streaking) return;   // seri ara tiklari (bridge.js:683 / tt.js:349); son tik gelince tek tesekkur
     const kid = kimlik(ev.user);
-    const ad = esc(isim(ev.user));
+    const ad = isim(ev.user);
     const elmas = (ev.gift && ev.gift.value) || 0;
     const b = kid ? bahisler.get(kid) : null;
     const k = ULTI.kademe(elmas);
-    ULTI.duyur('🎁 TEŞEKKÜRLER', { ad: isim(ev.user), emoji: '🎁', renk: k.renk, guc: k.guc }, 1500);
+    // Dikeyde ILK arguman 64px buyuk satir (gonderenin ADI), opts.ad 30px etiket.
+    if (TT.dikey) ULTI.duyur(isim(ev.user), { ad: '🎁 TEŞEKKÜRLER', emoji: '🎁', renk: k.renk, guc: k.guc }, 1500);
+    else ULTI.duyur('🎁 TEŞEKKÜRLER', { ad: isim(ev.user), emoji: '🎁', renk: k.renk, guc: k.guc }, 1500);
     if (durum === 'yaris') {
       if (b) {
         tezVer(kid, 5);
-        Spiker.soyle(`🎁 Sağ ol <span class="kim">${ad}</span> — <b style="color:${ATLAR[b.at].renk}">${ATLAR[b.at].ad}</b> tribünü coştu`, { oncelik: 2 });
+        Spiker.satir(['🎁 Sağ ol ', { kim: ad }, ' — ', { b: ATLAR[b.at].ad }, ' tribünü coştu'], { oncelik: 2 });
       } else {
-        Spiker.soyle(`🎁 Sağ ol <span class="kim">${ad}</span> — sıradaki koşuda <b>1-${ATLAR.length}</b> yaz, tahminini yap`, { oncelik: 2 });
+        Spiker.satir(['🎁 Sağ ol ', { kim: ad }, ' — sıradaki koşuda ', { b: '1-' + ATLAR.length }, ' yaz, tahminini yap'], { oncelik: 2 });
       }
       return;
     }
     const sira = durum === 'bahis' ? '' : ' sıradaki koşuda';
-    Spiker.soyle(b
-      ? `🎁 Sağ ol <span class="kim">${ad}</span> — tahminin <b style="color:${ATLAR[b.at].renk}">${ATLAR[b.at].ad}</b>, tribün seninle`
-      : `🎁 Sağ ol <span class="kim">${ad}</span> —${sira} <b>1-${ATLAR.length}</b> yaz, tahminini yap`, { oncelik: 3 });
+    Spiker.satir(b
+      ? ['🎁 Sağ ol ', { kim: ad }, ' — tahminin ', { b: ATLAR[b.at].ad }, ', tribün seninle']
+      : ['🎁 Sağ ol ', { kim: ad }, ' —' + sira + ' ', { b: '1-' + ATLAR.length }, ' yaz, tahminini yap'], { oncelik: 3 });
   });
 
   // ---- basla ---------------------------------------------------------------
   atlariYerlestir();
-  rayOran(); liderlikCiz(); sayacCiz();
+  rayLobi(); liderlikCiz(); sayacCiz();
   addEventListener('resize', atlariYerlestir);
   requestAnimationFrame(dongu);
 
