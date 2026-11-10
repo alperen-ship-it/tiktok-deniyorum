@@ -300,8 +300,9 @@
   // Yerel yardimci: satir r'de, mesafe s'de, tavan-zemin araligi h ve zemin ustu yuksekligi f*h
   function dkNokta(r, s, f) { const x = sX(r, s), z = zemY(r, x), t = tavY(r, x); return { x, y: z - f * (z - t), h: z - t, z, t }; }
   const KAPAT = 2 * R_TASARIM + 10;   // bilyenin altindan/ustunden gecebilecegi en dar aralik
-  /* Zeminde YURUYEN bilye icin: zemine oturan engel bilyenin tirmanabilecegi kadar alcak
-     olmali (kabarti), yukseltiler ise TAVANDAN sarkar ve altindan gecilir. */
+  /* Bilye zeminde YURUR ve zemindeki bir kabartiyi asamaz (olculdu: 12 px'lik kabarti
+     yarisi durduruyor). Bu yuzden butun engeller TAVANDAN sarkar; bilye altindan gecer,
+     kalabalik birbirine ve sarkik uclara carparak karisir. */
   function dkSarkik(r, s, yaricap, derinlik) {
     const n = dkNokta(r, s, 0);
     const alt = Math.min(derinlik, n.h - KAPAT);          // sarkik ucun tavandan inebilecegi en fazla
@@ -310,10 +311,6 @@
     duvarlar.push({ x1: n.x, y1: n.t, x2: n.x, y2: n.t + alt - rad });   // sap
     pegler.push({ x: n.x, y: n.t + alt - rad, r: rad });
     return true;
-  }
-  function dkKabarti(r, s, yaricap) {
-    const n = dkNokta(r, s, 0);
-    pegler.push({ x: n.x, y: n.z - yaricap * 0.15, r: yaricap });
   }
   function dkTavanDuvar(r, s, derinlik) {            // tavandan inen dikey duvar; zemin tarafi acik
     const n = dkNokta(r, s, 0);
@@ -326,7 +323,7 @@
     // (r, s0): etabin ilk ve son ~100 px'i bos (dusus/giris)
     'ÇİVİ TARLASI'(r, s0) {
       for (let s = s0 + 110, k = 0; s <= s0 + 380; s += 62, k++) {
-        if (k % 2 === 0) dkKabarti(r, s, 9); else dkSarkik(r, s, 8, 40);
+        dkSarkik(r, s, 8, k % 2 === 0 ? 34 : 60);
       }
     },
     'ZİKZAK RAMPA'(r, s0) {
@@ -338,7 +335,7 @@
     },
     'DEĞİRMEN'(r, s0) {
       for (let s = s0 + 120, k = 0; s <= s0 + 380; s += 70, k++) {
-        if (k % 2 === 0) dkSarkik(r, s, 12, 54); else dkKabarti(r, s, 12);
+        dkSarkik(r, s, 12, k % 2 === 0 ? 54 : 78);
       }
     },
     'HIZ TÜNELİ'() { /* bos ve hizlandirici: adim() bu etapta suruc kuvvetini artirir */ },
@@ -1462,7 +1459,7 @@
     Spiker.satir(['🎁 ', { kim: ad }, ' hediye gönderdi — teşekkürler'], { oncelik: 3, sure: 1900 });
   }
 
-  window.__dbg = () => ({ durum, R, b: bilyeler.map((b) => [b.ad, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.p), b.bitti]) });  // DBG-SIL
+  window.__dbg = () => ({ pegler: pegler.filter((p) => p.y < 130 && p.x < 400), duvar: duvarlar.filter((d) => d.y1 < 130 && Math.min(d.x1, d.x2) < 400 && d.x1 !== d.x2 || (d.x1 === d.x2 && d.y1 < 130 && d.x1 > 0 && d.x1 < 400)), etaplar: etaplar.map((e) => e.ad), durum, R, b: bilyeler.map((b) => [b.ad, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.p), b.bitti]) });  // DBG-SIL
   // ---- basla ---------------------------------------------------------------
   boyutla();
   pistUret();
