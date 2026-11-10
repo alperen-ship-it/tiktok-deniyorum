@@ -1946,51 +1946,65 @@
     }
     if (!gelen.length && !sayi) return;
     const sure = birles ? 2600 : bekleyen === 0 ? 3000 : bekleyen === 1 ? 2200 : 1700;
-    const ustMetin = SELAM_UST[gelen.length + sayi > 1 ? 'cok' : 'tek'][tur];
 
-    girisIcEl.textContent = '';
-    girisIcEl.classList.remove('sar');
-    const ust = document.createElement('div');
-    ust.className = 'gUst';
-    ust.textContent = ustMetin;
-    girisIcEl.appendChild(ust);
-    const adEller = [];
-    for (const { d, ad } of gelen) {
-      if (d && !d.gorunur) sahneyeAl(d);
-      if (adEller.length) {
-        const ayrac = document.createElement('div');
-        ayrac.className = 'gAyrac'; ayrac.textContent = '·';
-        girisIcEl.appendChild(ayrac);
+    // TEK SATIR: serit iki satira cikarsa danscilarin KAFALARINI orter. Adlar
+    // 54/50px'ten 46'ya kadar birlikte kuculur; 46'da da sigmiyorsa SONDAKI ad
+    // seritten cikar — normal seritte kuyrugun basina geri doner (bir sonraki
+    // seritte ilk o soylenir), birlesik seritte sayiya eklenir. Tek basina bile
+    // sigmayan (cok uzun) ad ancak o zaman kendi icinde sarar. Hicbir ad kesilmez.
+    const ciz = () => {
+      girisIcEl.textContent = '';
+      girisIcEl.classList.remove('sar');
+      const ust = document.createElement('div');
+      ust.className = 'gUst';
+      ust.textContent = SELAM_UST[gelen.length + sayi > 1 ? 'cok' : 'tek'][tur];
+      girisIcEl.appendChild(ust);
+      const adEller = [];
+      for (const { ad } of gelen) {
+        if (adEller.length) {
+          const ayrac = document.createElement('div');
+          ayrac.className = 'gAyrac'; ayrac.textContent = '·';
+          girisIcEl.appendChild(ayrac);
+        }
+        const adEl = document.createElement('div');
+        adEl.className = 'gAd'; adEl.textContent = ad;
+        girisIcEl.appendChild(adEl);
+        adEller.push(adEl);
       }
-      const adEl = document.createElement('div');
-      adEl.className = 'gAd'; adEl.textContent = ad;
-      girisIcEl.appendChild(adEl);
-      adEller.push(adEl);
-    }
-    if (sayi) {                                  // birlesik: gerisi SAYIYLA
-      const daha = document.createElement('div');
-      daha.className = 'gDaha';
-      daha.textContent = gelen.length ? `ve ${sayi} kişi daha!` : `${sayi} kişi`;
-      girisIcEl.appendChild(daha);
-    }
-    // TEK SATIRA SIGDIR: adlar 54/50px'ten 46'ya kadar birlikte kuculur; orada
-    // da sigmiyorsa serit iki satira cikar (adlar alta iner), tek basina bile
-    // sigmayan ad kendi icinde sarar. Hicbir ad kesilmez.
+      if (sayi) {                                // birlesik: gerisi SAYIYLA
+        const daha = document.createElement('div');
+        daha.className = 'gDaha';
+        daha.textContent = gelen.length ? `ve ${sayi} kişi daha!` : `${sayi} kişi`;
+        girisIcEl.appendChild(daha);
+      }
+      return adEller;
+    };
     girisIcEl.style.maxWidth = Math.max(300, W - 24) + 'px';
-    const tasiyor = () => adEller.some((e) => e.scrollWidth > e.clientWidth + 0.5);
-    const boyut = (px) => { for (const e of adEller) e.style.fontSize = px + 'px'; };
-    let a = 46, b = gelen.length > 1 ? 50 : 54;
-    boyut(b);
-    if (tasiyor()) {
+    for (;;) {
+      const adEller = ciz();
+      const tasiyor = () => adEller.some((e) => e.scrollWidth > e.clientWidth + 0.5);
+      const boyut = (px) => { for (const e of adEller) e.style.fontSize = px + 'px'; };
+      let a = 46, b = adEller.length > 1 ? 50 : 54;
+      boyut(b);
+      if (!tasiyor()) break;
       boyut(a);
+      const daha = girisIcEl.querySelector('.gDaha');
+      if (tasiyor() && daha) daha.style.fontSize = '30px';   // once sayi yazisi kuculur (40 -> 30), ad degil
       if (tasiyor()) {
-        girisIcEl.classList.add('sar');
-        for (const e of adEller) sigdir(e, 46, 46);
-      } else {
-        while (b - a > 1) { const o = (a + b) >> 1; boyut(o); if (tasiyor()) b = o; else a = o; }
-        boyut(a);
+        if (adEller.length > 1) {                // sigmayan son ad bu seritten cikar
+          const x = gelen.pop();
+          if (birles) sayi++; else altyazi.unshift(x.g);
+          continue;
+        }
+        girisIcEl.classList.add('sar');          // tek ad bile sigmiyor: kendi icinde sarsin
+        sigdir(adEller[0], 46, 46);
+        break;
       }
+      while (b - a > 1) { const o = (a + b) >> 1; boyut(o); if (tasiyor()) b = o; else a = o; }
+      boyut(a);
+      break;
     }
+    for (const { d } of gelen) if (d && !d.gorunur) sahneyeAl(d);
     girisBoy = { w: girisEl.offsetWidth, h: girisEl.offsetHeight };
     altAktif = { tur: 'giris', kid: gelen.length ? gelen[0].g.kid : null, bitis: simdi() + sure, el: girisEl };
     girisKonumla();
