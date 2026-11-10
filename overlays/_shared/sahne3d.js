@@ -194,6 +194,13 @@ function zeminCiz(ctx, N, tema, halkalar, hearth) {
   }
 }
 
+// ------------------------------------------------------------------ s.simge icin sabit tablolar
+// Balon icerigi YALNIZCA: yerlesik nida anahtarlari, bu izinli emoji listesi, sayfanin tablo() ile
+// bir kez kaydettigi sabit oyun etiketleri ve 0-9999 tam sayilari. Serbest metin kabul edilmez.
+const SIMGE_NIDA = Object.freeze(['HEY', 'HOP', 'HOPPA', 'OLEY']);
+const SIMGE_EMOJI = Object.freeze(["❤️", "🧡", "💛", "💚", "💙", "💜", "🔥", "👏", "🙌", "💃", "🕺", "🎉", "🎊", "🥳", "😀", "😂", "🤣", "😍", "🥰", "😎", "🤩", "😊", "😘", "👍", "💪", "🤝", "🙏", "🫶", "✨", "⭐", "🌟", "🎶", "🎵", "🥁", "🌹", "🌸", "💐", "🎁", "👑", "🇹🇷"]);
+const SIMGE_EMOJI_SET = new Set(SIMGE_EMOJI);
+
 // ------------------------------------------------------------------ ana
 const Sahne3D = {
   /** Yerel destek sorgusu (sayfa kur'dan once bakmak isterse). */
@@ -250,6 +257,7 @@ const Sahne3D = {
       s.halka = { ayarla: bos, hiz: bos };
       s.saat = { bagla: bos, tempo: bos, get vurus() { return 0; } };
       s.etiket = { ayarla: bos, enFazla: 0 };
+      const simgeBos = () => false; simgeBos.tablo = bos; simgeBos.izinli = SIMGE_EMOJI; simgeBos.nida = SIMGE_NIDA; s.simge = simgeBos;
       s.ekran = (kid, o) => { const r = o || {}; r.x = 0; r.y = 0; r.olcek = 1; r.gorunur = false; return r; };
       s.kadrajla = bos; s.kaliteSifirla = bos; s.yokEt = bos;
       s.olcum = () => ({ kalite: 'yok', figur: 0, cizimCagrisi: 0, ucgen: 0, jsMs: 0, jsMsP95: 0, kareMs: 0, kareMsP95: 0, pikselOrani: 0, webgl: '', yazilim: false, cizilen: 0, gizli: 0, sebep });
@@ -779,6 +787,7 @@ const Sahne3D = {
     const Rk = new Float64Array(9), Ra = new Float64Array(9), Rb = new Float64Array(9);
     const ord = new Int32Array(SLOT), ordK = new Float32Array(SLOT);
     const rektler = new Float32Array(64 * 4);     // yerlesen etiket dikdortgenleri
+    const rektSlot = new Int32Array(64); let nRekt = 0;
     const adaylar = new Int32Array(SLOT);
     let dx0 = 0, dy0 = 0, dx1 = 0, dy1 = 0, kirliVar = false;
     const T0 = performance.now() / 1000;
@@ -936,6 +945,96 @@ const Sahne3D = {
     }
 
     // ---- ust katman cizimi
+
+    // ======================================================================
+    // s.simge — nida / emoji balonu (serbest metin YOK)
+    // ======================================================================
+    const SB_N = 5;                               // ayni anda en fazla 5 balon
+    const sb = [];
+    for (let i = 0; i < SB_N; i++) sb.push({ kid: null, on: false, t0: 0, sure: 0, metin: '', satirlar: null, font: '', lh: 0, w: 0, h: 0, renk: '#ffffff', yazi: '#1b1446' });
+    let simgeTablo = new Map(), simgeDondu = false;
+    function simgeCoz(x) {                        // parca -> gorunecek metin, gecersizse null
+      if (typeof x === 'number') return (Number.isInteger(x) && x >= 0 && x <= 9999) ? String(x) : null;
+      if (typeof x !== 'string') return null;
+      if (SIMGE_NIDA.indexOf(x) >= 0) return x;
+      if (SIMGE_EMOJI_SET.has(x)) return x;
+      if (simgeTablo.has(x)) return simgeTablo.get(x);
+      return null;
+    }
+    function simge(kid, parcalar, opt) {
+      simgeDondu = true;                          // ilk cagriyla tablo kilitlenir
+      if (!Array.isArray(parcalar) || parcalar.length < 1 || parcalar.length > 4) return false;
+      let metin = '';
+      for (let i = 0; i < parcalar.length; i++) {
+        const m = simgeCoz(parcalar[i]); if (m === null) return false;
+        metin += (i ? ' ' : '') + m;
+      }
+      const o = opt && typeof opt === 'object' ? opt : {};
+      let renk = '#ffffff', yazi = '#1b1446';
+      if (typeof o.renk === 'string' && /^#[0-9a-fA-F]{6}$/.test(o.renk)) {
+        renk = o.renk; const v = parseInt(renk.slice(1), 16);
+        yazi = (((v >> 16) & 255) * 0.299 + ((v >> 8) & 255) * 0.587 + (v & 255) * 0.114) > 150 ? '#1b1446' : '#ffffff';
+      }
+      const sure = (typeof o.sureMs === 'number' && isFinite(o.sureMs)) ? clamp(o.sureMs, 600, 8000) : 2600;
+      // bu figurun balonu varsa yenisi onun yerine; yoksa bos olan; hepsi doluysa en eskisi
+      let b = null, eski = null;
+      for (let i = 0; i < SB_N; i++) { if (sb[i].on && sb[i].kid === kid) { b = sb[i]; break; } }
+      if (!b) for (let i = 0; i < SB_N; i++) if (!sb[i].on) { b = sb[i]; break; }
+      if (!b) { eski = sb[0]; for (let i = 1; i < SB_N; i++) if (sb[i].t0 < eski.t0) eski = sb[i]; b = eski; }
+      // yerlesim (olcum yalnizca burada): 40px, 600px'i asarsa bosluktan sar
+      ctx.font = '900 40px ' + FONT;
+      const satirlar = []; let cur = '';
+      for (const kl of metin.split(' ')) {
+        const dene = cur ? cur + ' ' + kl : kl;
+        if (cur && ctx.measureText(dene).width > 600) { satirlar.push(cur); cur = kl; } else cur = dene;
+      }
+      if (cur) satirlar.push(cur);
+      let mw = 0; for (const l of satirlar) mw = Math.max(mw, ctx.measureText(l).width);
+      b.kid = kid; b.on = true; b.t0 = performance.now() / 1000; b.sure = sure / 1000; b.metin = metin; b.satirlar = satirlar;
+      b.font = '900 40px ' + FONT; b.lh = 48; b.w = Math.ceil(mw + 40); b.h = satirlar.length * 48 + 14; b.renk = renk; b.yazi = yazi;
+      return true;
+    }
+    simge.tablo = function (obj) {
+      if (simgeDondu) throw new Error('s.simge.tablo: tablo ilk s.simge() cagrisindan sonra degistirilemez');
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error('s.simge.tablo: nesne bekleniyor');
+      const yeni = new Map();
+      for (const k of Object.keys(obj)) {
+        const v = obj[k];
+        if (typeof v !== 'string' || v.length < 1 || v.length > 24 || k.length > 24) throw new Error('s.simge.tablo: deger en fazla 24 karakterlik metin olmali: ' + k);
+        yeni.set(k, v);
+      }
+      simgeTablo = yeni;
+    };
+    simge.izinli = SIMGE_EMOJI;                   // salt okunur (dondurulmus) liste
+    simge.nida = SIMGE_NIDA;
+    s.simge = simge;
+
+    function simgeCiz(T) {                        // ustCiz'den: sinirlari [mnx..] dondurmek yerine modul degiskenlerine yazar
+      for (let q = 0; q < SB_N; q++) {
+        const b = sb[q]; if (!b.on) continue;
+        const yas = T - b.t0;
+        if (yas >= b.sure) { b.on = false; continue; }
+        const i = slotOf.get(b.kid);
+        if (i === undefined || !baskVis[i] || olum[i]) continue;
+        let tustu = 1e9;                          // ayni figurun ustteki etiketi varsa balon onun ustune
+        for (let r = 0; r < nRekt; r++) if (rektSlot[r] === i && rektler[r * 4 + 1] < baskY[i]) tustu = rektler[r * 4 + 1];
+        const rr = baskOl[i] * KAFA_R;
+        const yuk = 14 * (1 - Math.pow(1 - Math.min(1, yas / 0.3), 3));
+        let y0 = Math.min(baskY[i] - rr - 14, tustu - 8) - b.h - yuk;
+        const x0 = clamp(baskX[i] - b.w / 2, TAVAN.sol + 3, TAVAN.sag - 3 - b.w);
+        if (y0 < kadrajKutu.y && y0 > kadrajKutu.y - 80) y0 = kadrajKutu.y;
+        if (!kutuIci(y0, y0 + b.h) || !izinli(x0 - 3, y0 - 3, x0 + b.w + 3, y0 + b.h + 3)) continue;
+        const kalan = b.sure - yas;
+        ctx.globalAlpha = kalan < 0.4 ? kalan / 0.4 : 1;
+        pillCiz(x0, y0, b.w, b.h, 24); ctx.fillStyle = b.renk; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(23,18,58,.7)'; ctx.stroke();
+        ctx.font = b.font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = b.yazi;
+        for (let l = 0; l < b.satirlar.length; l++) ctx.fillText(b.satirlar[l], x0 + b.w / 2, y0 + 7 + b.lh * (l + 0.5));
+        ctx.globalAlpha = 1;
+        if (x0 < bmnx) bmnx = x0; if (y0 < bmny) bmny = y0; if (x0 + b.w > bmxx) bmxx = x0 + b.w; if (y0 + b.h > bmxy) bmxy = y0 + b.h;
+      }
+    }
+    let bmnx = 1e9, bmny = 1e9, bmxx = -1e9, bmxy = -1e9;
     // etiketler SAHNE kutusunun dikey araligindan cikmaz (UST/KOMUT/SPIKER yazilarinin ustune binmesin)
     function kutuIci(y0, y1) { return y0 >= kadrajKutu.y && y1 <= kadrajKutu.y + kadrajKutu.h; }
     function pillCiz(x, y, w, h, r) {
@@ -945,6 +1044,7 @@ const Sahne3D = {
     function ustCiz(now) {
       if (kirliVar) { ctx.clearRect(dx0 - 4, dy0 - 4, dx1 - dx0 + 8, dy1 - dy0 + 8); kirliVar = false; }
       let mnx = 1e9, mny = 1e9, mxx = -1e9, mxy = -1e9;
+      nRekt = 0; bmnx = 1e9; bmny = 1e9; bmxx = -1e9; bmxy = -1e9;
       // 1) avatar diskleri, uzaktan yakina
       let n = 0;
       for (let j = 0; j < nCiz; j++) {
@@ -989,7 +1089,7 @@ const Sahne3D = {
             if (x0 < rektler[b * 4 + 2] + 6 && x0 + d.w + 6 > rektler[b * 4] && y0 < rektler[b * 4 + 3] + 6 && y0 + d.h + 6 > rektler[b * 4 + 1]) { ok = false; break; }
           }
           if (!ok) continue;
-          rektler[yer * 4] = x0; rektler[yer * 4 + 1] = y0; rektler[yer * 4 + 2] = x0 + d.w; rektler[yer * 4 + 3] = y0 + d.h; yer++;
+          rektler[yer * 4] = x0; rektler[yer * 4 + 1] = y0; rektler[yer * 4 + 2] = x0 + d.w; rektler[yer * 4 + 3] = y0 + d.h; rektSlot[yer] = i; yer++; nRekt = yer;
           pillCiz(x0, y0, d.w, d.h, 18);
           ctx.fillStyle = 'rgba(23,18,58,.88)'; ctx.fill();
           ctx.lineWidth = 3; ctx.strokeStyle = d.altin ? '#ffd25a' : 'rgba(255,255,255,.55)'; ctx.stroke();
@@ -999,6 +1099,8 @@ const Sahne3D = {
           if (x0 < mnx) mnx = x0; if (y0 < mny) mny = y0; if (x0 + d.w > mxx) mxx = x0 + d.w; if (y0 + d.h > mxy) mxy = y0 + d.h;
         }
       }
+      simgeCiz(now / 1000);
+      if (bmxx > bmnx) { if (bmnx < mnx) mnx = bmnx; if (bmny < mny) mny = bmny; if (bmxx > mxx) mxx = bmxx; if (bmxy > mxy) mxy = bmxy; }
       if (mxx > mnx) { dx0 = Math.max(0, mnx); dy0 = Math.max(0, mny); dx1 = Math.min(W, mxx); dy1 = Math.min(H, mxy); kirliVar = true; }
     }
 

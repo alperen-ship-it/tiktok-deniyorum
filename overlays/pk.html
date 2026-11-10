@@ -73,6 +73,98 @@
   #speed.acik { display: inline-flex; animation: speedNabiz .7s ease-in-out infinite alternate; }
   @keyframes speedNabiz { from { opacity: 1; } to { opacity: .58; } }
   html.tt-lite #speed.acik { animation: none; }
+
+  /* ======================================================================
+     DIKEY (varsayilan) — PLAN-DIKEY B/pk. Tuval 1080x1920.
+     SAHNE 960x672: ust 300 = iki taraf (470'er) · orta 120 = halat · alt 250 =
+     iki MVP sutunu. PANO 460x490: son itenler (taraf renginde).
+     UST / KOMUT / SPIKER / KAZANAN kabuktan gelir. Yatay kurallar (yukarida)
+     html.tt-yatay icin oldugu gibi; burada yalnizca dikey ezilir.
+     Hareket yalniz transform/opacity: halat scaleX + sinir translateX.
+     ====================================================================== */
+  #kartlar, .uc, #pano { display: none; }
+  .yatayMetin { display: inline; }
+  html.tt-dikey .yatayMetin { display: none; }
+  html.tt-dikey #orta { display: block; position: relative; gap: 0; }
+  html.tt-dikey #ust { gap: 12px; }
+  html.tt-dikey #ust .rozetBuyuk { padding: 4px 12px; }
+  html.tt-dikey #durumSar { gap: 8px; }
+  html.tt-dikey #speed { padding: 4px 12px; border-radius: 14px; }
+
+  /* -- iki taraf: SAHNE ust 300px -- */
+  html.tt-dikey #konuKutu {
+    position: absolute; left: 0; top: 0; width: 960px; height: 300px; box-sizing: border-box;
+    padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none;
+  }
+  html.tt-dikey #konuUst {
+    position: absolute; left: 0; right: 0; top: 0; height: 40px; line-height: 40px;
+    font-size: 30px; letter-spacing: 2px; white-space: nowrap; overflow: hidden;
+  }
+  html.tt-dikey #konu { display: none; }
+  html.tt-dikey #kartlar {
+    display: flex; gap: 20px;
+    position: absolute; left: 0; top: 44px; width: 960px; height: 250px;
+  }
+  html.tt-dikey .kart {
+    flex: 1; min-width: 0; box-sizing: border-box;
+    background: var(--panel); border: 4px solid var(--cizgi); border-radius: 22px;
+    padding: 10px 16px; display: flex; flex-direction: column; justify-content: space-between;
+    overflow: hidden;
+  }
+  html.tt-dikey .kart .k1 { display: flex; align-items: center; gap: 12px; }
+  html.tt-dikey .kart .ikon { flex: none; font-size: 84px; line-height: 1; }
+  html.tt-dikey .kart .ad { flex: 1; min-width: 0; font-size: 56px; font-weight: 900; line-height: 1; overflow: hidden; white-space: nowrap; }
+  html.tt-dikey .kart .ad.sar { white-space: normal; overflow-wrap: anywhere; }
+  html.tt-dikey .kart .k2 { display: flex; align-items: baseline; justify-content: center; gap: 14px; line-height: 1; }
+  html.tt-dikey .kart .yaz { font-size: 30px; font-weight: 900; color: var(--soluk); letter-spacing: 1px; }
+  html.tt-dikey .kart .no { font-size: 72px; font-weight: 900; color: var(--murekkep); }
+  html.tt-dikey .kart .say { font-size: 30px; font-weight: 800; color: var(--soluk); text-align: center; white-space: nowrap; }
+
+  /* -- halat: SAHNE orta 120px, tam 960 -- */
+  html.tt-dikey #metreKutu {
+    position: absolute; left: 0; top: 300px; width: 960px; height: 120px; box-sizing: border-box;
+    padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none;
+  }
+  html.tt-dikey #metre { width: 960px; height: 120px; border: 0; border-radius: 22px; background: #191434; }
+  html.tt-dikey .yan { width: 100% !important; padding: 0; transition: transform .45s cubic-bezier(0.16, 1, 0.3, 1); }
+  html.tt-dikey #yanA { left: 0; z-index: 1; transform: scaleX(var(--a, .5)); transform-origin: left center; }
+  html.tt-dikey #yanB { right: 0; }
+  html.tt-dikey .yan > * { display: none; }
+  html.tt-dikey #sinir {
+    left: 0; top: 0; bottom: 0; width: 8px; border-radius: 4px;
+    transform: translateX(calc(var(--a, .5) * 960px - 4px));
+    transition: transform .45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html.tt-dikey .uc { display: block; position: absolute; top: 50%; margin-top: -40px; font-size: 64px; line-height: 80px; z-index: 2; }
+  html.tt-dikey #ucA { left: 24px; }
+  html.tt-dikey #ucB { right: 24px; }
+
+  /* -- MVP: SAHNE alt 250px, iki sutun -- */
+  html.tt-dikey #mvpler {
+    position: absolute; left: 0; top: 422px; width: 960px; height: 250px; gap: 20px;
+  }
+  html.tt-dikey .mvpKutu { display: flex; flex-direction: column; padding: 4px 4px 4px; height: 250px; box-sizing: border-box; }
+  html.tt-dikey .mvpBaslik { flex: none; font-size: 30px; letter-spacing: .5px; padding: 0 10px 2px; white-space: nowrap; }
+  html.tt-dikey .mvpKutu > div:last-child { flex: 1; min-height: 0; overflow: hidden; }
+  html.tt-dikey .mvpKutu .sira { padding: 3px 8px; gap: 10px; }
+  html.tt-dikey .mvpKutu .rozet { width: 40px; height: 40px; border-radius: 11px; font-size: 30px; }
+  html.tt-dikey .mvpKutu .ad { line-height: 1.02; }
+  html.tt-dikey .mvpKutu .sira.bos { font-size: 30px; padding: 10px; }
+
+  /* -- PANO: 460x490, son itenler -- */
+  html.tt-dikey #pano {
+    display: flex; flex-direction: column;
+    position: absolute; z-index: 2;
+    left: var(--dk-pano-x); top: var(--dk-pano-y);
+    width: var(--dk-pano-w); height: var(--dk-pano-h); box-sizing: border-box;
+    padding: 8px 6px; overflow: hidden;
+  }
+  html.tt-dikey #panoBas { flex: none; font-size: 30px; font-weight: 900; letter-spacing: .5px; color: var(--soluk); padding: 2px 10px 6px; white-space: nowrap; }
+  html.tt-dikey #panoIc { flex: 1; min-height: 0; overflow: hidden; }
+  html.tt-dikey #panoIc .sira { padding: 4px 8px 4px 10px; gap: 10px; border-left: 10px solid var(--renk, #6b5fb8); border-radius: 6px; }
+  html.tt-dikey #panoIc .ik { flex: none; font-size: 36px; line-height: 1; }
+  html.tt-dikey #panoIc .ad { line-height: 1.02; }
+  html.tt-dikey #panoIc .sira.bos { border-left: 0; font-size: 30px; }
 </style>
 </head>
 <body>
@@ -101,6 +193,7 @@
     <div id="konuKutu" class="kutu">
       <div id="konuUst">HANGİSİ?</div>
       <div id="konu">—</div>
+      <div id="kartlar"><div class="kart" id="kartA"></div><div class="kart" id="kartB"></div></div>
     </div>
 
     <div id="metreKutu" class="kutu">
@@ -108,6 +201,7 @@
         <div class="yan" id="yanA"></div>
         <div class="yan" id="yanB"></div>
         <div id="sinir"></div>
+        <div class="uc" id="ucA"></div><div class="uc" id="ucB"></div>
       </div>
     </div>
 
@@ -118,6 +212,9 @@
 
     <div id="kazanan"></div>
   </div>
+
+  <!-- PANO #orta'nin DISINDA: #kok'a gore mutlak (SAHNE'ye gore degil) -->
+  <div id="pano" class="kutu"><div id="panoBas">SON İTENLER</div><div id="panoIc"></div></div>
 
   <div id="akis"></div>
 
@@ -169,9 +266,32 @@
   const sinirEl = document.getElementById('sinir');
   const speedEl = document.getElementById('speed');
   const kazananEl = document.getElementById('kazanan');
+  const metreEl = document.getElementById('metre');
+  const panoIcEl = document.getElementById('panoIc');
   const uidler = new Map();
+  const DIKEY = !!TT.dikey;
+  let sonItenler = [];            // PANO: son itenler [{kid, ad, yan}], en yeni basta
 
   Spiker.kur(document.getElementById('akis'));
+
+  /** Kimlik gorseli (yalniz gorsel; ad icermez). */
+  function kimCipi(kid, boyut) {
+    const k = document.createElement('span');
+    k.innerHTML = Kimlik.cip(kid, boyut);
+    return k.firstChild;
+  }
+  function el(tag, cls, txt) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  /** Liste: ad 54 -> 40px, sigmazsa satira sar; alta sigmayan en eski satir
+   *  dusurulur ("..." yok). */
+  function listeSigdir(kap) {
+    kap.querySelectorAll('.ad').forEach((a) => TT.adSigdir(a, 54, 40));
+    while (kap.scrollHeight > kap.clientHeight + 1 && kap.children.length > 1) kap.lastElementChild.remove();
+  }
   Juice.sarsHedef(document.getElementById('kok'));
 
   /** Turkce karakterleri sadelestir — "çay" ve "cay" ayni eslessin. */
@@ -188,6 +308,7 @@
     kalanSn = TUR_SN;
     puanA = 0; puanB = 0;
     taraf = new Map(); katki = new Map();
+    sonItenler = [];
     speedEl.classList.remove('acik');
     Finis.kapat(kazananEl);
 
@@ -204,21 +325,55 @@
       `<span class="vs">VS</span>` +
       `<span style="color:${kap.b.renk}">${kap.b.ad} ${kap.b.emoji}</span>`;
 
-    document.getElementById('mvpBasA').innerHTML =
-      `<span style="color:${kap.a.renk}">${kap.a.emoji} ${kap.a.ad}</span><span style="color:var(--soluk)">EN ÇOK KATKI</span>`;
-    document.getElementById('mvpBasB').innerHTML =
-      `<span style="color:${kap.b.renk}">${kap.b.emoji} ${kap.b.ad}</span><span style="color:var(--soluk)">EN ÇOK KATKI</span>`;
+    /* MVP basligi: yatayda "emoji AD ... EN ÇOK KATKI"; dikeyde 470px'e sigsin
+       diye "emoji EN ÇOK KATKI" (taraf adi ustteki kartta). */
+    for (const yan of ['a', 'b']) {
+      const bas = document.getElementById(yan === 'a' ? 'mvpBasA' : 'mvpBasB');
+      bas.textContent = '';
+      const sol = el('span', null, kap[yan].emoji + (DIKEY ? '' : ' ' + kap[yan].ad));
+      sol.style.color = kap[yan].renk;
+      const sag = el('span', null, 'EN ÇOK KATKI');
+      sag.style.color = 'var(--soluk)';
+      if (DIKEY) { sol.style.marginRight = '10px'; bas.append(sol, sag); sag.style.color = kap[yan].renk; }
+      else bas.append(sol, sag);
+    }
 
-    document.getElementById('cagri').textContent =
-      'her mesaj takımını iter · 🎁 karşıyı geri iter';
+    document.getElementById('cagri').textContent = DIKEY
+      ? 'her mesaj takımını iter'
+      : 'her mesaj takımını iter · 🎁 karşıyı geri iter';
     // Komut cipi konuya gore: izleyici tam olarak NE yazacagini gorur
     document.getElementById('komutMetin').textContent = kap.a.ad + ' / ' + kap.b.ad;
+    document.getElementById('ucA').textContent = kap.a.emoji;
+    document.getElementById('ucB').textContent = kap.b.emoji;
+    kartTemizle();
     ciz();
     Spiker.soyle(`⚔️ <b>${kap.a.ad} vs ${kap.b.ad}</b> — tarafını yaz!`, { oncelik: 3, sure: 4200 });
     try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
   }
 
   // ---- cizim ----------------------------------------------------------------
+  /** Dikey: iki taraf karti (emoji, ad 56px, "YAZ 1/2", puan ve kisi). */
+  function kartTemizle() {
+    if (!DIKEY) return;
+    for (const yan of ['a', 'b']) {
+      const k = document.getElementById(yan === 'a' ? 'kartA' : 'kartB');
+      k.textContent = '';
+      k.style.borderColor = kap[yan].renk;
+      const k1 = el('div', 'k1');
+      const ad = el('div', 'ad', kap[yan].ad); ad.style.color = kap[yan].renk;
+      k1.append(el('div', 'ikon', kap[yan].emoji), ad);
+      const k2 = el('div', 'k2');
+      k2.append(el('span', 'yaz', 'YAZ'), el('span', 'no', yan === 'a' ? '1' : '2'));
+      k.append(k1, k2, el('div', 'say'));
+      TT.adSigdir(ad, 56, 40);
+    }
+  }
+
+  /* Yazi tipi yuklenince taraf adlarini yeniden sigdir (olcu degisir). */
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { if (DIKEY && kap) document.querySelectorAll('.kart .ad').forEach((a) => TT.adSigdir(a, 56, 40)); });
+  }
+
   function ciz() {
     // Yumusatilmis oran: ham pay (puanA/toplam) kullanilinca 1-0 skorunda
     // bar %100'e firliyor ve tur daha baslamadan bitmis gibi gorunuyordu.
@@ -231,41 +386,76 @@
     // Alt sinir %18: kaybeden tarafin adi ve ikonu okunabilir kalsin
     const yuzdeA = Math.max(18, Math.min(82, oranA * 100));
 
-    yanAEl.style.width = yuzdeA + '%';
-    yanBEl.style.width = (100 - yuzdeA) + '%';
     yanAEl.style.background = kap.a.renk;
     yanBEl.style.background = kap.b.renk;
-    sinirEl.style.left = yuzdeA + '%';
-
     const sayA = [...taraf.values()].filter((v) => v === 'a').length;
     const sayB = [...taraf.values()].filter((v) => v === 'b').length;
-    yanAEl.innerHTML =
-      `<div class="ikon">${kap.a.emoji}</div>
-       <div class="bilgi"><div class="ad">${kap.a.ad}</div>
-       <div class="say">${Math.round(puanA)} puan · ${sayA} kişi</div></div>`;
-    yanBEl.innerHTML =
-      `<div class="bilgi" style="align-items:flex-end"><div class="ad">${kap.b.ad}</div>
-       <div class="say">${Math.round(puanB)} puan · ${sayB} kişi</div></div>
-       <div class="ikon">${kap.b.emoji}</div>`;
+
+    if (DIKEY) {
+      // yalniz transform: halat scaleX, sinir translateX (CSS --a)
+      metreEl.style.setProperty('--a', String(yuzdeA / 100));
+      document.querySelector('#kartA .say').textContent = Math.round(puanA) + ' puan · ' + sayA + ' kişi';
+      document.querySelector('#kartB .say').textContent = Math.round(puanB) + ' puan · ' + sayB + ' kişi';
+    } else {
+      yanAEl.style.width = yuzdeA + '%';
+      yanBEl.style.width = (100 - yuzdeA) + '%';
+      sinirEl.style.left = yuzdeA + '%';
+      yanAEl.innerHTML =
+        `<div class="ikon">${kap.a.emoji}</div>
+         <div class="bilgi"><div class="ad">${kap.a.ad}</div>
+         <div class="say">${Math.round(puanA)} puan · ${sayA} kişi</div></div>`;
+      yanBEl.innerHTML =
+        `<div class="bilgi" style="align-items:flex-end"><div class="ad">${kap.b.ad}</div>
+         <div class="say">${Math.round(puanB)} puan · ${sayB} kişi</div></div>
+         <div class="ikon">${kap.b.emoji}</div>`;
+    }
 
     document.getElementById('sayacBuyuk').textContent = taraf.size;
-    mvpCiz();
+    listeBekle();
+  }
+
+  /* Listeler (MVP + son itenler) mesaj basina degil, en cok 8/sn yeniden
+     kurulur: sohbet hizliyken DOM kurma + olcum her mesajda calismasin. */
+  let listeZaman = 0;
+  function listeBekle() {
+    if (listeZaman) return;
+    listeZaman = setTimeout(() => { listeZaman = 0; mvpCiz(); panoCiz(); }, 120);
   }
 
   function mvpCiz() {
     for (const yan of ['a', 'b']) {
       const list = [...katki.entries()].filter(([, k]) => k.yan === yan)
-        .sort((x, y) => y[1].puan - x[1].puan).slice(0, 5);
+        .sort((x, y) => y[1].puan - x[1].puan).slice(0, DIKEY ? 3 : 5);
       const hedef = document.getElementById(yan === 'a' ? 'mvpA' : 'mvpB');
-      hedef.innerHTML = list.length
-        ? list.map(([kid, k], i) => `<div class="sira${i === 0 ? ' lider' : ''}">
-            <div class="rozet" style="background:${i === 0 ? 'var(--altin)' : '#6b5fb8'};color:${i === 0 ? '#191434' : '#fff'}">${i + 1}</div>
-            ${Kimlik.cip(kid, 30)}
-            <div class="ad">${k.ad}</div>
-            <div class="adet">${Math.round(k.puan)}</div>
-          </div>`).join('')
-        : '<div class="sira bos">bu tarafta henüz kimse yok</div>';
+      hedef.textContent = '';
+      if (!list.length) { hedef.appendChild(el('div', 'sira bos', 'bu tarafta henüz kimse yok')); continue; }
+      list.forEach(([kid, k], i) => {
+        const sira = el('div', 'sira' + (i === 0 ? ' lider' : ''));
+        const roz = el('div', 'rozet', String(i + 1));
+        roz.style.background = i === 0 ? 'var(--altin)' : '#6b5fb8';
+        roz.style.color = i === 0 ? '#191434' : '#fff';
+        sira.appendChild(roz);
+        if (!DIKEY) sira.appendChild(kimCipi(kid, 30));
+        sira.appendChild(el('div', 'ad', k.ad));
+        if (!DIKEY) sira.appendChild(el('div', 'adet', String(Math.round(k.puan))));
+        hedef.appendChild(sira);
+      });
+      if (DIKEY) listeSigdir(hedef);
     }
+  }
+
+  /** PANO (dikey): son itenler, taraf renginde; en yeni uste. */
+  function panoCiz() {
+    if (!DIKEY) return;
+    panoIcEl.textContent = '';
+    if (!sonItenler.length) { panoIcEl.appendChild(el('div', 'sira bos', 'henüz kimse itmedi')); return; }
+    sonItenler.slice(0, 6).forEach((x, i) => {
+      const sira = el('div', 'sira' + (i === 0 ? ' lider' : ''));
+      sira.style.setProperty('--renk', kap[x.yan].renk);
+      sira.append(el('div', 'ik', kap[x.yan].emoji), el('div', 'ad', x.ad));
+      panoIcEl.appendChild(sira);
+    });
+    listeSigdir(panoIcEl);
   }
 
   // ---- itis -----------------------------------------------------------------
@@ -276,6 +466,10 @@
     const k = katki.get(kid) || { ad, yan, puan: 0 };
     k.ad = ad; k.yan = yan; k.puan += miktar;
     katki.set(kid, k);
+    const onceki = sonItenler.findIndex((x) => x.kid === kid);
+    if (onceki >= 0) sonItenler.splice(onceki, 1);
+    sonItenler.unshift({ kid, ad, yan });
+    if (sonItenler.length > 8) sonItenler.pop();
   }
 
   /** Yorumdan taraf cikar. Once kelime listesi, sonra 1/2. */
@@ -304,6 +498,7 @@
     const speedMi = kalanSn <= SPEED_SN;
     if (speedMi && !speedEl.classList.contains('acik')) {
       speedEl.classList.add('acik');
+      if (DIKEY) document.getElementById('cagri').textContent = 'hediye 2 KAT';   // UST'te chip + durum satiri birlikte sigsin
       Ses.muzikHizli(1.25);   // son 30 sn: tempo yukselsin
       Spiker.soyle('🔥 <b>SPEED BÖLÜMÜ!</b> Hediyeler 2 KAT — son şans!', { oncelik: 3, sure: 4000 });
       Juice.sars(0.3);
@@ -342,8 +537,8 @@
           : `${Math.round(kazYan === 'a' ? puanA : puanB)} puanla kazandı`,
       });
       document.getElementById('cagri').textContent = kaz.ad + ' kazandı!';
-      Spiker.soyle(`🏆 <b>${kaz.emoji} ${kaz.ad}</b> KAZANDI!` +
-        (mvp ? ` MVP: <span class="kim">${mvp[1].ad}</span>` : ''), { oncelik: 3, sure: 4500 });
+      Spiker.satir(['🏆 ', { b: kaz.emoji + ' ' + kaz.ad }, ' KAZANDI!']
+        .concat(mvp ? [' MVP: ', { kim: mvp[1].ad }] : []), { oncelik: 3, sure: 4500 });
 
       // Kalici tablo: kazanan taraftaki herkese galibiyet
       for (const [kid, k] of katki) {
@@ -377,8 +572,7 @@
   TT.on('ilktemas', (e) => {
     const p = Profil.ekle(e.kid, isim(e.user), { mesaj: 1, xp: 2 });
     const oz = Profil.ozet(e.kid);
-    Spiker.soyle(`${Kimlik.cip(e.kid, 26)} <span class="kim">${isim(e.user)}</span> ${DURUM_METNI()}` +
-         (oz ? ` <span class="ok">·</span> ${oz}` : ' <span class="ok">·</span> <b>İLK KEZ</b>'),
+    Spiker.satir([{ kim: isim(e.user) }, ' ' + DURUM_METNI() + ' · '].concat(oz ? [oz] : [{ b: 'İLK KEZ' }]),
          { oncelik: 2, anahtar: 'temas' });
     if (window.Ses) Ses.cal('katil', 150);
   });
@@ -402,6 +596,7 @@
       for (const [bk] of [...taraf.entries()]) {
         if (Kimlik.botMu(bk)) { taraf.delete(bk); katki.delete(bk); }
       }
+      sonItenler = sonItenler.filter((x) => !Kimlik.botMu(x.kid));
     }
     // Taraf secilmisse HER mesaj iter — "yazdikca one gecsin"
     it(kid, isim(ev.user), yan, MESAJ, true);   // takim carpani mesajlara uygulanir
@@ -440,10 +635,22 @@
     return (c && performance.now() < c.bitis) ? c.kat : 1;
   }
 
+  /* Dikeyde ULTI bandinin BUYUK satiri ilk arguman (ad), kucuk satiri k.ad:
+     etiket tarafsiz bir tesekkur (at.html'deki "🎁 TEŞEKKÜRLER" ile ayni). */
+  const TESEKKUR = (k) => ({ ad: 'TEŞEKKÜRLER', emoji: '🎁', renk: k.renk, guc: k.guc });
+
   TT.on('gift', (ev) => {
+    if (ev.gift && ev.gift.streaking) return;   // seri ara tikleri; son tik gelince tek tesekkur
     const kid = kimlik(ev.user);
     const yan = taraf.get(kid);
-    if (!yan || durum !== 'savas') return;
+    if (!yan || durum !== 'savas') {
+      /* Taraf secmemis / tur bitmis: hediye oyunu degistirmez ama gonderenin
+         adi yine de ekranda — hicbir hediye sessizce dusmez. */
+      ULTI.duyur(isim(ev.user), TESEKKUR(ULTI.kademe((ev.gift && ev.gift.value) || 0)), 1800);
+      Spiker.satir(['🎁 Sağ ol ', { kim: isim(ev.user) }, durum === 'savas'
+        ? ' — tarafını yaz, hediye takımının mesajlarını katlar' : ' — yeni savaşta tarafını yaz'], { oncelik: 2 });
+      return;
+    }
     const elmas = (ev.gift && ev.gift.value) || 0;
     const speedMi = kalanSn <= SPEED_SN;
 
@@ -461,17 +668,17 @@
     if (yan === 'a') puanA += guc; else puanB += guc;
     it(kid, isim(ev.user), yan, guc);
 
-    ULTI.duyur(isim(ev.user), k, 1800);
-    Spiker.soyle(`${k.emoji} <span class="kim">${isim(ev.user)}</span> ▸ ` +
-      `<b>${kap[yan].ad}</b> 15 sn boyunca <b>x${kat.toFixed(2)}</b>` +
-      (speedMi ? ' <b>SPEED</b>' : ''), { oncelik: 3, sure: 4200 });
+    ULTI.duyur(isim(ev.user), DIKEY ? TESEKKUR(k) : k, 1800);
+    Spiker.satir([k.emoji + ' ', { kim: isim(ev.user) }, ' ▸ ', { b: kap[yan].ad }, ' 15 sn boyunca ', { b: 'x' + kat.toFixed(2) }]
+      .concat(speedMi ? [' ', { b: 'SPEED' }] : []), { oncelik: 3, sure: 4200 });
     // sars() lite modda (yani uretimde) calismiyor; hediye bu urunun
     // para kazandigi an, orada hicbir sey hissettirmemek kotu. vur() olcek
     // darbesi: oransal oldugu icin telefonda da goruluyor.
     // Hedef: yanin IKONU. Bar'in kendisi olmaz — #metre overflow:hidden,
     // olcek darbesi kirpilir. Ikon barin icinde ve 62px, buyudugunde
     // tasmadan goruluyor.
-    const ikonEl = document.querySelector(`#${yan === 'a' ? 'yanA' : 'yanB'} .ikon`);
+    const ikonEl = DIKEY ? document.querySelector(`#${yan === 'a' ? 'kartA' : 'kartB'} .ikon`)
+      : document.querySelector(`#${yan === 'a' ? 'yanA' : 'yanB'} .ikon`);
     Juice.vur(ikonEl, 0.6);
     if (window.Ses) Ses.cal('hediye');
     ciz();

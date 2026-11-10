@@ -331,6 +331,8 @@
     }
   }
 
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(soruSigdir);
+
   /* Liste satiri: ad textContent ile (ham HTML yok). */
   function kimCipi(kid, boyut) {
     const k = document.createElement('span');

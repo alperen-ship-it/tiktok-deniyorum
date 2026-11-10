@@ -456,16 +456,25 @@
       n.style.color = rank > 2 ? '#fff' : '#17123a';
       r.append(n);
     }
-    r.append(cipEl(kid, DIKEY ? 36 : 30));
+    if (!DIKEY) r.append(cipEl(kid, 30));   // dikeyde 460px PANO'da yer ada kalsin
     const a = h('div', DIKEY ? 'fAd izl' : 'fAd', ad);
     r.append(a, h('div', 'fSag', sag));
     return r;
   }
   /** PANO'ya sigmayan son izleyici satirlarini at (en az 1 kalir). */
-  function sigdirListe(ust) {
+  function sigdirListe(toplam) {
     const sat = [...fazIcEl.querySelectorAll('.fSatir.izl')];
     sat.forEach((r) => adSigdir(r.querySelector('.fAd')));
-    while (sat.length > 1 && fazIcEl.scrollHeight > fazIcEl.clientHeight + 1) sat.pop().remove();
+    if (!DIKEY) return;
+    // Sigmayan satirlar atilir; atilan olursa son satir "+N kisi daha" der (sessiz kayip yok).
+    const fazla = h('div', 'fSatir bos');
+    const guncelle = () => { fazla.textContent = '+' + (toplam - sat.length) + ' kişi daha'; };
+    if (toplam > sat.length) { guncelle(); fazIcEl.append(fazla); }
+    while (sat.length > 1 && fazIcEl.scrollHeight > fazIcEl.clientHeight + 1) {
+      sat.pop().remove();
+      if (!fazla.parentNode) fazIcEl.append(fazla);
+      guncelle();
+    }
   }
 
   function rayOran() {
@@ -528,10 +537,10 @@
     });
     if (dagitilan.length) {
       dagitilan.slice(0, 5).forEach((d) => fazIcEl.append(izlSatir(d.kid, d.ad, '+' + d.kazanc)));
+      sigdirListe(dagitilan.length);
     } else {
       fazIcEl.append(h('div', 'fSatir bos', 'kimse bilemedi — sıradaki koşuda dene'));
     }
-    sigdirListe();
   }
 
   function liderListe() {
@@ -552,8 +561,9 @@
   function rayLider() {
     fazBaslikEl.textContent = 'EN İYİ TAHMİNCİLER';
     fazIcEl.className = '';
-    fazIcEl.replaceChildren(...liderSatirlari(liderListe()));
-    sigdirListe();
+    const list = liderListe();
+    fazIcEl.replaceChildren(...liderSatirlari(list));
+    sigdirListe(list.length);
   }
   // Lobi: dikeyde tahta ile liderlik 8 sn aralikla doner (liste bossa donmez).
   let lobiSayfa = 0, lobiSn = 0;
@@ -599,7 +609,7 @@
     tezahurat = ATLAR.map(() => 0);
     sahaEl.classList.add('kosuyor'); sahaEl.classList.remove('tahmin');
     Ses.muzik('at');
-    document.getElementById('cagri').textContent = cagriMetni('koşu sürüyor — yaz & beğen, atına güç ver!', 'koşu sürüyor — yaz & beğen');
+    document.getElementById('cagri').textContent = cagriMetni('koşu sürüyor — yaz & beğen, atına güç ver!', 'koşu sürüyor');
     Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> — ${bahisler.size} tahmin`, { oncelik: 3 });
   }
 
@@ -827,8 +837,6 @@
   // ---- olaylar -------------------------------------------------------------
   const kimlik = (u) => (u && (u.id || u.uniqueId)) || '';
   const isim = (u) => (u && (u.nickname || u.uniqueId)) || 'anon';
-  // TT.dispatch zaten <>&"' siliyor; spiker/satir HTML'ine girerken yine de kacisla.
-  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   // At adiyla da bahis: "şimşek" yazan 1'e oynamis olur
   const adTablo = new Map(ATLAR.map((a, i) =>
