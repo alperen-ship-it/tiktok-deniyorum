@@ -17,32 +17,72 @@
   }
   iframe.soluk { opacity: 0; }
 
-  /* "Siradaki oyun" rozeti — son 45 saniyede gorunur */
+  /* "Siradaki oyun" rozeti — son 45 saniyede gorunur.
+
+     DIKEY (varsayilan, PLAN-DIKEY A8): rozet KOMUT kutusunun ICINDE durur
+     (60,392 960x84 — oyunun "YAZ →" seridi), son 45 sn onun yerine gecer;
+     ust 240px'e ASLA girmez. Kutu, sayfanin kendi olcegiyle (--o, JS) yerlesir:
+     iframe'in ic tuvaliyle ayni formul min(en/1080, boy/1920). Metin 40px
+     (tasarim pikseli) * --o. Yalniz opacity canlanir.
+     YATAY (?yatay=1): eski ustte hap rozet. */
   #siradaki {
-    position: fixed; top: 14px; left: 50%; transform: translate(-50%, -80px);
+    position: fixed; z-index: 5; white-space: nowrap;
     background: #2b2170; color: #fff;
+    font-family: system-ui, sans-serif; font-weight: 900; letter-spacing: .3px;
+  }
+  #siradaki b { color: #ffd23f; }
+
+  html.dikey #siradaki {
+    left: calc(var(--dx, 0px) + 60px * var(--o, 1));
+    top: calc(var(--dy, 0px) + 392px * var(--o, 1));
+    width: calc(960px * var(--o, 1)); height: calc(84px * var(--o, 1));
+    box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+    background: #2a2358;
+    border: calc(4px * var(--o, 1)) solid #191434; border-radius: calc(22px * var(--o, 1));
+    font-size: calc(40px * var(--o, 1)); line-height: 1;
+    opacity: 0; transition: opacity .4s ease; pointer-events: none;
+  }
+  html.dikey #siradaki.acik { opacity: 1; }
+
+  html.yatay #siradaki {
+    top: 14px; left: 50%; transform: translate(-50%, -80px);
     border: 3px solid #17123a; border-radius: 999px;
     box-shadow: 5px 5px 0 rgba(10, 6, 30, .5);
     padding: 10px 22px;
-    font: 900 22px/1 system-ui, sans-serif;
-    letter-spacing: .3px;
+    font-size: 22px; line-height: 1;
     transition: transform .4s ease;
-    z-index: 5; white-space: nowrap;
   }
-  #siradaki.acik { transform: translate(-50%, 0); }
-  #siradaki b { color: #ffd23f; }
+  html.yatay #siradaki.acik { transform: translate(-50%, 0); }
 </style>
 </head>
 <body>
 
 <iframe id="sahne" allow="autoplay"></iframe>
-<div id="siradaki">birazdan: <b>—</b></div>
+<div id="siradaki"></div>
 
 <script>
 (function () {
   'use strict';
 
   const q = new URLSearchParams(location.search);
+
+  // ---- yon ve olcek ----------------------------------------------------------
+  // Oyunlar varsayilan DIKEY 1080x1920; ?yatay=1 eski 1920x1080 (oyunlara da
+  // aynen aktarilir, asagida). Rozetin yeri icin ayni olcek formulu: tt.js'teki
+  // --tt-olcek = min(en/TUVAL.w, boy/TUVAL.h) ve letterbox payi.
+  const YATAY = q.get('yatay') === '1' || q.get('yatay') === 'true';
+  document.documentElement.classList.add(YATAY ? 'yatay' : 'dikey');
+  function olcekle() {
+    if (YATAY) return;
+    const w = innerWidth, h = innerHeight, o = Math.min(w / 1080, h / 1920);
+    const st = document.documentElement.style;
+    st.setProperty('--o', String(o));
+    st.setProperty('--dx', ((w - 1080 * o) / 2).toFixed(2) + 'px');
+    st.setProperty('--dy', ((h - 1920 * o) / 2).toFixed(2) + 'px');
+  }
+  olcekle();
+  addEventListener('resize', olcekle);
 
   // ---- ayarlar -------------------------------------------------------------
   // ?dk=6            oyun basina sure (dakika)
@@ -140,7 +180,11 @@
     // Son 45 saniyede "siradaki" rozetini goster
     if (SIRA.length > 1 && gecen > SURE_MS - 45 * 1000) {
       const o = siradakiOyun();
-      rozet.innerHTML = 'birazdan: <b>' + o.ikon + ' ' + o.ad + '</b>';
+      // Sabit oyun adi (viewer metni degil); yine de DOM ile kur.
+      rozet.textContent = 'birazdan: ';
+      const kalin = document.createElement('b');
+      kalin.textContent = o.ikon + ' ' + o.ad;
+      rozet.appendChild(kalin);
       rozet.classList.add('acik');
     }
 

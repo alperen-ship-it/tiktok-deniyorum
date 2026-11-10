@@ -552,6 +552,23 @@
       if (d >= 5) return '❤️';
       return '🌹';
     },
+    /**
+     * Izleyici adini kutusuna SIGDIR (PLAN-DIKEY A4): enBuyuk'ten (54px) enKucuk'e
+     * (40px) iner; orada da sigmazsa .sar sinifi ekler (satira boler). "…" yok.
+     * Kutu: el'in kendi genisligi (flex:1; min-width:0 ve overflow:hidden olmali).
+     * Donus: secilen px. Listede ad yazan her oyun bunu cagirabilir.
+     */
+    adSigdir(el, enBuyuk, enKucuk) {
+      const buyuk = enBuyuk || 54, kucuk = enKucuk || 40;
+      el.classList.remove('sar');
+      for (let px = buyuk; px >= kucuk; px -= 2) {
+        el.style.fontSize = px + 'px';
+        if (el.scrollWidth <= el.clientWidth) return px;
+      }
+      el.style.fontSize = kucuk + 'px';
+      el.classList.add('sar');
+      return kucuk;
+    },
     /** 1234 -> "1.2B" (Turkce kisaltma) */
     short(n) {
       n = Number(n) || 0;
