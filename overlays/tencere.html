@@ -668,6 +668,10 @@ function kutlamaBaslat(tip) {            // tip: 'patladi' | 'pisti'
   const l = sirala(), gercek = l.some((d) => !d.bot);
   const kisi = l.filter((d) => gercek ? !d.bot : true).length;
   sonuc = { tip, usta, kisi, odun: usta ? Math.round(usta.odun) : 0, sonOdun: sonOdunKisi };
+  for (const d of l) {                     // omurluk profil: yalniz gercek izleyiciler, botlar asla
+    if (d.bot) continue;
+    try { Profil.ekle(d.kid, d.ad, { xp: Math.min(20, Math.round(d.odun)) + 3 + (d === usta ? 25 : 0), tencereOdun: Math.round(d.odun), tencereUsta: d === usta ? 1 : 0 }); } catch (e) { /* */ }
+  }
   const h = holderlar();
   if (tip === 'patladi') {
     cal('patla', 300);

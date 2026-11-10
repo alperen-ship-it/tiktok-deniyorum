@@ -185,7 +185,7 @@
   const R_TASARIM = 22;          // dikey pistin bosluklari bu yaricapa gore tasarlandi
   const YERCEKIMI = DIKEY ? 1200 : 780;   // 1100'de yaris 23 sn suruyordu; etap anonslari yetismiyordu
   // Dikey yilan pist olculeri
-  const SURUS = 0.13 * YERCEKIMI;   // dikey: satir yonu suruc ivmesi (px/sn^2)
+  const SURUS = 0.085 * YERCEKIMI;   // dikey: satir yonu suruc ivmesi (px/sn^2)
   const SATIR = 5, SATIR_P = 124, SATIR_D = 48, SATIR_BAS = 100, BOSLUK = 84;
   const XE = 960 - BOSLUK;       // satirin zemininin bittigi x (cift satir) / basladigi mesafe
   const YARIM_UZ = 480;          // bir etap = yarim satir
@@ -1366,7 +1366,6 @@
     sayacSn -= Math.min(1, (simdi - sayacT) / 1000);     // saat bazli (setInterval kaymasi sayilmaz)
     sayacT = simdi;
     if (DIKEY && durum === 'katilim') cagriYaz(`katılım açık · ${Math.max(0, Math.ceil(sayacSn))} sn`);
-    hediyeAkit();
     if (durum === 'katilim' && sayacSn <= 0) yarisBasla();
     else if (durum === 'bitti' && sayacSn <= 0) katilimaDon();
     if (durum !== 'bitti') siralamaCiz();
@@ -1449,26 +1448,40 @@
      Hicbir hediye sessizce dusmez: Spiker kuyrugu dolunca dusuk oncelikli soz
      kaybolabildigi icin hediyeler KENDI kuyruguna girer, birer birer gosterilir.
      gift.streaking === true olan seri tikleri sayilmaz. */
-  const hediyeKuyruk = [];
-  let hediyeSon = 0;
+  const hediyeKuyruk = [];            // {ad, kademe, sira}
+  let hediyeSon = 0, hediyeSira = 0;
+  // Kademe (elmas): 0 <10 · 1 <100 · 2 <1000 · 3 >=1000. Buyuk hediye sirada beklemez.
+  const hediyeKademe = (g) => { const d = Number(g && (g.diamonds || g.value)) || 0; return d >= 1000 ? 3 : d >= 100 ? 2 : d >= 10 ? 1 : 0; };
   TT.on('gift', (ev) => {
     if (ev.gift && ev.gift.streaking === true) return;
     const kid = kimlik(ev.user);
     const ad = isim(ev.user);
     sonHediye = { kid, ad, t: performance.now() / 1000 };
-    hediyeKuyruk.push(ad);
-    if (hediyeKuyruk.length > 40) hediyeKuyruk.splice(0, hediyeKuyruk.length - 40);
+    hediyeKuyruk.push({ ad, kademe: hediyeKademe(ev.gift), sira: hediyeSira++ });   // sinir YOK: hicbiri dusmez
   });
-  /** 250 ms'lik saatte cagrilir: her hediye >=1.6 sn gorunur, sirayla. */
+  /** 100 ms'lik saatte cagrilir. En yuksek kademe once, kademe icinde ilk gelen once.
+   *  3'ten fazla bekleyen varsa ayni kademedekiler tek satirda birlesir (en fazla 3 ad),
+   *  boylece 40'lik yigin ~14 sn'de tamamen anilir. Satir oncelik 4: baska sozle ezilmez. */
   function hediyeAkit() {
     if (!hediyeKuyruk.length) return;
     const simdi = performance.now();
-    if (simdi - hediyeSon < 1600) return;
+    const kalabalik = hediyeKuyruk.length > 3;
+    if (simdi - hediyeSon < (kalabalik ? 900 : 1600)) return;
     hediyeSon = simdi;
-    const ad = hediyeKuyruk.shift();
-    Spiker.satir(['🎁 ', { kim: ad }, ' hediye gönderdi — teşekkürler'], { oncelik: 3, sure: 1900 });
+    let en = 0;
+    for (const h of hediyeKuyruk) if (h.kademe > en) en = h.kademe;
+    const grup = [];
+    for (let i = 0; i < hediyeKuyruk.length && grup.length < (kalabalik ? 3 : 1); i++) {
+      if (hediyeKuyruk[i].kademe === en) { grup.push(hediyeKuyruk[i]); hediyeKuyruk.splice(i, 1); i--; }
+    }
+    const parcalar = ['🎁 '];
+    grup.forEach((h, i) => { if (i) parcalar.push(', '); parcalar.push({ kim: h.ad }); });
+    parcalar.push(grup.length > 1 ? ' — teşekkürler' : ' hediye gönderdi — teşekkürler');
+    Spiker.satir(parcalar, { oncelik: 4, sure: kalabalik ? 1000 : 1900 });
   }
+  setInterval(hediyeAkit, 100);
 
+  window.__dbg = () => ({ durum, R, b: bilyeler.map((b) => [b.ad, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.p), b.bitti]) });  // DBG-SIL
   // ---- basla ---------------------------------------------------------------
   boyutla();
   pistUret();

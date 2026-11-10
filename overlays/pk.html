@@ -532,8 +532,13 @@
       Finis.kart(kazananEl, {
         kupa: kaz.emoji,
         isim: kaz.ad,
+        // Dikeyde MVP adi ikinci ad satirinda (ad2: 72->40px, sonra sarar); alt yazida yalniz etiket.
+        // Yatayda kart eskisi gibi (ad alt yazida).
+        ad2: DIKEY && mvp ? mvp[1].ad : undefined,
         alt: mvp
-          ? `${Math.round(kazYan === 'a' ? puanA : puanB)} puanla kazandı · MVP: ${mvp[1].ad}`
+          ? (DIKEY
+            ? `${Math.round(kazYan === 'a' ? puanA : puanB)} puanla kazandı · 🏅 MVP`
+            : `${Math.round(kazYan === 'a' ? puanA : puanB)} puanla kazandı · MVP: ${mvp[1].ad}`)
           : `${Math.round(kazYan === 'a' ? puanA : puanB)} puanla kazandı`,
       });
       document.getElementById('cagri').textContent = kaz.ad + ' kazandı!';

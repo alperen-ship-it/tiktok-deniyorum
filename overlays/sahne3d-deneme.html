@@ -130,7 +130,9 @@ function katil(u) {
   const ad = String(u.nickname || u.uniqueId || '').trim(); if (!ad) return;
   const kid = 'u' + String(u.id || u.uniqueId || ad);
   if (katilanlar.some((k) => k.kid === kid)) return;
-  if (!s.figur.ekle(kid, { renk: RENKLER[katilanlar.length % RENKLER.length] })) return;
+  if (!s.figur.ekle(kid, { renk: RENKLER[katilanlar.length % RENKLER.length] })) {   // sahne dolu: figur yok, ad yine soylenir
+    Spiker.satir(['👋 ', { kim: ad }, ' katıldı'], { oncelik: 1, sure: 2500 }); return;
+  }
   s.figur.yerlestir(kid, { halka: 2, sira: 3 * katilanlar.length + 1 }, { sureMs: 900 });
   katilanlar.push({ kid, ad }); if (katilanlar.length > 6) { s.figur.cikar(katilanlar.shift().kid); }
   etiketle(); sayacYaz();
