@@ -23,6 +23,10 @@
  */
 import * as THREE from './vendor/three.module.min.js';
 
+// Renk yonetimi KAPALI: tum renkler 'oldugu gibi' (sRGB degerleri) islenir. Yazilim cizimde (SwiftShader / LIVE Studio)
+// sRGB doku cozumu + cikis kodlamasi ciddi dolgu maliyeti; stilize bir sahne icin dogrusal isik gereksiz.
+THREE.ColorManagement.enabled = false;
+
 const W = 1080, H = 1920;                       // tasarim pikseli
 const TAVAN = { ust: 240, sol: 60, sag: 1020, alt: 1760, komX: 540, komY: 1250 };   // A2
 const FONT = '"Outfit", system-ui, "Segoe UI", Arial, sans-serif';
@@ -96,7 +100,7 @@ function yazmaGeo() {
   const uc = uvSil(new THREE.ConeGeometry(0.07, 0.17, 5)); uc.rotateX(Math.PI); uc.translate(0, -0.14, -0.27);
   return birlestir([ort, dugum, uc]);
 }
-function golgeGeo() { const g = uvSil(new THREE.CircleGeometry(0.34, 14)); g.rotateX(-Math.PI / 2); return g; }
+function golgeGeo() { const g = uvSil(new THREE.CircleGeometry(0.34, 8)); g.rotateX(-Math.PI / 2); return g; }
 function mendilGeo() { const g = uvSil(new THREE.PlaneGeometry(0.36, 0.3, 1, 1)); return g; }
 function haleGeo() { const g = uvSil(new THREE.RingGeometry(0.34, 0.5, 28)); g.rotateX(-Math.PI / 2); return g; }
 
@@ -140,20 +144,20 @@ function kilimDokusu() {
     x.lineTo(64 + dx * 62 + (dy ? 7 : 0) + (dx ? 0 : 0), 64 + dy * 62 + (dx ? 7 : 0));
     x.lineTo(64 + dx * 62 - (dy ? 7 : 0), 64 + dy * 62 - (dx ? 7 : 0)); x.closePath(); x.fill();
   }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 1; t.generateMipmaps = true;
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 1; t.generateMipmaps = true;
   return t;
 }
 function gokDokusu(tema) {
+  // plan: y=-25..40 dunya birimi (65 yuksek); renkler yukseklige gore
   const c = document.createElement('canvas'); c.width = 4; c.height = 256;
   const x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, 256);
-  if (tema === 'ocakbasi') {
-    g.addColorStop(0, '#120e30'); g.addColorStop(0.3, '#241a52'); g.addColorStop(0.5, '#3a2468'); g.addColorStop(0.72, '#7a3a76'); g.addColorStop(0.9, '#d8604a'); g.addColorStop(1, '#f08a3c');
-  } else {
-    g.addColorStop(0, '#1b1446'); g.addColorStop(0.3, '#2c1e68'); g.addColorStop(0.5, '#4a2a7c'); g.addColorStop(0.72, '#9a4486'); g.addColorStop(0.9, '#e0705c'); g.addColorStop(1, '#f5a54b');
-  }
+  const dur = tema === 'ocakbasi'
+    ? [[40, '#120e30'], [34, '#1a1240'], [22, '#2a1b58'], [13, '#3a2468'], [6, '#7a3a76'], [0.5, '#d8604a'], [0, '#f08a3c'], [-25, '#f08a3c']]
+    : [[40, '#1b1446'], [34, '#1f1650'], [22, '#2c1e68'], [13, '#4a2a7c'], [6, '#9a4486'], [0.5, '#e0705c'], [0, '#f5a54b'], [-25, '#f5a54b']];
+  for (const [y, col] of dur) g.addColorStop(Math.min(1, Math.max(0, 1 - (y + 25) / 65)), col);
   x.fillStyle = g; x.fillRect(0, 0, 4, 256);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = false; t.minFilter = THREE.LinearFilter;
+  const t = new THREE.CanvasTexture(c); t.generateMipmaps = false; t.minFilter = THREE.LinearFilter;
   return t;
 }
 const ZEMIN_R = 24;                               // zemin diski yaricapi (dunya birimi)
@@ -251,6 +255,7 @@ const Sahne3D = {
       s.olcum = () => ({ kalite: 'yok', figur: 0, cizimCagrisi: 0, ucgen: 0, jsMs: 0, jsMsP95: 0, kareMs: 0, kareMsP95: 0, pikselOrani: 0, webgl: '', yazilim: false, cizilen: 0, gizli: 0, sebep });
       s.deneme = { sahteKare: bos, baglamKaybet: bos, baglamGeriGetir: bos, gpuMs: () => 0 };
       s.render = ''; s.yazilim = false;
+      s.sahne = new THREE.Scene(); s.kamera = new THREE.PerspectiveCamera();   // bos: sayfa dekor kodu hata vermesin, cizilmez
       Object.defineProperty(s, 'kalite', { get: () => 'yok', set: bos, enumerable: true, configurable: true });
       const d = kaliteDurumu('yok', sebep, null);
       setTimeout(() => yay('kalite', d), 0);      // sayfa dinleyici ekleyebilsin diye ertele
@@ -284,7 +289,7 @@ const Sahne3D = {
     } catch (e) { cv.remove(); ov.remove(); return yokSahne('webgl-kurulamadi'); }
     if (!renderer.capabilities.isWebGL2) { renderer.dispose(); cv.remove(); ov.remove(); return yokSahne('webgl2-yok'); }
     renderer.setClearColor(0x1b1446, 1);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     // ---- sahne, kamera, isiklar
     const scene = new THREE.Scene();
@@ -338,14 +343,15 @@ const Sahne3D = {
     // SABIT DEKOR: gok, zemin, kilim girlandi, fenerler (+ ocakbasi tasi)
     // ======================================================================
     const gokTex = gokDokusu(tema);
-    const gok = new THREE.Mesh(new THREE.PlaneGeometry(260, 40), new THREE.MeshBasicMaterial({ map: gokTex, depthWrite: false, fog: false }));
-    gok.position.set(0, 18, -ZEMIN_R - 3); scene.add(gok); gok.renderOrder = -2; gok.frustumCulled = false;
+    const gok = new THREE.Mesh(new THREE.PlaneGeometry(300, 65), new THREE.MeshBasicMaterial({ map: gokTex, depthWrite: false, depthTest: false, fog: false }));
+    gok.position.set(0, 7.5, -ZEMIN_R - 3); scene.add(gok); gok.renderOrder = -2; gok.frustumCulled = false;
 
     const zemCv = document.createElement('canvas'); zemCv.width = zemCv.height = 512;
     const zemCtx = zemCv.getContext('2d');
-    const zemTex = new THREE.CanvasTexture(zemCv); zemTex.colorSpace = THREE.SRGBColorSpace; zemTex.anisotropy = 1; zemTex.generateMipmaps = false; zemTex.minFilter = THREE.LinearFilter;
+    const zemTex = new THREE.CanvasTexture(zemCv); zemTex.anisotropy = 1; zemTex.generateMipmaps = false; zemTex.minFilter = THREE.LinearFilter;
     const zemGeo = new THREE.CircleGeometry(ZEMIN_R, 64); zemGeo.rotateX(-Math.PI / 2);
     const zemin = new THREE.Mesh(zemGeo, new THREE.MeshBasicMaterial({ map: zemTex }));
+    zemin.material.depthTest = false; zemin.material.depthWrite = false;   // ilk cizilir; derinlik islemi gereksiz (dolgu maliyeti)
     zemin.renderOrder = -1; scene.add(zemin);
 
     // girland: kameraya bagli, ekranin ust bandinda (y 100..235) — sadece arka plan
@@ -353,9 +359,9 @@ const Sahne3D = {
     const kilimTex = kilimDokusu();
     const ELMAS_N = 17;
     const elmas = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: kilimTex, alphaTest: 0.5, side: THREE.DoubleSide }), ELMAS_N);
-    const IP_N = 72;
+    const IP_N = 38;
     const ip = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0x4a2a30 }), IP_N);
-    const ampul = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe29a }), ELMAS_N);
+    const ampul = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffe29a }), ELMAS_N);
     elmas.frustumCulled = ip.frustumCulled = ampul.frustumCulled = false;
     garland.add(ip, elmas, ampul);
     const KILIM_RENK = [0xd8344a, 0xf5b92e, 0x20b2b0, 0xf6ead0];
@@ -370,7 +376,7 @@ const Sahne3D = {
       const off = camera.view ? camera.view : { offsetX: 0, offsetY: 0 };
       const px2x = (px) => (px + off.offsetX - W / 2) / ppuD;
       const py2y = (py) => -(py + off.offsetY - H / 2) / ppuD;
-      const yAt = (u) => 112 + 84 * Math.sin(Math.PI * ((u * 3) % 1));
+      const yAt = (u) => 96 + 76 * Math.sin(Math.PI * ((u * 3) % 1));
       // iplik
       const N = IP_N;
       let ox = px2x(-30), oy = py2y(yAt(0));
@@ -385,7 +391,7 @@ const Sahne3D = {
       ip.instanceMatrix.needsUpdate = true;
       const bw = 78 / ppuD;
       for (let i = 0; i < ELMAS_N; i++) {
-        const u = (i + 0.5) / ELMAS_N, px = -30 + u * (W + 60), py = yAt(u) + 52;
+        const u = (i + 0.5) / ELMAS_N, px = -30 + u * (W + 60), py = yAt(u) + 46;
         _gv.set(px2x(px), py2y(py), -D);
         _gq.identity(); _gs.set(bw, bw, 1);
         elmas.setMatrixAt(i, _gm.compose(_gv, _gq, _gs));
@@ -399,8 +405,8 @@ const Sahne3D = {
 
     // fenerler (arka koseler) — direk + isik topu, 2 cizim cagrisi
     const FENER_YER = tema === 'ocakbasi' ? [[-6.2, -6.2], [6.2, -6.2], [-9, -1.5], [9, -1.5]] : [[-6.4, -6.4], [6.4, -6.4], [-3.4, -9.6], [3.4, -9.6]];
-    const direk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.07, 0.09, 2.6, 7), new THREE.MeshLambertMaterial({ color: 0x4a3326 }), FENER_YER.length);
-    const fener = new THREE.InstancedMesh(new THREE.SphereGeometry(0.34, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffc66a }), FENER_YER.length);
+    const direk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.07, 0.09, 2.6, 5), new THREE.MeshLambertMaterial({ color: 0x4a3326 }), FENER_YER.length);
+    const fener = new THREE.InstancedMesh(new THREE.SphereGeometry(0.34, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffc66a }), FENER_YER.length);
     direk.frustumCulled = fener.frustumCulled = false;
     FENER_YER.forEach((p, i) => {
       direk.setMatrixAt(i, _gm.compose(_gv.set(p[0], 1.3, p[1]), _gq.identity(), _gs.set(1, 1, 1)));
@@ -930,6 +936,8 @@ const Sahne3D = {
     }
 
     // ---- ust katman cizimi
+    // etiketler SAHNE kutusunun dikey araligindan cikmaz (UST/KOMUT/SPIKER yazilarinin ustune binmesin)
+    function kutuIci(y0, y1) { return y0 >= kadrajKutu.y && y1 <= kadrajKutu.y + kadrajKutu.h; }
     function pillCiz(x, y, w, h, r) {
       ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
       ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
@@ -972,10 +980,10 @@ const Sahne3D = {
         for (let a = 0; a < na && yer < etMax && yer < 64; a++) {
           const i = adaylar[a], d = etDuz[i];
           const r = baskOl[i] * KAFA_R;
-          let x0 = clamp(baskX[i] - d.w / 2, TAVAN.sol, TAVAN.sag - d.w);
+          let x0 = clamp(baskX[i] - d.w / 2, TAVAN.sol + 3, TAVAN.sag - 3 - d.w);
           let y0 = baskY[i] - r - 10 - d.h;                         // basin ustunde
-          let ok = izinli(x0, y0, x0 + d.w, y0 + d.h);
-          if (!ok) { y0 = baskY[i] + r + 0.8 * baskOl[i] + 6; ok = izinli(x0, y0, x0 + d.w, y0 + d.h); }   // altta dene
+          let ok = kutuIci(y0, y0 + d.h) && izinli(x0 - 3, y0 - 3, x0 + d.w + 3, y0 + d.h + 3);
+          if (!ok) { y0 = baskY[i] + r + 0.8 * baskOl[i] + 6; ok = kutuIci(y0, y0 + d.h) && izinli(x0 - 3, y0 - 3, x0 + d.w + 3, y0 + d.h + 3); }   // altta dene
           if (!ok) continue;
           for (let b = 0; b < yer; b++) {
             if (x0 < rektler[b * 4 + 2] + 6 && x0 + d.w + 6 > rektler[b * 4] && y0 < rektler[b * 4 + 3] + 6 && y0 + d.h + 6 > rektler[b * 4 + 1]) { ok = false; break; }
@@ -1053,11 +1061,12 @@ const Sahne3D = {
       r.gorunur = g && r.x >= 0 && r.x <= W && r.y >= 0 && r.y <= H;
       return r;
     };
+    const kayipEk = renderer.getContext().getExtension('WEBGL_lose_context');
     s.deneme = {
       /** yavas kare enjekte et (basamak testi): ms=null kapatir. Sadece olcumu degistirir. */
       sahteKare(ms) { sahteKareMs = ms == null ? null : +ms; },
-      baglamKaybet() { const e = renderer.getContext().getExtension('WEBGL_lose_context'); if (e) e.loseContext(); },
-      baglamGeriGetir() { const e = renderer.getContext().getExtension('WEBGL_lose_context'); if (e) e.restoreContext(); },
+      baglamKaybet() { if (kayipEk) kayipEk.loseContext(); },
+      baglamGeriGetir() { if (kayipEk) kayipEk.restoreContext(); },   // (kayip baglamda getExtension null doner: kurulumda alinir)
       /** n kare uzerinden readPixels ile GERCEK kare maliyeti (ms) — rAF'i beklemeden. */
       gpuMs(n) {
         const px1 = new Uint8Array(4);
@@ -1082,7 +1091,7 @@ const Sahne3D = {
     renderer.setPixelRatio(tier.pr); renderer.setSize(W, H, false);
     meshGolge.visible = tier.golge;
     kap.setAttribute('data-sahne3d', ilk);
-    sonDegisim = performance.now();
+    sonDegisim = performance.now() - 7000;        // ilk dusus en erken ~3 sn'lik pencere sonunda
     raf = requestAnimationFrame(dongu);
     { const d = kaliteDurumu(ilk, zorlaKalite ? (kilitIstek ? 'kilitli' : 'zorla') : (yazilim ? 'yazilim-render' : 'baslangic'), null); setTimeout(() => yay('kalite', d), 0); }
     return s;
