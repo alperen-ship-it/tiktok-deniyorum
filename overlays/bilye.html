@@ -1334,7 +1334,7 @@
     demoTur = gercek === 0;
     /* Tek gercek oyuncu 4 botun arasina atilinca ~%80 kaybediyordu ve
        bu onun ILK deneyimi oluyordu. Az kisi varsa bot sayisini kis:
-       1 kisi -> 2 bot (kazanma sansi ~%33), 2 kisi -> 1 bot. */
+       1 kisi -> 2 bot (kazanma ihtimali dusuk kalmasin), 2 kisi -> 1 bot. */
     if (gercek < 5) {
       const hedef = gercek === 0 ? 6 : (gercek === 1 ? 3 : gercek + 1);
       const eksik = Math.max(0, hedef - gercek);
@@ -1444,7 +1444,7 @@
   });
 
   /* Hediye: TESEKKUR + ad. Sonucu DEGISTIRMEZ (PLAN-DIKEY: hediye kimin kazanacagini
-     degistirmez, sans satin almaz): fizige hicbir etkisi yok; gonderenin bilyesine
+     degistirmez, sonuc satin almaz): fizige hicbir etkisi yok; gonderenin bilyesine
      yalniz gorsel halka + etiket. Eskiden misketi ileri itiyordu — kaldirildi.
      Hicbir hediye sessizce dusmez: Spiker kuyrugu dolunca dusuk oncelikli soz
      kaybolabildigi icin hediyeler KENDI kuyruguna girer, birer birer gosterilir.
