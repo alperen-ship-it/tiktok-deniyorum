@@ -1,22 +1,25 @@
-# TikTok LIVE Studio — tersine mühendislik notları
+# TikTok LIVE Studio: tersine mühendislik notları
 
 > Bu dosya projenin **başladığı yerin** kaydı: TikTok LIVE Studio uygulamasının
 > nasıl çalıştığını, olayların nereden geldiğini ve "Link" kaynağının tuzaklarını
-> çözdüğümüz araştırma. Oyunları kullanmak için buna İHTİYACIN YOK — ana
+> çözdüğümüz araştırma. Oyunları kullanmak için buna İHTİYACIN YOK. Ana
 > [README](README.md) yeter. Burası, köprünün neden böyle kurulduğunu merak
 > edenler ve kendi oyununu yazacaklar için.
+>
+> Oyun sayısı, sürüm numaraları ve örnek adresler araştırma günündeki hâliyle
+> duruyor. Güncel durum README'de.
 
-## 1. Uygulamanın iç yapısı — ne bulduk
+## 1. Uygulamanın iç yapısı: ne bulduk
 
 ### Ne üzerine kurulu
 
-**Electron. Ama stok Electron değil — ByteDance'in kendi çatallaması: `TTElectron`.**
-*(kanıtlanmış — User-Agent dizesi birden çok bağımsız projede birebir aynı)*
+**Electron. Ama stok Electron değil, ByteDance'in kendi çatallaması: `TTElectron`.**
+*(kanıtlanmış: User-Agent dizesi birden çok bağımsız projede birebir aynı)*
 
 | LIVE Studio | Chromium | Electron |
 |---|---|---|
 | 0.52 | 104 | 20.1.0-tt.8 |
-| 0.53 – 0.89 | 108 | 22.3.18-tt.8/tt.11 |
+| 0.53-0.89 | 108 | 22.3.18-tt.8/tt.11 |
 | **1.27+ (güncel)** | **136** | **36.4.0-alpha.17** |
 
 ```
@@ -27,10 +30,10 @@ TTElectron/36.4.0-alpha.17 Safari/537.36
 
 `-tt.N.release.main.NN` eki ve fazladan `TTElectron/` belirteci, bunun ByteDance'in
 kurum içi derlemesi olduğunu gösteriyor. Yani stok Electron davranışına **birebir
-güvenme** — bayraklar kaldırılmış olabilir.
+güvenme**. Bayraklar kaldırılmış olabilir.
 
-**CEF değil, OBS/libobs değil.** Video tarafı ByteDance'in kendi **MediaSDK**'sı ve
-ayrı bir native process olarak çalışıyor. *(kanıtlanmış — Douyin 直播伴侣 ile aynı bileşen)*
+**CEF değil, OBS/libobs değil.** Video tarafı ByteDance'in kendi **MediaSDK**'si ve
+ayrı bir native process olarak çalışıyor. *(kanıtlanmış: Douyin 直播伴侣 ile aynı bileşen)*
 
 ### Dosya yapısı
 
@@ -50,21 +53,21 @@ C:\Program Files\TikTok LIVE Studio\
 ```
 
 **`app.asar` yok.** Kodu çıkarmana gerek yok, `resources\app\static\js\` içindeki
-JS dosyalarını doğrudan açıp okuyabilirsin. *(kanıtlanmış — birden çok araç bu
+JS dosyalarını doğrudan açıp okuyabilirsin. *(kanıtlanmış: birden çok araç bu
 dosyaları yerinde düzenliyor)*
 
 ### Kullanıcı verisi
 
-`%APPDATA%\TikTok LIVE Studio\` *(kanıtlanmış — Roaming, LocalAppData değil)*
+`%APPDATA%\TikTok LIVE Studio\` *(kanıtlanmış: Roaming, LocalAppData değil)*
 
 | Yol | İçerik |
 |---|---|
 | **`TTStore\services.json`** | **★ Sahne ve kaynak grafiği. En önemli dosya.** |
 | `TTStore\store.json` | Uygulama durumu (`source` anahtarını silmek tuvali temizler) |
 | `TTStore\localStore.json` | Efekt önbelleği |
-| `logs\renderer.log` | Renderer logu — içinde protobuf dökümleri var |
+| `logs\renderer.log` | Renderer logu, içinde protobuf dökümleri var |
 | `Network\Cookies` | Chromium SQLite çerez veritabanı |
-| `gecko_cache\` | ByteDance Gecko sıcak-güncelleme paketleri |
+| `gecko_cache\` | ByteDance Gecko sıcak güncelleme paketleri |
 
 `services.json` şeması:
 ```
@@ -81,11 +84,11 @@ Bu dosyayı okumak/düzenlemek için: `node tools/ttls-sahne.js list`
 `MediaSDK_Server.exe`, `AISDK_Server.exe`, `AIEngine.exe`, `EffectProvider.exe`,
 `VoiceAssistant.exe`, `tt_crash_reporter.exe`
 
-### ★ Gizli yerel API — Stream Deck soketi
+### ★ Gizli yerel API: Stream Deck soketi
 
 **En değerli bulgu.** LIVE Studio, Elgato Stream Deck entegrasyonu için `127.0.0.1`
-üzerinde bir **Socket.IO sunucusu** açıyor. TikTok'un kendi resmi eklentisi bununla
-konuşuyor. *(kanıtlanmış — protokol resmi eklentinin paketinden çıkarıldı)*
+üzerinde bir **Socket.IO sunucusu** açıyor. TikTok'un kendi resmî eklentisi bununla
+konuşuyor. *(kanıtlanmış: protokol resmî eklentinin paketinden çıkarıldı)*
 
 ```
 ws://127.0.0.1:<port>/socket.io/?EIO=4&transport=websocket
@@ -99,7 +102,7 @@ el sıkışma   : join_room gönder → cevap gelince sync_settings gönder
 ```
 
 Sunucu cevabında `scene` (aktif sahne) ve `scene_list: [{name, sources:[{label,value}]}]`
-geliyor. Eylemler arasında **sahne değiştirme** ve **kaynak gösterme/gizleme** var —
+geliyor. Eylemler arasında **sahne değiştirme** ve **kaynak gösterme/gizleme** var,
 ayrıca yayın başlat/bitir, mikrofon, kayıt, anket, hedef, hazine kutusu.
 
 **Eklentide token/parola yok** → endpoint muhtemelen kimlik doğrulamasız. Yani kendi
@@ -115,9 +118,9 @@ Deck eylemleri**, **kısayol tuşları**.
 
 ---
 
-## 2. Kaynak tipleri — ve "Link" meselesi
+## 2. Kaynak tipleri ve "Link" meselesi
 
-**LIVE Studio'da tarayıcı kaynağı VAR. Adı "Link".** *(kanıtlanmış — dahili tip
+**LIVE Studio'da tarayıcı kaynağı VAR. Adı "Link".** *(kanıtlanmış: dahili tip
 adı `browser`, `services.json` içinde böyle geçiyor)*
 
 `Kaynak ekle → Link` → "Link Source Settings" penceresi.
@@ -126,38 +129,38 @@ Tam kaynak listesi:
 - **Yakalama:** Kamera, Ekran yakalama, Pencere yakalama, **Oyun yakalama**, Yakalama kartı, Cast (iOS/Android)
 - **Medya:** Resim, Video, Metin, **Link** (= tarayıcı)
 - **Widget:** Hedef, Geri sayım, Hatırlatıcı, Sohbet kutusu, Liderlik tablosu, Yayın aktarma
-- **Ses kaynak değil** — ayrı bir Ses Karıştırıcı paneli var
+- **Ses kaynak değil**, ayrı bir Ses Karıştırıcı paneli var
 
 ### ⚠️ Link kaynağının 6 tuzağı
 
 Bunları bilmezsen overlay'in sessizce boş kalır. Hepsi bu depoda çözülmüş durumda:
 
-**1. `localhost` / ham IP — ÇELİŞKİLİ BULGU, en önemli madde.**
+**1. `localhost` / ham IP: ÇELİŞKİLİ BULGU, en önemli madde.**
 
 Üç bağımsız araştırma, üç farklı sonuç verdi:
 
 | Kaynak | İddia |
 |---|---|
 | `dOtExE97/botexe-studio` (2026, bakımlı) | localhost ve IP **reddediliyor**, kodda `localtest.me`'ye çeviriyor |
-| `vicentefelipechile/stream-persona-overlay` | localhost, IP **ve port** reddediliyor; `:80` ile hosts dosyası kullanıyor |
+| `vicentefelipechile/stream-persona-overlay` | localhost, IP **ve port** reddediliyor, `:80` ile hosts dosyası kullanıyor |
 | Bir overlay sağlayıcısının kılavuzu | `http://127.0.0.1:PORT` **kabul ediliyor** |
 
 Muhtemelen **sürüme göre değişiyor** (doğrulama kodu bir noktada eklendi/gevşetildi).
 
-> **Sıralama böyle dene — ilki tutarsa gerisine bakma:**
-> 1. `http://127.0.0.1:8787/overlays/alerts.html?lite=1` — en basit
-> 2. `http://localtest.me:8787/overlays/alerts.html?lite=1` — **her durumda çalışır**
-> 3. `http://localtest.me/overlays/alerts.html?lite=1` — port da reddediliyorsa
+> **Sıralama böyle dene. İlki tutarsa gerisine bakma:**
+> 1. `http://127.0.0.1:8787/overlays/alerts.html?lite=1`: en basit
+> 2. `http://localtest.me:8787/overlays/alerts.html?lite=1`: **her durumda çalışır**
+> 3. `http://localtest.me/overlays/alerts.html?lite=1`: port da reddediliyorsa
 >    (köprü 80'i de dinliyor)
-> 4. `powershell -File tools\hosts-ekle.ps1` (yönetici) → `http://yayin.local:8787/...`
->    — modeminin DNS-rebind koruması `localtest.me`'yi engelliyorsa (FritzBox vb.)
+> 4. `powershell -File tools\hosts-ekle.ps1` (yönetici) → `http://yayin.local:8787/...`:
+>    modeminin DNS-rebind koruması `localtest.me`'yi engelliyorsa (FritzBox vb.)
 >
 > `localtest.me` herkese açık bir alan adı ve DNS'i kalıcı olarak `127.0.0.1`'e
-> çözülüyor — yani trafik makineden dışarı çıkmıyor, sadece doğrulamayı geçiyor.
+> çözülüyor. Yani trafik makineden dışarı çıkmıyor, sadece doğrulamayı geçiyor.
 
-**2. Link kaynağı fare/klavye almıyor.** OBS'teki "Interact" karşılığı yok; sayfa
+**2. Link kaynağı fare/klavye almıyor.** OBS'teki "Interact" karşılığı yok. Sayfa
 salt görüntü. Yani oyuncağı **tıklamayla değil, TikTok olaylarıyla** sürmelisin.
-> Bu depodaki 6 oyuncak zaten öyle çalışıyor — hiçbiri tıklama beklemiyor.
+> Bu depodaki 6 oyuncak zaten öyle çalışıyor, hiçbiri tıklama beklemiyor.
 
 **3. Sayfanın alt kaynakları AYNI HOST'tan gelmeli.** Sayfa `localtest.me`'den
 yüklenip WebSocket'i `127.0.0.1`'e giderse engelleniyor → sayfa yüklenir ama
@@ -166,7 +169,7 @@ yüklenip WebSocket'i `127.0.0.1`'e giderse engelleniyor → sayfa yüklenir ama
 
 **4. Gömülü tarayıcıda GPU hızlandırma YOK.** `blur`, `backdrop-filter`, `drop-shadow`
 yazılımda hesaplanıyor ve kare hızını yerle bir ediyor.
-> **Çözüm:** Adrese `?lite=1` ekle — pahalı efektler kapanır, yazıya ucuz kontur gelir.
+> **Çözüm:** Adrese `?lite=1` ekle. Pahalı efektler kapanır, yazıya ucuz kontur gelir.
 > Görünüm neredeyse aynı, maliyet ~10 kat düşer.
 
 **5. Link kaynağının sesi sessizce ölüyor** *(bilinen hata)*.
@@ -190,15 +193,15 @@ Ayrıca yok: özel CSS alanı, genişlik/yükseklik ayarı, "sahne aktif olunca 
 | Sayfa sesini miksere al | ❌ | ✅ |
 
 Overlay işi için OBS teknik olarak açık ara üstün. **Ama TikTok'a OBS ile yayın
-yapmanın ciddi bir bedeli var** — aşağıya bak.
+yapmanın ciddi bir bedeli var**. Aşağıya bak.
 
 ### ⚠️ OBS ile TikTok'a yayın: bilmen gereken 3 şey
 
-**1. Yayın anahtarı her yayında değişiyor.** *(kanıtlanmış — Aitum eklentisinin
+**1. Yayın anahtarı her yayında değişiyor.** *(kanıtlanmış: Aitum eklentisinin
 dil dosyasında bu uyarı birebir var)* Anahtarı `livecenter.tiktok.com/producer`
 üzerinden alıyorsun ve **her yayın öncesi yeniden yapıştırman gerekiyor**.
 
-**2. TikTok, OBS'in hizmet listesinde YOK.** *(kanıtlanmış — OBS'in
+**2. TikTok, OBS'in hizmet listesinde YOK.** *(kanıtlanmış: OBS'in
 `services.json` dosyasında 84 hizmet var, TikTok yok)* Ayarlar → Yayın →
 Hizmet: **"Özel…"** seçip Sunucu + Anahtar'ı elle gireceksin. Bu ayrıca OBS'in
 TikTok için bit hızı/keyframe sınırı uygulamadığı anlamına geliyor.
@@ -206,20 +209,20 @@ TikTok için bit hızı/keyframe sınırı uygulamadığı anlamına geliyor.
 **3. ★ %50 oyun içeriği kuralı.** 7 Temmuz 2025'ten beri TikTok, üçüncü taraf
 yazılımla (OBS, Streamlabs, Restream) yayın erişimi için **yayınlarının en az
 %50'sinin oyun içeriği olmasını** şart koşuyor. Erişimin iptal edilirse 14 gün
-sonra yeniden başvurabiliyorsun. *(bu belgedeki en iyi kanıtlanmış kısıt —
+sonra yeniden başvurabiliyorsun. *(bu belgedeki en iyi kanıtlanmış kısıt:
 Streamlabs, Restream ve StreamElements destek sayfaları birbirini doğruluyor)*
 
-> **Oyun yayını yapmıyorsan OBS yolu senin için kırılgan.** LIVE Studio bu kuralın
-> dışında — TikTok'un kendi uygulaması olduğu için. Bu, LIVE Studio'nun teknik
+> **Oyun yayını yapmıyorsan OBS yolu senin için kırılgan.** LIVE Studio, TikTok'un
+> kendi uygulaması olduğu için bu kuralın dışında. Bu, LIVE Studio'nun teknik
 > kısıtlarına katlanmanın en güçlü sebebi.
 
 Ayrıca: TikTok Shop yayınlarında **ekranın %50'sinden fazlasını kaplayan sabit
-içerik yasak** — overlay ağırlıklı, kamerasız bir sahne buna takılabilir.
+içerik yasak**. Overlay ağırlıklı, kamerasız bir sahne buna takılabilir.
 
 **OBS için dikey ayarlar:** 1080×1920, 30 fps, H.264 High, CBR, keyframe 2 sn,
-~4000–6000 kbps, AAC 128 kbps. Yatay ve dikey kanvası aynı anda kullanmak için
-**Aitum Vertical** (veya yerine geçen **Aitum Stream Suite** — ikisi birden
-kurulmuyor). OBS'in kendi çoklu-kanvas desteği motor seviyesinde var ama
+~4000-6000 kbps, AAC 128 kbps. Yatay ve dikey kanvası aynı anda kullanmak için
+**Aitum Vertical** (veya yerine geçen **Aitum Stream Suite**, ikisi birden
+kurulmuyor). OBS'in kendi çoklu kanvas desteği motor seviyesinde var ama
 **arayüzü yok**, eklenti şart.
 
 Bu depodaki overlay'ler OBS'te ekstra ayar istemiyor: `?lite=1` ve `?bg=` olmadan
@@ -231,42 +234,42 @@ kullan, şeffaflık kendiliğinden çalışır.
 ## 4. Olay verisi nereden geliyor
 
 **Önce net olalım: TikTok'un resmî canlı yayın olay API'si YOK.**
-*(kanıtlanmış — TikTok'un webhook listesi tam olarak 4 olay içeriyor, hiçbiri canlı
+*(kanıtlanmış: TikTok'un webhook listesi tam olarak 4 olay içeriyor, hiçbiri canlı
 yayınla ilgili değil; scope listesinde `live.*` yok)*
 
 Ortakçı (partner) kapısı arkasında `live.room.info` / `live.room.manage` scope'ları
-var ama bunlar sadece **izleyici sayısı** veriyor — sohbet, hediye, beğeni yok.
+var ama bunlar sadece **izleyici sayısı** veriyor. Sohbet, hediye, beğeni yok.
 Gerçek zamanlı olay isteyen herkes aynı tersine mühendislik yüzeyini kullanıyor.
 
 Bu depo **üç yolu da** destekliyor:
 
-### Yol A — TikFinity (en kolay, kod yok)
+### Yol A: TikFinity (en kolay, kod yok)
 TikFinity Desktop kuruluysa `ws://127.0.0.1:21213/` üzerinden ham JSON olay yayınlıyor.
-`tt.js` bu formatı zaten konuşuyor — **köprüye hiç gerek yok**, imzalama derdi yok,
+`tt.js` bu formatı zaten konuşuyor. **Köprüye hiç gerek yok**, imzalama derdi yok,
 API anahtarı yok. Overlay'i açman yeterli, otomatik bulur.
 
 Kapalı kaynak ve o da aynı tersine mühendisliğe dayanıyor, ama bakımını **başkası**
-yapıyor — TikTok protokolü değiştirdiğinde senin kodun bozulmuyor.
+yapıyor. TikTok protokolü değiştirdiğinde senin kodun bozulmuyor.
 
-### Yol B — Bu depodaki köprü (bağımsız)
+### Yol B: Bu depodaki köprü (bağımsız)
 ```bat
 cd server && npm install
 node bridge.js --user senin_kullanici_adin
 ```
 `tiktok-live-connector` v2.4.3 kullanıyor. İki teknik detay:
-- Paket **ESM-only**; köprü CommonJS olduğu için dinamik `import()` ile yüklüyor
-  (`require()` ile v2'nin sınıfına ulaşılmıyor — yaygın bir tuzak)
-- TikTok'un webcast adresi **imzalanmak zorunda**; bunu yapan tek sürdürülen servis
-  **EulerStream**. Ücretsiz katman **2500 istek/gün** — bir istek = bir *bağlantı*,
+- Paket **ESM-only**. Köprü CommonJS olduğu için dinamik `import()` ile yüklüyor
+  (`require()` ile v2'nin sınıfına ulaşılmıyor, yaygın bir tuzak)
+- TikTok'un webcast adresi **imzalanmak zorunda**. Bunu yapan tek sürdürülen servis
+  **EulerStream**. Ücretsiz katman **2500 istek/gün**. Bir istek = bir *bağlantı*,
   mesaj başına değil, yani tek yayıncı için fazlasıyla yeter.
   ```bat
   set EULER_API_KEY=<anahtarin>
   node bridge.js --user kullaniciadin
   ```
-- **`sessionid` çerezi gerekmiyor** — sadece okuma için kimlik bilgisi istemiyor.
+- **`sessionid` çerezi gerekmiyor**. Sadece okuma için kimlik bilgisi istemiyor.
   (Zaten isteme: çerezini üçüncü taraf imza sunucusuna göndermiş olursun.)
 
-### Yol C — Mock (geliştirme)
+### Yol C: Mock (geliştirme)
 ```bat
 node server/bridge.js --mock --rate 3
 ```
@@ -296,7 +299,7 @@ const değer = repeatCount * diamondCount;
 | `tools/ttls-sahne.js` | `services.json`'u okur, Link kaynaklarının adresini değiştirir (otomatik yedekli) |
 | `tools/hosts-ekle.ps1` | `localtest.me` çalışmazsa yerel alan adı oluşturur (yönetici) |
 | `server/bridge.js` | Olay köprüsü + overlay dosya sunucusu + kontrol paneli |
-| `server/ws-mini.js` | Bağımlılıksız WebSocket sunucusu — `npm install` yapamasan bile mock çalışsın diye |
+| `server/ws-mini.js` | Bağımlılıksız WebSocket sunucusu, `npm install` yapamasan bile mock çalışsın diye |
 
 ### Önerilen sıra
 
@@ -343,7 +346,7 @@ node tools\ttls-sahne.js list
 </body></html>
 ```
 
-Test etmek için `dosyaadi.html?mock=1` aç — sunucu bile gerekmez.
+Test etmek için `dosyaadi.html?mock=1` aç. Sunucu bile gerekmez.
 
 ### Olay şeması
 
@@ -362,8 +365,8 @@ Test etmek için `dosyaadi.html?mock=1` aç — sunucu bile gerekmez.
 
 ### `TT` yardımcıları
 
-`TT.esc(s)` XSS kalkanı (yorumlar kullanıcıdan geliyor — **asla ham HTML basma**) ·
-`TT.avatar(user)` · `TT.giftEmoji(gift)` · `TT.short(1234)` → `1.2B` ·
+`TT.esc(s)` XSS kalkanı (yorumlar kullanıcıdan geliyor, **asla ham HTML basma**) ·
+`TT.avatar(user)` · `TT.giftEmoji(gift)` · `TT.short(1234)` → `1,2B` ·
 `TT.hue(seed)` kişiye sabit renk · `TT.loop(dt => …)` oyun döngüsü ·
 `TT.fire(ev)` elle olay tetikle
 
@@ -371,24 +374,24 @@ Test etmek için `dosyaadi.html?mock=1` aç — sunucu bile gerekmez.
 
 ## 7. Doğrulanmamış olanlar
 
-Dürüst olmak gerekirse şunları kanıtlayamadık:
+Şunları kanıtlayamadık:
 
 - **`--remote-debugging-port` / DevTools çalışıyor mu.** Hiçbir yönde kanıt yok.
   ByteDance çatallaması bayrağı kaldırmış olabilir. Recon scripti bunu deniyor.
-- **Link kaynağının port kabul edip etmediği** — iki kaynak çelişiyor (bu yüzden
+- **Link kaynağının port kabul edip etmediği**: iki kaynak çelişiyor (bu yüzden
   köprü hem 8787'yi hem 80'i dinliyor).
 - **Stream Deck soketinde sunucu tarafı kimlik doğrulaması var mı** ve portun 7
   adaydan rastgele mi seçildiği.
-- **`ttls-control.js`'in komut gönderme kısmı** — protokol resmi eklentiden çıkarıldı
+- **`ttls-control.js`'in komut gönderme kısmı**: protokol resmî eklentiden çıkarıldı
   ama gerçek uygulamaya karşı test edilmedi. Bu yüzden varsayılan mod `listen`.
 - **Sahne başına 10 kaynak sınırı** (muhtemel, kesin değil).
 - **macOS sürümünde Link kaynağı var mı.**
-- **Güncel tam sürüm numarası** — 1.27.0 kodda alt sınır olarak doğrulandı, 1.29.2
+- **Güncel tam sürüm numarası**: 1.27.0 kodda alt sınır olarak doğrulandı, 1.29.2
   tek kaynaklı.
 
 `recon/tls-recon.ps1` çıktısını paylaşırsan bunların çoğu netleşir.
 
-## 8. EulerStream bağımlılığından kurtulmak — keşif notları
+## 8. EulerStream bağımlılığından kurtulmak: keşif notları
 
 > **Durum: sadece öğrenme.** Hiçbiri uygulanmadı, kodda karşılığı yok.
 > Bugün köprü hâlâ Euler'in imza servisini kullanıyor. Bu bölüm, ileride
@@ -396,16 +399,16 @@ Dürüst olmak gerekirse şunları kanıtlayamadık:
 
 ### Neden Euler'e bağlıyız
 
-Tek sebep: TikTok'un webcast WebSocket adresi **imzalı** olmak zorunda —
+Tek sebep: TikTok'un webcast WebSocket adresi **imzalı** olmak zorunda:
 `X-Bogus`, `X-Gnarly`, `msToken`. Bu parametreleri TikTok'un obfuscate
 edilmiş `webmssdk.js`'i üretiyor ve tarayıcı bilgilerini (UA, sürüm,
-ekran) kodluyor; `browser_version` / `browser_name` sorgu parametreleri
+ekran) kodluyor. `browser_version` / `browser_name` sorgu parametreleri
 ve `User-Agent` başlığıyla tutmazsa TikTok isteği reddediyor.
 
 Geri kalan her şeyin **zaten Euler'siz yolu var**: `fetchRoomInfoFromHtmlRoute`,
 `fetchRoomInfoFromApiLiveRoute`, `fetchRoomIdComposite` doğrudan TikTok'a
 gidiyor. `tiktok-live-api-sdk@0.4.0-beta1`'in rota listesini çıkardığımızda
-gerçekten Euler'e bağımlı olan yalnızca iki uç nokta kaldı:
+gerçekten Euler'e bağımlı olan yalnızca iki endpoint kaldı:
 
 | Rota | Ne yapıyor | Not |
 |---|---|---|
@@ -416,7 +419,7 @@ gerçekten Euler'e bağımlı olan yalnızca iki uç nokta kaldı:
 
 `tiktok-live-api-sdk`, OpenAPI'den üretilmiş bir axios istemcisi ve
 `basePath` yapılandırılabilir (`dist/*.d.ts` içinde doğrulandı).
-`SignConfig` tipi de `Partial<ClientConfiguration>` — yani:
+`SignConfig` tipi de `Partial<ClientConfiguration>`, yani:
 
 ```js
 SignConfig.basePath = 'http://localhost:9999';   // butun Euler cagrilari bize duser
@@ -430,12 +433,12 @@ Varsayılan hostlar (bundle'dan çıkarıldı): `tiktok.eulerstream.com`,
 
 ### İki uygulama yolu
 
-**A — Kendi imzalayıcımız.** Headless Chromium'da TikTok'un kendi
+**A: Kendi imzalayıcımız.** Headless Chromium'da TikTok'un kendi
 `webmssdk.js`'ini çalıştırıp imzayı hesaplatmak. `carcabot/tiktok-signature`
 tam olarak bunu yapıyor (açık kaynak, ücretsiz, Docker'lı).
-*Maliyeti:* bakım koşu bandı — TikTok algoritmayı döndürdükçe kırılır.
+*Maliyeti:* bakım koşu bandı. TikTok algoritmayı döndürdükçe kırılır.
 
-**B — Hiç imzalamamak (tercih edilen).** TikTok LIVE sayfasını kullanıcının
+**B: Hiç imzalamamak (tercih edilen).** TikTok LIVE sayfasını kullanıcının
 kendi tarayıcısında aç, CDP `Network.webSocketFrameReceived` ile ham
 çerçeveleri yakala, kütüphanenin **zaten dışa açtığı** fonksiyona ver:
 
@@ -443,13 +446,13 @@ kendi tarayıcısında aç, CDP `Network.webSocketFrameReceived` ile ham
 deserializeWebSocketMessage(binaryMessage: Uint8Array): Promise<DecodedWebcastPushFrame>
 ```
 
-İmzayı TikTok'un kendi sayfası atıyor; bizim çözmemiz gereken bir şey yok.
-Sohbete yazmak da bedavaya geliyor — gerçek yorum kutusuna yazılıyor,
+İmzayı TikTok'un kendi sayfası atıyor. Bizim çözmemiz gereken bir şey yok.
+Sohbete yazmak da bedavaya geliyor. Gerçek yorum kutusuna yazılıyor,
 premium plan gerekmiyor. Windows'ta zaten kurulu olan Edge'i
-`--remote-debugging-port` ile kalıcı profilde açmak yeterli; exe'ye
+`--remote-debugging-port` ile kalıcı profilde açmak yeterli, exe'ye
 Chromium paketlemeye gerek yok.
 
-*Maliyeti:* açık bir tarayıcı süreci (~300–400MB) · TikTok sayfa yapısını
+*Maliyeti:* açık bir tarayıcı süreci (~300-400MB) · TikTok sayfa yapısını
 değiştirirse hook kırılabilir (imza rotasyonundan çok daha seyrek) ·
 ToS açısından durum bütün ekosistemle aynı: tek hesap, tek oda, kendi yayın.
 
@@ -459,19 +462,19 @@ Değiştirilebilir kaynak katmanı: `--kaynak euler` (bugünkü davranış, doku
 / `--kaynak tarayici` (yeni). Biri düşerse diğerine geçilir. Köprü zaten
 tek tip olay şeması yaydığı için **oyunlar tarafında tek satır değişmez**.
 
-### EulerStream GitHub org — ne var ne yok
+### EulerStream GitHub org: ne var ne yok
 
 7 depo. İşe yarayabilecekler: `Euler-WebSocket-SDK` (TS, WS bağlantı yönetimi),
-`Euler-Connect` (Chrome eklentisi — ama imzayı atlatmıyor, kendi servisleri için
+`Euler-Connect` (Chrome eklentisi ama imzayı atlatmıyor, kendi servisleri için
 oturum aracısı), `TikTok-Live-Api` (C# istemci). İmza sunucusunun kendisi
-kapalı kaynak; org'da yok.
+kapalı kaynak. Org'da yok.
 
 ---
 
 ## Kaynaklar
 
 Bulgular şu projelerin kaynak kodundan çıkarıldı:
-`fefecal/ajazz-tiktok-live-studio-plugin` (TikTok'un **resmi** Stream Deck eklentisi —
+`fefecal/ajazz-tiktok-live-studio-plugin` (TikTok'un **resmî** Stream Deck eklentisi,
 yerel protokolün kaynağı) · `Zumbisinho/GD-TiktokLive` (`services.json` şeması) ·
 `dOtExE97/botexe-studio` (Link kaynağı URL kuralları, `localtest.me`) ·
 `xinzongTT/tiktok_vcam_bypass` (dosya yapısı) · `Renamezyx/python` LSTools ·

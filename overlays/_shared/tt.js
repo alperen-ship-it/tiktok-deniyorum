@@ -589,7 +589,7 @@
       el.textContent = '';
       parca.forEach((x, i) => { if (i) el.appendChild(document.createElement('wbr')); el.appendChild(document.createTextNode(x)); });
     },
-    /** 1234 -> "1.2B" (Turkce kisaltma) */
+    /** 1234 -> "1,2B" (Turkce kisaltma) */
     short(n) {
       n = Number(n) || 0;
       if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '').replace('.', ',') + 'Mr';
