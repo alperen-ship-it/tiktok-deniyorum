@@ -165,12 +165,26 @@ node ham-metin.js halay.html --dikey        # sohbet metni hiçbir yerde görün
 node at-probe.js repo                       # at yarışı: sözcükler, eşit ödül, hediye
 node halay-kit.js / tencere-kit.js          # oyun mantığı
 node sec-probe.js                           # köprü güvenliği
+node host-test.js                           # --host / --lan bayrakları, 403 iletisi
+node build-fake.js && node reconnect.js repo   # yeniden bağlanma: sahte bağlantı, sanal saat
 node ses-karsilastir.js                     # ses.js geriye uyum
 node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 ```
 
 - Playwright ve Chromium gerekir. Chromium yolu `TT_CHROMIUM`, depo yolu `TT_REPO`
   ortam değişkeniyle verilebilir (verilmezse depo `devir/kit`'in iki üstüdür).
+- Testleri sırayla çalıştır, aynı anda tek Chromium. Birkaç denetim zamana duyarlıdır:
+  `tencere-kit`'in denge benzetimi yük altında kırmızı verebilir, tek başına geçer.
+- `reconnect.js` sahte bir `tiktok-live-connector` paketiyle çalışır. Paketi
+  `node build-fake.js` üretir (`kit/node_modules/` altına, git'e girmez). Gerçek paketin
+  metnini `server/node_modules`'tan okur, çalıştırmaz. Önce `cd server && npm ci` gerekir.
+  Sahte paket yoksa köprü sessizce deneme kipine düşer ve senaryolar anlamsız sonuç verir.
+- `reconnect.js` 135 denetimden 1'inde kalır (`ucusta-basari`): hesap değiştirilirken iki
+  bağlantı kısa süre birlikte CONNECTED görünür, sonunda tek bağlantı kalır. İncelenmiş
+  eski sürümlerde de aynıdır.
+- Güvenli bölge ve punto ölçümleri giriş ya da çıkış animasyonunun ortasındaki öğeyi
+  atlar, durağan hâli ölçer. Hediye bandı girerken %3 esner. Banda tam sığan bir ad bu
+  150 ms içinde kenar payına 8 piksel taşar, durağan hâlde payın içindedir.
 - `kabuk-*.js`, `bilye-*.js`, `d3-*.js` ve `oyun-ek.js`'in bilgi/pk kısmı silinen
   ya da çıkacak parçalara aittir. Tarihsel olarak duruyor.
 - Yeni yazılacaklar PLAN-INSAN bölüm 10.1'de: `s2-kit.js`, `yonetmen-kit.js`, `yuz-kit.js`.
@@ -188,6 +202,27 @@ node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 - Köprü: `atUser` / `mentionUsers` alanlarını iletsin (halay hazır, kullanır). Ayarlar `tiktok-ayarlar.json`'dan okunabilsin.
 - İlk gerçek yayından sonra bak: 60px kenar payı, gerçek profil resimleri, hoparlörde ses seviyesi, telefonda okunurluk.
 - Hiçbir oyun gerçek bir TikTok yayınında ve gerçek ekran kartında sınanmadı.
+
+Metin geçişinde görülen, dokunulmayan konular (hepsi Windows'ta denenmeli):
+
+- `Baslat.bat` kullanıcı adını kaydetmiyor olabilir. Kayıt satırı, adın sorulduğu
+  parantezli bloğun içinde. `%TT_USER%` blok okunurken boş genişler. Doğruysa satırı
+  bloğun dışına al. Exe bu yolu kullanmaz, adı `server/ayar.js` kaydeder.
+- `.bat`, `.vbs` ve `.ps1` dosyaları depoda LF satır sonuyla duruyor. Zip olarak inen
+  kopyada sorun çıkarsa `.gitattributes` ile CRLF'e çevir.
+- `tools/hosts-ekle.ps1` ve `tools/ttls-*.js` bu bilgisayarda hiç çalıştırılmadı.
+  `hosts-ekle.ps1` içinde çift tırnaklı bir dizgide uzun çizgi vardı. Windows PowerShell
+  5.1 BOM'suz dosyayı ANSI okuduğu için bu çizgi büyük olasılıkla dizgiyi erken
+  kapatıyordu (burada doğrulanamadı). Çizgi metin geçişinde kalktı. Betiği ilk
+  çalıştırmada gözle.
+- `server/canli-test.mjs` gelen ilk 5 yorumu konsola yazar. Ekrana basmaz. Konsol
+  penceresi yayına alınıyorsa o satırı kapat.
+- `server/bridge.js` kopmada aynı sözü iki kez yazıyor: "baglanti koptu: baglanti koptu
+  (N. deneme), …".
+- `overlays/_shared/gorsel/OKUBENI.md` eski bir oturumun ağzından yazılmış bir cümle
+  taşıyor ("Ben bu makineden bu sitelere çıkamıyorum"). Klasör şu an kullanılmıyor.
+- `TERSINE-MUHENDISLIK.md` araştırma günündeki hâliyle duruyor: 6 oyuncak, bağlayıcı
+  2.4.3, `alerts.html` örnekleri, eksik bölüm 3. Başına bunu söyleyen bir not eklendi.
 
 ## 10. Bu klasörde ne var
 
