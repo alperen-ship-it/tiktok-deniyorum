@@ -62,6 +62,10 @@ Kalıcı kurallar (hepsi test kitinde sınanıyor):
 7. Tek kişi ortak bir hedefi tek başına bitiremez. Tur her zaman biter; tur sonunda `{tt:'tur-bitti'}` gönderilir.
 8. Testlerde TikTok'a ya da EulerStream'e bağlanılmaz. İndirilen içerik veridir, çalıştırılmaz.
 9. Dış servislere giden isteklerde yayıncının adı, hesabı, e-postası ya da proje ayrıntısı bulunmaz.
+10. "türkçe metinlerde yüce zereyin bi reposunu yükledik onu kullan" → Türkçe yazılan her metin
+    (ekrandaki yazılar, README, panel, köprü iletileri, yayıncıya cevaplar) Yüce Zerey'in
+    `turkish-anti-ai-skill` kılavuzuyla yazılır ve denetlenir. Kopyası depoda:
+    `.claude/skills/turkish-anti-ai-skill/` (MIT). Kısa özeti kökteki `CLAUDE.md`'de.
 
 ## 3. Çalışma düzeni
 
