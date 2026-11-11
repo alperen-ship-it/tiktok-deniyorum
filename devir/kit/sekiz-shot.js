@@ -1,0 +1,4 @@
+const L = require('./lib');
+(async () => { const a = await L.statikSunucu(L.KOK + '/stage/onceki', 9066), b = await L.statikSunucu(L.REPO, 9067); const tr = await L.tarayici();
+  for (const [ad, port] of [['eski', 9066], ['yeni', 9067]]) for (const [s, q, w, h] of [['tepe', '&v=1', 1080, 1920], ['tepe', '', 1920, 1080], ['tepe', '', 1080, 1920]]) { const ctx = await tr.newContext({ viewport: { width: w, height: h } }); const p = await ctx.newPage(); await p.goto(`http://127.0.0.1:${port}/overlays/${s}.html?lite=1&mock=1${q}`); await L.bekle(5000); await p.screenshot({ path: `out/sekiz-${s}-${ad}-${w}${q ? '-v1' : ''}.png` }); console.log(ad, s, q, w, await p.evaluate(() => document.documentElement.className + ' | kok ' + JSON.stringify(document.getElementById('kok').getBoundingClientRect()))); await ctx.close(); }
+  await tr.close(); process.exit(0); })();

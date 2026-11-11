@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yayın Kontrolü — bu kaynak oyunları çalıştırabiliyor mu?</title>
+<!--
+  KONTROL SAYFASI — OBS tarayici kaynagi ya da TikTok LIVE Studio "Link" kaynagi
+  bu oyunlari calistirabiliyor mu? Sayfa kendi kendini sinar ve sonucu buyuk
+  yaziyla gosterir; yayinci ekran goruntusunu yollar.
+
+  Bilerek BAGIMSIZ: tt.js / base.css yuklemez. Ortam bozuksa bile bu sayfa
+  acilabilsin diye her sey satir ici. Izleyici verisi gostermez, sohbet okumaz.
+
+  Sinadiklari:
+    1. Ortam        : hangi tarayici (OBS / LIVE Studio / duz), pencere boyutu
+    2. Kopru        : /api/status + ws://<ayni host>/ws
+    3. 2D cizim     : 150 hareketli figur + yazi, 3 sn; kare maliyeti ve fps
+    4. Ekran karti  : WebGL var mi, hangi cizici (yalniz bilgi)
+    5. Dis resim    : baska sitelerden resim yuklenebiliyor mu (profil
+                      fotograflari TikTok'un kendi sunucularindan gelir)
+    6. Resmi cizme  : dis resim tuvale cizilebiliyor mu (karakterin yuzu)
+    7. Ses, modul   : yalniz bilgi
+-->
+<style>
+  @font-face { font-family: 'Outfit'; font-weight: 700; font-display: swap;
+    src: url(_shared/font/outfit-latin-700-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Outfit'; font-weight: 700; font-display: swap; unicode-range: U+0100-024F;
+    src: url(_shared/font/outfit-latin-ext-700-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Outfit'; font-weight: 900; font-display: swap;
+    src: url(_shared/font/outfit-latin-900-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Outfit'; font-weight: 900; font-display: swap; unicode-range: U+0100-024F;
+    src: url(_shared/font/outfit-latin-ext-900-normal.woff2) format('woff2'); }
+  :root {
+    --zemin: #120d24; --yuzey: #1d1740; --cizgi: #2f2766;
+    --metin: #f4f1ff; --soluk: #b3a8e6; --altin: #f6c94f;
+    --iyi: #5fd68a; --kotu: #ff6b5e; --bilgi: #8fb4ff;
+    /* Pencere boyutu bilinmiyor (LIVE Studio'da genislik/yukseklik ayari yok,
+       kaydirma da yok): her olcu --b'ye bagli; --b hem genislige hem yukseklige
+       gore secilir, sonra sigdir() icerik pencereye sigana kadar kucultur. */
+    --b: max(8px, min(4.2vw, 2.3vh));
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--zemin); color: var(--metin);
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif; font-weight: 700; }
+  #kok { min-height: 100%; display: flex; flex-direction: column; gap: calc(var(--b) * .55);
+    padding: calc(var(--b) * 1.1) calc(var(--b) * 1.1); }
+  h1 { margin: 0; font-size: calc(var(--b) * 1.7); font-weight: 900; line-height: 1.05; letter-spacing: -.02em; }
+  #ozet { font-size: calc(var(--b) * 1.25); font-weight: 900; padding: calc(var(--b) * .5) calc(var(--b) * .7);
+    border-radius: calc(var(--b) * .5); background: var(--yuzey); border: calc(var(--b) * .08) solid var(--cizgi); }
+  #ozet.iyi { color: #0d2416; background: var(--iyi); border-color: var(--iyi); }
+  #ozet.kotu { color: #2b0b08; background: var(--kotu); border-color: var(--kotu); }
+  #liste { display: flex; flex-direction: column; gap: calc(var(--b) * .3); }
+  .satir { display: grid; grid-template-columns: calc(var(--b) * 1.5) minmax(0, 1fr); gap: calc(var(--b) * .5);
+    align-items: start; padding: calc(var(--b) * .42) calc(var(--b) * .6);
+    background: var(--yuzey); border-radius: calc(var(--b) * .4); }
+  .isaret { font-size: calc(var(--b) * 1.15); font-weight: 900; line-height: 1.1; text-align: center; color: var(--soluk); }
+  .satir.iyi .isaret { color: var(--iyi); } .satir.kotu .isaret { color: var(--kotu); } .satir.bilgi .isaret { color: var(--bilgi); }
+  .ad { font-size: calc(var(--b) * .78); color: var(--soluk); letter-spacing: .06em; text-transform: uppercase; line-height: 1.15; }
+  .deger { font-size: calc(var(--b) * 1.02); line-height: 1.18; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  #tuval { width: 100%; height: calc(var(--b) * 4.2); display: block; border-radius: calc(var(--b) * .4); background: #0c0919; }
+  #alt { margin-top: auto; font-size: calc(var(--b) * .85); color: var(--altin); line-height: 1.2; }
+</style>
+</head>
+<body>
+<div id="kok">
+  <h1>Yayın Kontrolü</h1>
+  <div id="ozet">Sınanıyor… birkaç saniye sürer</div>
+  <canvas id="tuval" width="1080" height="260"></canvas>
+  <div id="liste"></div>
+  <div id="alt">Bu ekranın görüntüsünü al ve gönder.</div>
+</div>
+
+<script type="module">window.__modulVar = true;</script>
+<script>
+(function () {
+  'use strict';
+  var liste = document.getElementById('liste');
+  var ozet = document.getElementById('ozet');
+  var sonuc = {};          // ad -> 'iyi' | 'kotu' | 'bilgi'
+
+  /** Bir satir ac; donen fonksiyonla sonucu yaz. Yazi yalniz textContent ile. */
+  function satir(anahtar, ad) {
+    var s = document.createElement('div'); s.className = 'satir';
+    var i = document.createElement('div'); i.className = 'isaret'; i.textContent = '…';
+    var g = document.createElement('div');
+    var a = document.createElement('div'); a.className = 'ad'; a.textContent = ad;
+    var d = document.createElement('div'); d.className = 'deger'; d.textContent = 'sınanıyor';
+    g.appendChild(a); g.appendChild(d); s.appendChild(i); s.appendChild(g); liste.appendChild(s);
+    return function (durum, metin) {
+      sonuc[anahtar] = durum;
+      s.className = 'satir ' + durum;
+      i.textContent = durum === 'iyi' ? '✓' : durum === 'kotu' ? '✗' : 'i';
+      d.textContent = metin;
+      ozetle();
+      sigdir();
+    };
+  }
+
+  /** Kaynakta kaydirma yok: icerik pencereden uzunsa --b'yi oranla kucult. */
+  function sigdir() {
+    var kok = document.getElementById('kok'), kokStil = document.documentElement.style;
+    kokStil.removeProperty('--b');
+    for (var i = 0; i < 6; i++) {
+      var tasan = kok.scrollHeight, pencere = window.innerHeight;
+      if (tasan <= pencere + 1) return;
+      var simdi = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--b')) || 0;
+      if (!simdi) {                      // min()/vw degeri: bir olcu cubuguyla piksele cevir
+        var o = document.createElement('div'); o.style.cssText = 'position:absolute;visibility:hidden;width:var(--b)';
+        document.body.appendChild(o); simdi = o.getBoundingClientRect().width; o.remove();
+      }
+      kokStil.setProperty('--b', Math.max(6, simdi * (pencere / tasan) * 0.985).toFixed(2) + 'px');
+    }
+  }
+  window.addEventListener('resize', sigdir);
+
+  var yaz = {
+    ortam:  satir('ortam',  'Ortam'),
+    kopru:  satir('kopru',  'Köprü bağlantısı'),
+    cizim:  satir('cizim',  '2D çizim hızı (150 figür)'),
+    resim:  satir('resim',  'Başka siteden resim (profil fotoğrafları)'),
+    yuz:    satir('yuz',    'Resmi karaktere çizme'),
+    kart:   satir('kart',   'Ekran kartı (WebGL)'),
+    ses:    satir('ses',    'Ses ve modül'),
+  };
+  var ZORUNLU = ['kopru', 'cizim'];     // bunlar kotuyse oyunlar calismaz
+  var BEKLENEN = ['ortam', 'kopru', 'cizim', 'resim', 'yuz', 'kart', 'ses'];
+
+  function ozetle() {
+    for (var k = 0; k < BEKLENEN.length; k++) if (!sonuc[BEKLENEN[k]]) return;   // hepsi bitsin
+    var kotu = ZORUNLU.filter(function (a) { return sonuc[a] === 'kotu'; });
+    if (kotu.length) {
+      ozet.className = 'kotu';
+      ozet.textContent = 'SORUN VAR: ' + kotu.map(function (a) { return a === 'kopru' ? 'köprüye bağlanamadı' : 'çizim çok yavaş'; }).join(', ');
+    } else if (sonuc.resim === 'kotu') {
+      ozet.className = 'iyi';
+      ozet.textContent = 'OYUNLAR ÇALIŞIR — profil fotoğrafları bu kaynakta yüklenmiyor';
+    } else {
+      ozet.className = 'iyi';
+      ozet.textContent = 'HAZIR — oyunlar bu kaynakta çalışır';
+    }
+  }
+
+  // ---- 1. Ortam -----------------------------------------------------------
+  (function () {
+    var ua = navigator.userAgent || '';
+    var chrome = (ua.match(/Chrome\/(\d+)/) || [])[1];
+    var nerede = /TikTokLIVEStudio/i.test(ua) ? 'TikTok LIVE Studio ' + ((ua.match(/TikTokLIVEStudio\/([\d.]+)/i) || [])[1] || '')
+      : window.obsstudio ? 'OBS ' + (window.obsstudio.pluginVersion || '')
+      : /OBS\//.test(ua) ? 'OBS' : 'Tarayıcı';
+    yaz.ortam('bilgi', nerede.trim() + ' · Chrome ' + (chrome || '?') + ' · pencere ' + window.innerWidth + '×' + window.innerHeight
+      + ' · oran ' + (window.devicePixelRatio || 1));
+  })();
+
+  // ---- 2. Kopru: /api/status + WebSocket (ikisi de AYNI host) --------------
+  (function () {
+    var http = null, ws = null, bitti = false;
+    function bitir() {
+      if (bitti || http === null || ws === null) return; bitti = true;
+      if (http.ok && ws) yaz.kopru('iyi', 'bağlı · ' + (http.mode === 'live' ? (http.connected ? 'yayına bağlı' : 'yayın bekleniyor') : 'deneme kipi'));
+      else if (http.ok) yaz.kopru('kotu', 'sayfa geldi ama canlı bağlantı (WebSocket) kurulamadı');
+      else yaz.kopru('kotu', 'köprü cevap vermiyor — uygulama açık mı, adres paneldeki gibi mi?');
+    }
+    try {
+      fetch('/api/status', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { http = j ? { ok: true, mode: j.mode, connected: !!j.connected } : { ok: false }; bitir(); })
+        .catch(function () { http = { ok: false }; bitir(); });
+    } catch (e) { http = { ok: false }; }
+    try {
+      var s = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
+      var t = setTimeout(function () { if (ws === null) { ws = false; try { s.close(); } catch (e) {} bitir(); } }, 5000);
+      s.onopen = function () { clearTimeout(t); ws = true; bitir(); try { s.close(); } catch (e) {} };
+      s.onerror = function () { clearTimeout(t); if (ws === null) { ws = false; bitir(); } };
+    } catch (e) { ws = false; bitir(); }
+    setTimeout(function () { if (http === null) http = { ok: false }; if (ws === null) ws = false; bitir(); }, 7000);
+  })();
+
+  // ---- 3. 2D cizim hizi ----------------------------------------------------
+  // Oyunlar 2D tuvale onceden cizilmis insan figurleri basacak. Burada ayni
+  // is yuku: 150 figur (hazir bir kucuk resimden), derinlik sirasi, golge,
+  // 8 ad etiketi. Her karede 1 piksel okunur ki cizim gercekten yapilsin
+  // (tuvalde yalniz bizim cizimimiz var; dis resim buraya CIZILMEZ).
+  (function () {
+    var tuval = document.getElementById('tuval'), c = tuval.getContext('2d', { willReadFrequently: false });
+    if (!c) { yaz.cizim('kotu', '2D tuval açılamadı'); return; }
+    var kalip = document.createElement('canvas'); kalip.width = 72; kalip.height = 96;
+    var k = kalip.getContext('2d');
+    k.fillStyle = '#e8b88a'; k.beginPath(); k.arc(36, 22, 15, 0, 6.3); k.fill();             // bas
+    k.fillStyle = '#f6c94f'; k.fillRect(22, 38, 28, 34);                                      // govde
+    k.fillStyle = '#3a2f7a'; k.fillRect(24, 72, 10, 22); k.fillRect(38, 72, 10, 22);          // bacaklar
+    k.fillStyle = '#e8b88a'; k.fillRect(10, 40, 12, 8); k.fillRect(50, 40, 12, 8);            // kollar
+    var N = 150, fig = [];
+    for (var i = 0; i < N; i++) fig.push({ a: (i / N) * 6.283 * 3, r: 60 + (i % 3) * 34, hiz: 0.25 + (i % 5) * 0.03 });
+    var W = tuval.width, H = tuval.height, baslangic = 0, kare = 0, isMs = 0, ilk = 0, son = 0;
+    function ciz(t) {
+      if (!baslangic) { baslangic = t; ilk = t; }
+      var z = (t - baslangic) / 1000, t0 = performance.now();
+      c.fillStyle = '#0c0919'; c.fillRect(0, 0, W, H);
+      for (var i = 0; i < N; i++) { var f = fig[i]; f.x = W / 2 + Math.cos(f.a + z * f.hiz) * f.r * 3.4; f.y = H / 2 + 40 + Math.sin(f.a + z * f.hiz) * f.r * 0.62; }
+      fig.sort(function (p, q) { return p.y - q.y; });
+      for (var j = 0; j < N; j++) {
+        var g = fig[j], o = 0.55 + (g.y / H) * 0.5;
+        c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(g.x, g.y, 20 * o, 7 * o, 0, 0, 6.3); c.fill();
+        c.drawImage(kalip, g.x - 36 * o, g.y - 92 * o, 72 * o, 96 * o);
+      }
+      c.font = '700 30px Outfit, sans-serif'; c.textBaseline = 'middle';
+      for (var e = 0; e < 8; e++) { var h = fig[e * 18]; c.fillStyle = '#1d1740'; c.fillRect(h.x - 60, h.y - 128, 120, 34); c.fillStyle = '#f4f1ff'; c.fillText('izleyici', h.x - 50, h.y - 110); }
+      try { c.getImageData(0, 0, 1, 1); } catch (x) {}
+      isMs += performance.now() - t0; kare++; son = t;
+      if (t - baslangic < 3000) requestAnimationFrame(ciz); else bitir();
+    }
+    function bitir() {
+      var ort = isMs / Math.max(1, kare), fps = kare > 1 ? (kare - 1) * 1000 / (son - ilk) : 0;
+      var metin = 'kare ' + ort.toFixed(1) + ' ms · ' + fps.toFixed(0) + ' fps';
+      if (ort <= 20 && fps >= 24) yaz.cizim('iyi', metin + ' — rahat');
+      else if (ort <= 33 && fps >= 18) yaz.cizim('iyi', metin + ' — yeterli');
+      else yaz.cizim('kotu', metin + ' — yavaş');
+    }
+    requestAnimationFrame(ciz);
+    setTimeout(function () { if (!sonuc.cizim) yaz.cizim('kotu', 'çizim başlamadı (sayfa arka planda olabilir)'); }, 9000);
+  })();
+
+  // ---- 4. Ekran karti (yalniz bilgi) ---------------------------------------
+  (function () {
+    try {
+      var t = document.createElement('canvas'), gl = t.getContext('webgl2') || t.getContext('webgl');
+      if (!gl) { yaz.kart('bilgi', 'yok — sorun değil, oyunlar 2D çizer'); return; }
+      var uz = gl.getExtension('WEBGL_debug_renderer_info');
+      var ad = uz ? String(gl.getParameter(uz.UNMASKED_RENDERER_WEBGL) || '') : String(gl.getParameter(gl.RENDERER) || '');
+      var yazilim = /swiftshader|llvmpipe|softpipe|basic render|software/i.test(ad);
+      yaz.kart('bilgi', (yazilim ? 'yazılımla çiziyor: ' : 'var: ') + ad.replace(/^ANGLE \(|\)$/g, '').slice(0, 90));
+    } catch (e) { yaz.kart('bilgi', 'yok — sorun değil, oyunlar 2D çizer'); }
+  })();
+
+  // ---- 5 + 6. Dis resim ve tuvale cizme ------------------------------------
+  // Profil fotograflari TikTok'un sunucularindan gelir. Bu kaynak baska
+  // sitelerden resim yukleyebiliyor mu? Uc ayri site denenir; biri yeterli.
+  // Istekle hicbir kisisel veri gitmez (referrer kapali, cerez yok).
+  (function () {
+    var ADRESLER = ['https://www.tiktok.com/favicon.ico', 'https://www.google.com/favicon.ico', 'https://github.com/favicon.ico'];
+    var yuklenen = [], biten = 0, cizildi = false;
+    function son() {
+      if (biten < ADRESLER.length) return;
+      if (yuklenen.length) yaz.resim('iyi', ADRESLER.length + ' siteden ' + yuklenen.length + ' tanesi yüklendi');
+      else yaz.resim('kotu', 'hiçbiri yüklenmedi — bu kaynak dış resimleri engelliyor ya da internet yok');
+      if (!yuklenen.length) { yaz.yuz('bilgi', 'dış resim yüklenmediği için sınanamadı'); return; }
+      try {
+        var t = document.createElement('canvas'); t.width = 64; t.height = 64;
+        var c = t.getContext('2d'); c.beginPath(); c.arc(32, 32, 30, 0, 6.3); c.clip();
+        c.drawImage(yuklenen[0], 0, 0, 64, 64); cizildi = true;     // bu tuval bir daha OKUNMAZ
+        yaz.yuz('iyi', 'oldu — profil fotoğrafı karakterin yüzüne çizilebilir');
+      } catch (e) { yaz.yuz('kotu', 'resim yüklendi ama tuvale çizilemedi'); }
+    }
+    ADRESLER.forEach(function (u) {
+      var im = new Image(); var bitti = false;
+      function tamam(ok) { if (bitti) return; bitti = true; if (ok) yuklenen.push(im); biten++; son(); }
+      im.referrerPolicy = 'no-referrer';
+      im.onload = function () { tamam(im.naturalWidth > 0); };
+      im.onerror = function () { tamam(false); };
+      setTimeout(function () { tamam(false); }, 7000);
+      im.src = u;
+    });
+  })();
+
+  // ---- 7. Ses ve modul (yalniz bilgi) --------------------------------------
+  setTimeout(function () {
+    var ses = 'yok';
+    try { var AC = window.AudioContext || window.webkitAudioContext; if (AC) { var a = new AC(); ses = a.state === 'running' ? 'açık' : 'dokunma bekliyor'; try { a.close(); } catch (e) {} } } catch (e) {}
+    yaz.ses('bilgi', 'ses: ' + ses + ' · modül: ' + (window.__modulVar ? 'var' : 'yok'));
+  }, 600);
+})();
+</script>
+</body>
+</html>

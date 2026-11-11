@@ -1,0 +1,4 @@
+const L = require('./lib'); const http = require('http'); const fs = require('fs'); const { chromium } = require('playwright');
+(async () => { const b = await L.statikSunucu(L.KOK + '/spike', 9069); const y = http.createServer((q, s) => { s.writeHead(200, { 'content-type': 'image/png' }); s.end(fs.readFileSync(L.KOK + '/spike/yabanci/a.png')); }).listen(9068, '127.0.0.1');
+  const tr = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-proxy-server', '--disable-gpu', '--host-resolver-rules=MAP localhost 127.0.0.1'] }); const p = await (await tr.newContext({ viewport: { width: 220, height: 220 } })).newPage();
+  await p.goto('http://127.0.0.1:9069/kir.html'); await p.waitForFunction(() => window.__r, null, { timeout: 8000 }); console.log(JSON.stringify(await p.evaluate(() => window.__r))); await p.screenshot({ path: 'out/kir.png' }); await tr.close(); process.exit(0); })();

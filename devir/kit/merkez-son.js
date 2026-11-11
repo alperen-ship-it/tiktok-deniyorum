@@ -1,0 +1,6 @@
+const L = require('./lib');
+(async () => { const b = await L.statikSunucu(L.REPO, 9064); const tr = await L.tarayici(['--enable-unsafe-swiftshader']); const ctx = await tr.newContext({ viewport: { width: 1080, height: 1920 } }); const p = await ctx.newPage(); const hata = []; p.on('pageerror', (e) => hata.push(String(e).slice(0, 140)));
+  await p.addInitScript(() => { if (window.top !== window) return; window.__g = []; window.addEventListener('message', (e) => { if (e.data && e.data.tt === 'tur-bitti') window.__g.push(Math.round(performance.now() / 100) / 10); }); });
+  await p.goto('http://127.0.0.1:9064/overlays/oyun.html?lite=1&mock=1&rate=3&sn=6&sure=10&kutlama=3&tahmin=4&kosu=4&hiz=8'); const t0 = Date.now(); let son = ''; const gec = [];
+  while (Date.now() - t0 < 150000) { const s = await p.evaluate(() => { const f = document.querySelector('iframe'); return f ? (f.getAttribute('src') || '').split('?')[0].split('/').pop() : ''; }); if (s !== son) { gec.push(((Date.now() - t0) / 1000).toFixed(1) + 's ' + s); son = s; } if (gec.length >= 5) break; await L.bekle(300); }
+  console.log('merkez gecisler:', gec.join(' | '), '\n  tur-bitti anlari (sn):', JSON.stringify(await p.evaluate(() => window.__g)), 'hata', hata.length, hata[0] || ''); await tr.close(); process.exit(0); })();

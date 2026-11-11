@@ -1,0 +1,4 @@
+const L = require('./lib'); const fs = require('fs');
+(async () => { const b = await L.statikSunucu(L.KOK + '/spike', 9069); const tr = await L.tarayici(['--enable-unsafe-swiftshader']); const p = await (await tr.newContext()).newPage(); const hata = []; p.on('pageerror', (e) => hata.push(String(e).slice(0, 200)));
+  const t0 = Date.now(); await p.goto('http://127.0.0.1:9069/atlas.html'); await p.waitForFunction(() => window.__atlas, null, { timeout: 60000 }); const d = await p.evaluate(() => [window.__atlas, window.__bilgi]);
+  fs.writeFileSync(L.KOK + '/spike/atlas.png', Buffer.from(d[0].split(',')[1], 'base64')); console.log('atlas', JSON.stringify(d[1]), 'bayt', fs.statSync(L.KOK + '/spike/atlas.png').size, 'sure ms', Date.now() - t0, hata.join('|')); await tr.close(); process.exit(0); })();

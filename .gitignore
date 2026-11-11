@@ -23,3 +23,9 @@ recon/asar-dosya-listesi.txt
 .env
 .DS_Store
 Thumbs.db
+
+# devir/kit calisma ciktilari
+devir/kit/bin/
+devir/kit/out/
+devir/kit/stage/
+devir/kit/head/

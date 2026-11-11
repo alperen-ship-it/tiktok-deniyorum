@@ -1,0 +1,24 @@
+'use strict';
+const L = require('./lib'); const S = require('./sayfa');
+(async () => {
+  const PORT = 9062; const sun = await L.statikSunucu(L.kaynak('repo'), PORT); const tr = await L.tarayici();
+  const ctx = await tr.newContext({ viewport: { width: 1080, height: 1920 } }); await ctx.addInitScript(S.KANCA); await ctx.addInitScript(S.TUVAL_KANCA);
+  const p = await ctx.newPage(); await p.goto(`http://127.0.0.1:${PORT}/overlays/bilye.html?lite=1&src=bridge`, { waitUntil: 'load' }); await L.bekle(2500);
+  const U = (id, ad) => ({ id, uniqueId: id, nickname: ad, avatar: '' });
+  const hediye = (id, ad, v) => p.evaluate(([u, v]) => window.TT.fire({ type: 'gift', user: u, gift: { id: 1, name: 'Gül', diamonds: v, value: v, count: 1, streaking: false, emoji: '🌹', image: '' }, ts: Date.now() }), [U(id, ad), v]);
+  const gorulen = async (ad, ms) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const g = await p.evaluate((ad) => document.body.innerText.includes(ad) || (window.__T2 && [...window.__T2.hepsi].some((m) => m.includes(ad))), ad); if (g) return ((Date.now() - t0) / 1000).toFixed(1) + ' sn'; await L.bekle(150); } return 'GORUNMEDI'; };
+  const ust = () => p.evaluate(() => (document.getElementById('cagri') || {}).textContent);
+  console.log('faz: ' + await ust());
+  await hediye('y1', 'KatilimdaYabanci', 30); console.log('katilim fazi, misketi olmayan: ' + await gorulen('KatilimdaYabanci', 8000));
+  for (let i = 0; i < 6; i++) await p.evaluate((u) => window.TT.fire({ type: 'chat', user: u, comment: 'selam', ts: Date.now() }), U('r' + i, 'Yarisci' + i));
+  await hediye('r1', 'Yarisci1', 30); console.log('katilim fazi, misketi olan: ' + await gorulen('Yarisci1', 3000));
+  const t0 = Date.now(); while (Date.now() - t0 < 60000 && !/ETAP/i.test(await ust())) await L.bekle(300);
+  console.log('faz: ' + await ust());
+  await hediye('y2', 'YaristaYabanci', 30); console.log('yaris, misketi olmayan: ' + await gorulen('YaristaYabanci', 8000));
+  await hediye('r2', 'Yarisci2', 2000); await L.bekle(300);
+  for (let i = 0; i < 8; i++) await hediye('s' + i, 'SelHediye' + i, 1);
+  const son = []; for (let i = 0; i < 8; i++) son.push(await gorulen('SelHediye' + i, i === 0 ? 20000 : 300));
+  console.log('yaris, 8 hediyelik sel (20 sn): ' + son.join(' | '));
+  console.log('spiker: ' + JSON.stringify((await p.evaluate(() => window.__D.spiker.map((s) => s.metin))).slice(-6)));
+  await tr.close(); sun.close();
+})();
