@@ -87,28 +87,20 @@
   // ---- ayarlar -------------------------------------------------------------
   // ?dk=6            oyun basina sure (dakika)
   // ?sn=90           ayni sey saniye cinsinden (test icin; dk'yi ezer)
-  // ?oyunlar=bilye,at  donecek oyunlar ve sirasi
+  // ?oyunlar=at,halay  donecek oyunlar ve sirasi (varsayilan: at,halay,tencere)
   // ?duyuru=0        gecislerde sohbet botuna yazma
   // Geri kalan TUM parametreler oyunlara AYNEN aktarilir (?lite=1&sag=24...)
+  // Urunde tam uc oyun var; hepsi varsayilan rotasyonda.
   const OYUNLAR = {
-    bilye: { dosya: 'bilye.html', ad: 'Misket Yarışı', ikon: '🏁' },
-    bilgi: { dosya: 'bilgi.html', ad: 'Bilgi Yarışması', ikon: '🧠' },
-    pk:    { dosya: 'pk.html',    ad: 'PK Savaşı',    ikon: '⚔️' },
-    at:    { dosya: 'at.html',    ad: 'At Yarışı',    ikon: '🏇' },
-    // Rotasyon disi ama duruyor (?oyunlar= ile acilir):
-    //   tepe  — kendi tasarimim, kanitlanmis format degil
-    //   kalan — battle royale, kullanici istemedi
-    tepe:  { dosya: 'tepe.html',  ad: 'Tepe Savaşı',  ikon: '👑' },
-    kalan: { dosya: 'kalan.html', ad: 'Son Ayakta Kalan', ikon: '💀' },
-    //   halay — ortak dans sahnesi (yarisma degil): yaz/begen = halaya gir,
-    //           @isim ya da numara = dansa kaldir. Varsayilan siraya ALINMADI;
-    //           ?oyunlar=...,halay ile acilir.
-    halay: { dosya: 'halay.html', ad: 'Halay', ikon: '💃' },
-    tencere: { dosya: 'tencere.html', ad: 'Düdüklü', ikon: '🍲' },
+    at:      { dosya: 'at.html',      ad: 'At Yarışı', ikon: '🏇' },
+    //   halay — 3D ortak dans sahnesi (yarisma degil): yaz/begen = halaya gir,
+    //           @isim ya da numara = dansa kaldir.
+    halay:   { dosya: 'halay.html',   ad: 'Halay',     ikon: '💃' },
+    tencere: { dosya: 'tencere.html', ad: 'Düdüklü',   ikon: '🍲' },
   };
-  const SIRA = (q.get('oyunlar') || 'bilye,bilgi,pk,at')
+  const SIRA = (q.get('oyunlar') || 'at,halay,tencere')
     .split(',').map((s) => s.trim()).filter((s) => OYUNLAR[s]);
-  if (!SIRA.length) SIRA.push('bilye', 'bilgi', 'pk', 'at');
+  if (!SIRA.length) SIRA.push('at', 'halay', 'tencere');
 
   const SURE_MS = q.has('sn')
     ? (Number(q.get('sn')) || 90) * 1000
@@ -192,8 +184,7 @@
     if (!gecisBekliyor && gecen >= SURE_MS) gecisiIste();
 
     // EMNIYET: sadece DONMUS sayfa icin. Oyun nabiz attigi surece turunu
-    // sonuna kadar oynatiyoruz — 10 etaplik yaris ya da 40 soruluk bilgi
-    // turu ortasindan kesilmesin diye. Nabiz 30 sn kesilirse sayfa
+    // sonuna kadar oynatiyoruz — bir yaris ya da tur ortasindan kesilmesin diye. Nabiz 30 sn kesilirse sayfa
     // gercekten donmustur, o zaman zorla geciyoruz.
     if (gecisBekliyor && sonNabiz && Date.now() - sonNabiz > 30000) gec();
   }, 1000);

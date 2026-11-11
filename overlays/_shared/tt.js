@@ -88,11 +88,10 @@
    * (TikTok yorumlari); y>1760 (giris kutusu, hediye dugmesi).
    */
   // Dikey kabuk YALNIZ oyun sayfalarinda (#kok.tt-oyun; tt.js body sonunda
-  // yuklendigi icin #kok bu noktada vardir). Eski overlay'ler (durum, boss,
-  // chat, alerts...) ONCEKI davranisi aynen korur: tt-yatay (?v=1 ise
+  // yuklendigi icin #kok bu noktada vardir). Widget'lar (durum,
+  // alerts, like-goal, gift-rain) ONCEKI davranisi aynen korur: tt-yatay (?v=1 ise
   // tt-vertical), 1920x1080 olcegi, eski olu-bolge degiskenleri.
-  // data-yatay: DONUSTURULMEMIS oyun sayfasi dikeyden cikar (eski yatay davranis); sayfa dikeye cevrilince bu oznitelik SILINIR.
-  const OYUN = !!document.querySelector('#kok.tt-oyun:not([data-yatay])');
+  const OYUN = !!document.querySelector('#kok.tt-oyun');
   const DIKEY = OYUN && !cfg.yatay;
   const TUVAL = DIKEY ? { w: 1080, h: 1920 } : { w: 1920, h: 1080 };
   const KUTU = Object.freeze({
@@ -702,7 +701,7 @@
    * dosyasi yoksa/yuklenemezse oyun bozulmuyor, eskisi gibi calisiyor.
    * Bu yuzden sprite'lar ZORUNLU degil — ustune eklenen bir katman.
    *
-   *   const kahraman = TT.sprite('labirent-kahraman', '🐹');
+   *   const kahraman = TT.sprite('kahraman', '🐹');
    *   TT.spriteCiz(ctx, kahraman, x, y, 40);
    */
   const spriteler = new Map();

@@ -202,7 +202,7 @@ if (bagliOldu) {
   console.log('SONUC: TikTok baglantisi CALISIYOR.');
   console.log('');
   console.log('  Sirada:  node server/bridge.js --user <kullaniciadin>');
-  console.log('  OBS Tarayici Kaynagi:  http://localhost:8787/overlays/chat.html');
+  console.log('  OBS Tarayici Kaynagi:  http://localhost:8787/overlays/oyun.html?lite=1');
 } else {
   console.log('SONUC: Baglanti kurulamadi.');
   console.log('');

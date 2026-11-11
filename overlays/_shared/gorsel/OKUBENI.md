@@ -5,13 +5,7 @@ bozulmaz. Buraya PNG atarsan oyun otomatik olarak emoji yerine onu kullanır.
 
 ## Dosya adları
 
-Adı birebir tutturman gerekiyor, klasöre şu isimlerle at:
-
-| Dosya adı                | Nerede görünür            | Şu an emoji |
-|--------------------------|---------------------------|-------------|
-| `labirent-kahraman.png`  | Labirentte gezen karakter | 🐹          |
-| `labirent-canavar.png`   | Labirentteki canavarlar   | 👻          |
-| `tirmanis-kahraman.png`  | Tırmanan karakter         | 🧗          |
+Şu an hiçbir oyun sprite kullanmıyor (sprite kullanan eski oyunlar kaldırıldı); klasör boş kalabilir.
 
 Yeni bir tane eklemek istersen oyun dosyasında `TT.sprite('ad', 'emoji')`
 satırını arayıp aynı `ad` ile buraya `ad.png` koyman yeterli.
@@ -42,7 +36,7 @@ göre değiştir, bu klasöre at. Sayfayı yenile — görsel gelmiş olur.
 
 ## Çalışmadıysa
 
-- Dosya adında büyük/küçük harf farkı var mı? `Labirent-Kahraman.png` olmaz.
+- Dosya adında büyük/küçük harf farkı var mı? `Kahraman.png` olmaz.
 - Uzantı gerçekten `.png` mi? Windows uzantıyı gizliyor olabilir
   (Görünüm > Dosya adı uzantıları'nı aç).
 - Görsel gelmezse oyun sessizce emojiye düşer, yani bir şey **bozulmaz** —

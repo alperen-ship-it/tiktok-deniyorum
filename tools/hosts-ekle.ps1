@@ -150,7 +150,7 @@ try {
         Write-Host "  BASARILI: $AlanAdi -> 127.0.0.1" -ForegroundColor Green
         Write-Host ''
         Write-Host '  Link kaynagina yapistirabilecegin adresler:' -ForegroundColor Cyan
-        foreach ($o in @('alerts','chat','gift-rain','like-goal','battle','race')) {
+        foreach ($o in @('oyun','at','alerts','gift-rain','like-goal')) {
             Write-Host "     http://$AlanAdi`:8787/overlays/$o.html?lite=1"
         }
     } else {

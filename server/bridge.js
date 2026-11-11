@@ -1197,16 +1197,15 @@ server.listen(args.port, DINLE_ADRES, async () => {
 
       Sahneyi DIKEY (1080x1920) kur; yatay gerekirse adrese &yatay=1 ekle (gecici).
 
-      TEK LINK YETER: oyun.html dort oyunu sirayla dondurur, gecisleri
+      TEK LINK YETER: oyun.html uc oyunu (At Yarisi, Halay, Duduklu) sirayla dondurur, gecisleri
       tur arasinda yapar, bos odada demo calistirir. Istersen oyunlari
       tek tek de ekleyebilirsin:
 
    >> Oyunlar — sohbet oynuyor, sen hicbir sey yapmiyorsun <<
-     bilye.html   MISKET YARISI — yazana ozel misket, 10 etaplik uzun pist
-     bilgi.html   soru cikar, A/B/C/D yaz — ILK dogru en cok puani alir
-     pk.html      iki taraf kapisir (kedi vs kopek...), tarafini yaz, ittir
-     at.html      8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
-     (istege bagli 3D: halay + Duduklu — adrese &oyunlar=bilye,bilgi,pk,at,halay,tencere ekle; OBS'te donanim hizlandirma acik olmali)
+     at.html      At Yarisi (2D) — 8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
+     halay.html   Halay (3D) — yaz/begen = halaya gir, @isim ya da numara = dansa kaldir
+     tencere.html Duduklu (3D) — yaz, atesi harla, tencereyi birlikte pisir
+     (3D oyunlar da varsayilan donguede; OBS'te donanim hizlandirma acik olmali)
 
       Hepsi kendi kendine donuyor: katilim penceresi acilir, oyun
       oynanir, kazanan cikar, yeni tur baslar. Mudahale gerekmiyor.

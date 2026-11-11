@@ -4,8 +4,8 @@
 
 **İzleyicinin sohbete yazarak oynadığı oyunlar. Aç, başlat, yayını sen yap.**
 
-Dört oyun bir arada döner: bilye yarışı · bilgi yarışması · PK savaşı · at yarışı.
-Oyunlar **dikey (1080×1920)** yayın için tasarlandı. İstersen halay ve Düdüklü (ikisi de gerçek 3D) da eklenir.
+Üç oyun bir arada döner: at yarışı · halay (3D) · Düdüklü (3D).
+Oyunlar **dikey (1080×1920)** yayın için tasarlandı.
 Oyunlar kendi kendine tur atar, kazananları kutlar, oda boşken demo oynar,
 izleyici geldiğinde gerçek oyuna geçer; sen de sesinle ya da kameranla yayında kalırsın.
 
@@ -29,19 +29,19 @@ paneli tarayıcıda açılır. Yayında değilsen bekler, yayına geçince kendi
 
 1. **Tuvali dikey yap:** OBS → Ayarlar → Video → *Temel (Tuval) Çözünürlük* ve *Çıkış Çözünürlüğü*: **1080x1920**. FPS 30.
 2. **Tarayıcı kaynağını ayarla:** oyun kaynağına çift tıkla → *Genişlik* **1080**, *Yükseklik* **1920**.
-   Adres aynı kalıyor: `http://localhost:8787/overlays/oyun.html?lite=1`
+   Adres: `http://localhost:8787/overlays/oyun.html?lite=1` (at yarışı, halay ve Düdüklü bu tek adreste döner; ayrıca bir şey eklemene gerek yok)
    (LIVE Studio kullanıyorsan: `http://localtest.me:8787/overlays/oyun.html?lite=1`)
 3. Kaynağı tuvale tam oturt: kaynağa sağ tıkla → *Dönüştür* → *Ekrana Sığdır*.
 4. **Kontrol et** (yayına çıkmadan önce bir kez): adresin sonuna `&guvenli=1` ekle. Kırmızı gölgeli yerler
    TikTok'un kendi düğmelerinin ve yorumların duracağı yerlerdir; oyunun yazıları kırmızının içine girmemeli.
    Baktıktan sonra `&guvenli=1` kısmını sil.
-5. **3D kontrolü (halay ve Düdüklü için):** OBS → Ayarlar → Gelişmiş → *Tarayıcı Kaynağı Donanım Hızlandırmasını
+5. **3D kontrolü (halay ve Düdüklü varsayılan döngüde):** OBS → Ayarlar → Gelişmiş → *Tarayıcı Kaynağı Donanım Hızlandırmasını
    Etkinleştir* işaretli olsun (varsayılan böyledir). Sonra tarayıcıda şu adresi aç:
    `http://localhost:8787/overlays/sahne3d-deneme.html?kisi=150` — ekranda "kalite: tam" ve 33 ms civarı bir kare süresi
    yazmalı. "dusuk" ya da "yok" yazıyorsa bilgisayarın 3D'yi zor çeviriyor demektir; oyun yine çalışır ama sahne sade görünür. Bunu bize bildir.
 6. Telefonundan kendi yayınına bak: izleyici adları rahat okunuyor mu, üstte kanal adın oyunun başlığını kapatıyor mu,
    sol altta yorumlar oyunun bir yerini örtüyor mu? Bir sorun görürsen ekran görüntüsü al.
-7. Eski yatay düzene dönmen gerekirse (geçici, yalnızca misket, bilgi, kapışma ve at yarışı için): tuvali ve kaynağı yeniden 1920x1080 yap ve adrese `&yatay=1` ekle.
+7. Yatay düzene dönmen gerekirse (geçici, yalnızca at yarışı için): tuvali ve kaynağı yeniden 1920x1080 yap ve adrese `&yatay=1` ekle.
 
 > LIVE Studio'da **Kaynak ekle → Link** kullanıyorsan `localhost` yazma, bazı sürümler kabul etmez; `localtest.me` her durumda çalışır.
 > `?lite=1` gömülü tarayıcıda GPU olmadığı için şart — ağır efektler kapanır, akıcı kalır.
@@ -51,32 +51,6 @@ paneli tarayıcıda açılır. Yayında değilsen bekler, yayına geçince kendi
 ---
 
 ## Oyunlar
-
-### 🏁 Bilye Yarışı (misket)
-Twitch'in en çok oynanan sohbet oyunu (Marbles on Stream) uyarlaması. Sohbete
-yazan herkes **kendine özel bir bilye** alır — renk ve desen kullanıcı adından
-üretilir, her yayında aynıdır ("benim bilyem"). Bilyeler engelli pistten aşağı
-yarışır, canlı sıralama + spiker anlatımı + son düzlükte ağır çekim. İlk biten kazanır.
-Hediye gelince göndericinin adı teşekkürle ekranda görünür; **yarışın sonucunu değiştirmez**
-(eski hediye desteği bilerek kaldırıldı).
-
-### 👑 Tepe Savaşı (yatay; henüz dikey değil)
-Saf rekabet — **emek = ilerleme.** Her mesaj seni merkezdeki tahta bir adım
-yaklaştırır, beğeni küçük adım, **hediye öndeki rakibi geri iter** (saldırı!). Tahta ilk ulaşan **tacı takar**, herkes kenara döner, yeni
-tur anında başlar. Üst üste taç = seri çarpanı. Taç ve puan tablosu **kalıcı** —
-düzenli izleyiciyi geri getiren tablo bu.
-
-### ⚔️ PK Savaşı
-TikTok'un **kendi formatının** (PK Battle) uyarlaması + tartışma yemi. İki taraf
-bir konuda kapışır — *🐱 kedi vs 🐶 köpek*, *menemen soğanlı mı soğansız mı*,
-*ananaslı pizza olur mu* — kimse kararsız kalamaz, yorum yazmadan duramaz.
-İzleyici tarafının adını yazar; **her mesaj takımını ileri iter**, beğeni de
-sayılır. 🎁 **Hediye, göndericinin kendi takımını güçlendirir:** o takımın mesajları
-15 saniye boyunca çarpanla sayılır (hediye büyüdükçe çarpan büyür; son 30 saniye
-**SPEED**'de daha da büyük) ve takıma küçük bir anlık itiş gelir. Karşı taraf
-**geri itilmez**, beğeniler çarpılmaz. Takım seçmemiş birinin hediyesi oyunu
-değiştirmez; adı teşekkürle görünür. 30 konu döner, galibiyet tablosu kalıcı.
-Konular: `overlays/_shared/kapismalar.js`
 
 ### 🏇 At Yarışı
 8 sabit at — kalıcı isim, forma, koşudan koşuya galibiyet + son 5 koşu formu
@@ -89,7 +63,7 @@ Hediye gelince adı ekranda teşekkürle çıkar; puanı büyütmez. Koşu sıra
 Foto finişte ağır çekim, sonda podyum.
 Eski OBS linklerindeki `?bahis=` süre parametresi `?tahmin=` ile aynı işi görmeye devam eder.
 
-### 💃 Halay (3D) — isteğe bağlı
+### 💃 Halay (3D)
 Ortak dans sahnesi, yarışma değil. Gerçek 3D bir meydan: ortada platform, etrafında **üç halka, en çok 150 kişi**.
 - **Katılmak:** sohbete bir şey yazmak ya da beğeni göndermek halkaya sokar. Halkalar içten dışa dolar.
 - **Düet:** `@isim` ya da halkadaki bir **numara** yazarak birini dansa kaldırırsın; o da kabul eder ve ortada ikisi oynar.
@@ -100,10 +74,10 @@ Ortak dans sahnesi, yarışma değil. Gerçek 3D bir meydan: ortada platform, et
 - Kafaların üstündeki balonlar yalnızca tezahürat (HEY! / HOP! / HOPPA! / OLEY!) ve parti emojisi gösterir;
   izleyicinin yazdığı metin asla çıkmaz.
 
-**Nasıl açılır:** oyun listesine ekle: `oyun.html?lite=1&oyunlar=bilye,bilgi,pk,at,halay`
+**Nasıl açılır:** varsayılan rotasyonda; ayrıca bir şey eklemen gerekmez (`oyun.html?lite=1`). Tek başına: `oyun.html?lite=1&oyunlar=halay`.
 Kaynak: `overlays/halay.html`.
 
-### 🍲 Düdüklü (3D) — isteğe bağlı
+### 🍲 Düdüklü (3D)
 Herkesin birlikte oynadığı ortak oyun: büyük bir düdüklü tencereyi **hep beraber** ateşe odun atarak doldurursunuz.
 - **Yazmak = odun:** her mesaj ateşe odun atar, beğeniler de sayılır.
 - Basınç **33**'te ve **66**'da düdük öter. **100**'de tencere patlar.
@@ -113,14 +87,15 @@ Herkesin birlikte oynadığı ortak oyun: büyük bir düdüklü tencereyi **hep
 - Hediye basınca sınırlı bir destek ekler; tencereyi patlatan son itiş asla hediye olmaz. Adı teşekkürle görünür.
 - Tencere genelde 1–1,5 dakikada patlar; patlamazsa tur en geç yaklaşık 2,5 dakikada "kıvamında pişti" ile biter.
 
-**Nasıl açılır:** `oyun.html?lite=1&oyunlar=bilye,bilgi,pk,at,tencere` (ikisini birden: `...,at,halay,tencere`).
+**Nasıl açılır:** varsayılan rotasyonda (`oyun.html?lite=1`). Tek başına: `oyun.html?lite=1&oyunlar=tencere`.
 Kaynak: `overlays/tencere.html`.
 
 ---
 
 ## Yayın notları
 
-- Oyunlar artık dikey (1080×1920). Geçici olarak eski yatay düzene dönmek için (yalnızca misket, bilgi, kapışma ve at yarışı) adrese `&yatay=1` ekle; tepe ve kalan zaten yataydır.
+- Oyunlar dikey (1080×1920). Geçici olarak yatay düzene dönmek için (yalnızca at yarışı) adrese `&yatay=1` ekle.
+- Misket, Bilgi ve PK oyunları ile eski oyunlar streamer'ın isteğiyle kaldırıldı; git geçmişinde duruyorlar.
 - Yayındayken kontrol paneli sekmesini kapat: panelin önizlemeleri de bilgisayarın ekran kartını kullanır.
 - Yayında sesinle ya da kameranla sen de ol: oyunlar kendi kendine döner ama sohbetle konuşan bir yayıncı hem izleyiciye hem platform kurallarına daha yakın durur (öneridir, TikTok'un kendi metnini doğrulamadık).
 - Oda boşken oynayan demo botların adı 🤖 ile işaretlidir; puan tablosuna girmezler.
@@ -139,7 +114,7 @@ Kaynak: `overlays/tencere.html`.
 
 | Durum | Ne olur |
 |---|---|
-| **Tek link** | `oyun.html` oyunları (varsayılan dört) sırayla döndürür (varsayılan 6'şar dk). Geçişler **tur arasında** olur — yarış ortasında ekran değişmez. |
+| **Tek link** | `oyun.html` oyunları (at, halay, Düdüklü) sırayla döndürür (varsayılan 6'şar dk). Geçişler **tur arasında** olur — yarış ortasında ekran değişmez. |
 | **Oda boş** | Turlar 🤖 demo botlarıyla döner. Gelen izleyici oyunu izleyerek anlar; yazdığı an sıradaki tur gerçek olur. |
 | **Kazanan çıktı** | Sohbet botu kazananı `@etiketler` (aşağıda). Puanlar ve at galibiyetleri kalıcı (localStorage). |
 
@@ -154,19 +129,19 @@ bot kendini kapatır, oyunlar etkilenmez.
 ## Ayarlar (URL parametreleri)
 
 Hepsi `oyun.html`'e eklenir, oyunlara aktarılır. Örnek:
-`oyun.html?lite=1&dk=4&oyunlar=bilye,at&sag=24`
+`oyun.html?lite=1&dk=4&oyunlar=at,halay&sag=24`
 
 | Parametre | Ne yapar |
 |---|---|
 | `?lite=1` | GPU'suz tarayıcı modu (LIVE Studio'da **şart**) |
-| `?yatay=1` | Eski 1920×1080 düzen, geçici (yalnızca bilye, bilgi, pk, at) |
+| `?yatay=1` | 1920×1080 düzen, geçici (yalnızca at yarışı) |
 | `?dk=6` | Oyun başına dakika (tek link modunda) |
-| `?oyunlar=bilye,at` | Hangi oyunlar, hangi sırayla (ek, rotasyon dışı: `halay`, `tencere` (dikey, 3D); `tepe`, `kalan` (yatay, henüz dikey değil)) |
+| `?oyunlar=at,halay,tencere` | Hangi oyunlar, hangi sırayla (varsayılan: üçü de) |
 | `?duyuru=0` | Geçiş duyurusunu kapat |
 | `?sag=24&alt=24` | Kenar paylarını daralt, sahneyi büyüt (piksel) |
 | `?ust= ?sol=` | Diğer kenarlar — TikTok arayüzünün kapattığı alana göre |
 
-Tek tek oyun eklemek istersen: `bilye.html`, `bilgi.html`, `pk.html`, `at.html` (hepsi
+Tek tek oyun eklemek istersen: `at.html`, `halay.html`, `tencere.html` (hepsi
 `?lite=1` ile). Her birinin kendi parametreleri kontrol panelinde yazılı.
 
 ---
@@ -180,16 +155,14 @@ TikTokOyunlar.exe
    │    chat · gift · like → tek biçime çevirir            │
    │                                                        ▼
    └─ http://localhost:8787   ──►  oyun.html (tek link)
-                                     ├─ bilye.html   ┐
-                                     ├─ bilgi.html   ├─ sabit dikey 1080×1920 sahne
-                                     ├─ pk.html      │  (?yatay=1: geçici 1920×1080)
-                                     └─ at.html      ┘  Canvas2D + DOM, GPU'suz
-                                     (halay.html, tencere.html: aynı sahne, gerçek 3D)
+                                     ├─ at.html       ┐ sabit dikey 1080×1920 sahne
+                                     ├─ halay.html    │ (at.html: ?yatay=1 geçici 1920×1080)
+                                     └─ tencere.html  ┘ at: Canvas2D + DOM; halay, Düdüklü: gerçek 3D
 ```
 
 - **Köprü** (Node) TikTok'a bağlanır, olayları normalize eder, WebSocket'le yayınlar.
   Gerçek yayın için `tiktok-live-connector`; internet yokken `--mock` ile sahte olay.
-- **Oyunlar** vanilla JS + Canvas2D (halay ve Düdüklü gerçek 3D, `_shared/sahne3d.js`). Ortak katmanlar `overlays/_shared/`:
+- **Oyunlar** vanilla JS + Canvas2D (halay ve Düdüklü gerçek 3D, `_shared/sahne3d.js`; at yarışı Canvas2D). Ortak katmanlar `overlays/_shared/`:
   `kimlik.js` (kalıcı skin), `spiker.js` (anlatım), `finis.js` + `juice.js`
   (ağır çekim, konfeti, ekran sarsıntısı), `oyun-tema.css` (Outfit fontu, premium tema).
 - **Performans:** Pişirilmiş sprite'lar (kare başı gradyan yok), uyarlanır kalite
@@ -227,10 +200,10 @@ Test için `?mock=1` — sunucu olmadan sahte olaylarla çalışır. Ayrıntı:
 ```
 overlays/
   oyun.html          ← TEK LİNK: oyunları döndüren merkez
-  bilye.html  bilgi.html  pk.html  at.html   (varsayılan dönüş)
-  halay.html  tencere.html                   (isteğe bağlı, 3D)
-  tepe.html  kalan.html                      (rotasyon dışı, yatay)
+  at.html  halay.html  tencere.html          (üç oyun, hepsi varsayılan dönüşte)
   index.html         ← kontrol paneli (adresleri kopyala, test olayı gönder)
+  sahne3d-deneme.html                        (3D / GPU kontrol sayfası)
+  alerts.html  like-goal.html  gift-rain.html  durum.html   (yayıncı widget'ları)
   _shared/           tt.js · kimlik.js · spiker.js · finis.js · juice.js
                      oyun-tema.css · base.css · font/ (Outfit, OFL)
 server/

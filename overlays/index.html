@@ -203,12 +203,11 @@
 <main>
   <div class="note" id="note">
     <b>Dikey yayın:</b> oyunlar artık <b>1080×1920</b> (dikey). OBS'te tuvali ve Tarayıcı Kaynağı'nı
-    1080 × 1920 yap. Eski yatay (1920×1080) düzene geçici dönmek için adrese <code>&amp;yatay=1</code> ekle
-    (yalnızca misket, bilgi, PK ve at yarışı için).
+    1080 × 1920 yap. Yatay (1920×1080) gerekirse At Yarışı adresine geçici olarak <code>&amp;yatay=1</code> ekle.
     <br><br>
     <b>TikTok LIVE Studio:</b> <code>Kaynak ekle → Link</code> → aşağıdaki adresi yapıştır.
     Sonuna <code>?lite=1</code> ekle (gömülü tarayıcıda GPU yok, ağır efektler kare hızını
-    düşürüyor).
+    düşürüyor). 3D oyunlar (Halay, Düdüklü) varsayılan döngüde; OBS'te donanım hızlandırma açık olmalı.
     <br><br>
     <b>Adres kabul edilmezse:</b> Link kaynağı bazı sürümlerde <code>localhost</code> ve ham IP
     reddediyor. O zaman <code>localhost</code> yerine <code>localtest.me</code> yaz —
@@ -268,31 +267,10 @@
       oyun: true,
       file: 'oyun.html',
       name: '🎮 OYUN MERKEZİ — tek link (önerilen)',
-      desc: 'SADECE BUNU EKLE, gerisi otomatik: dört oyun (misket, bilgi, PK, at) sırayla döner, geçişler tur arasında yapılır (yarış ortasında ekran değişmez), oda boşken demo turları çalışır, geçişlerde sohbet botu duyuru bırakır. Yayın boyunca hiçbir şeye dokunmazsın.',
-      opts: '<code>?dk=6</code> oyun başına dakika · <code>?oyunlar=bilye,at</code> hangi oyunlar, hangi sıra · <code>?duyuru=0</code> geçiş duyurusu kapat · diğer tüm parametreler (<code>?lite=1&sag=24</code>...) oyunlara aynen geçer',
+      desc: 'SADECE BUNU EKLE, gerisi otomatik: üç oyun (At Yarışı, Halay, Düdüklü) sırayla döner, geçişler tur arasında yapılır (tur ortasında ekran değişmez), oda boşken demo turları çalışır, geçişlerde sohbet botu duyuru bırakır. Yayın boyunca hiçbir şeye dokunmazsın.',
+      opts: '<code>?dk=6</code> oyun başına dakika · <code>?oyunlar=at,halay,tencere</code> hangi oyunlar, hangi sıra (varsayılan bu) · <code>?duyuru=0</code> geçiş duyurusu kapat · diğer tüm parametreler (<code>?lite=1&sag=24</code>...) oyunlara aynen geçer',
     },
     // ---- OYUNLAR: sohbet oynuyor, yayinci hicbir sey yapmiyor ----------
-    {
-      oyun: true,
-      file: 'bilye.html',
-      name: '🏁 Misket Yarışı',
-      desc: 'Twitch&rsquo;in en çok oynanan sohbet oyununun (Marbles on Stream) TikTok uyarlaması. Yazan herkes KENDİNE ÖZEL misketini alır — renk ve desen kullanıcı adından üretilir, her yayında aynıdır. Canlı sıralama, spiker anlatımı, son düzlükte ağır çekim. Hediye göndericinin adını teşekkürle gösterir, yarışın sonucunu değiştirmez.',
-      opts: '<code>?katilim=25</code> katılım süresi (sn) · <code>?max=50</code> aynı anda kaç misket · <code>?kelime=katıl</code> sadece bu kelimeyi yazan katılsın · <code>?etap=10</code> pist kaç etap',
-    },
-    {
-      oyun: true,
-      file: 'bilgi.html',
-      name: '🧠 Bilgi Yarışması',
-      desc: 'TikTok’un kendi viral formatı (TikTok Trivia) uyarlaması. Soru çıkar, izleyici sohbete A/B/C/D yazar; İLK doğru cevaplayan en çok puanı alır (hız ödülü). Üst üste doğru = seri çarpanı. ❤️ Beğeniler ortak ipucu barını doldurur — dolunca yanlış bir şık herkes için elenir. 🎁 Hediye o sorudaki puanını katlar ama doğruyu satın almaz. Puan tablosu KALICI.',
-      opts: '<code>?sure=18</code> cevap süresi (sn) · <code>?acik=7</code> cevap gösterim süresi · <code>?ipucu=60</code> ipucu için gereken beğeni · Soru bankası: <code>overlays/_shared/sorular.js</code> (kendi sorunu ekleyebilirsin)',
-    },
-    {
-      oyun: true,
-      file: 'pk.html',
-      name: '⚔️ PK Savaşı',
-      desc: 'TikTok’un KENDİ formatı (PK Battle) + tartışma yemi. İki taraf bir konuda kapışır — “🐱 KEDİ vs 🐶 KÖPEK”, “menemen soğanlı mı soğansız mı”, “ananaslı pizza”… İzleyici tarafının adını yazar, HER MESAJ takımını ileri iter, beğeni de sayılır. 🎁 Hediye göndericinin KENDİ takımının mesajlarını 15 sn boyunca çarpar (son 30 sn “SPEED”te daha çok) ve küçük bir anlık itiş verir; karşı tarafı geri itmez, beğeniler çarpılmaz. 30 konu döner, kalıcı galibiyet tablosu.',
-      opts: '<code>?sure=180</code> savaş süresi (sn) · <code>?speed=30</code> speed bölümü · <code>?mesaj=1</code> mesaj itişi · <code>?hediye=14</code> hediyenin anlık itişi · Konular: <code>overlays/_shared/kapismalar.js</code>',
-    },
     {
       oyun: true,
       file: 'at.html',
@@ -300,26 +278,45 @@
       desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür — formu okuyan öne geçer). Çarpan havuzdan. Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı — sonucu yine form + şans belirler). Varış sırası tam koşulur, podyum gösterilir. Doğru tahmin edenler sohbet botuyla @etiketlenir.',
       opts: '<code>?tahmin=25</code> tahmin süresi (sn) · <code>?sure=20</code> koşu uzunluğu · puanlar ve galibiyetler kalıcı (localStorage)',
     },
-
-    // ---- ISTEGE BAGLI 3D OYUNLAR (varsayilan donuse girmez) -------------
     {
       oyun: true,
       file: 'halay.html',
-      hub: 'oyun.html?lite=1&oyunlar=bilye,bilgi,pk,at,halay',
-      name: '💃 Halay (3D) — isteğe bağlı',
+      hub: 'oyun.html?lite=1&oyunlar=halay',
+      name: '💃 Halay (3D)',
       desc: 'Ortak dans sahnesi: yazan ya da beğenen halkaya girer (üç halka, en çok 150 kişi). <code>@isim</code> ya da halka numarası = dansa kaldır (düet). Halay başı mendili taşır, coşku yükselir. Küçük hediye = TEMPO, çok büyük hediye = MEYDAN GÖSTERİSİ. Balonlarda yalnızca tezahürat ve emoji var, izleyici yazısı çıkmaz.',
-      opts: 'Dönüşe eklemek için adresteki <code>oyunlar=…,halay</code> kısmı yeter · GPU kontrolü: <code>overlays/sahne3d-deneme.html?kisi=150</code> ("kalite: tam" yazmalı)',
+      opts: 'Varsayılan döngüde · GPU kontrolü: <code>overlays/sahne3d-deneme.html?kisi=150</code> ("kalite: tam" yazmalı)',
     },
     {
       oyun: true,
       file: 'tencere.html',
-      hub: 'oyun.html?lite=1&oyunlar=bilye,bilgi,pk,at,tencere',
-      name: '🍲 Düdüklü (3D) — isteğe bağlı',
+      hub: 'oyun.html?lite=1&oyunlar=tencere',
+      name: '🍲 Düdüklü (3D)',
       desc: 'Herkes birlikte düdüklü tencereyi doldurur: yazmak = odun, beğeni de sayılır. 33 ve 66’da düdük öter, 100’de patlar. USTA AŞÇI en çok katkı yapandır; tek kişi tek başına patlatamaz. Oda boşken 🤖 botlar yardım eder. Hediye sınırlı destek verir, son itiş olmaz. Tur en çok ~2,5 dk.',
-      opts: 'İkisini birden: <code>oyunlar=bilye,bilgi,pk,at,halay,tencere</code> · GPU kontrolü: <code>overlays/sahne3d-deneme.html?kisi=150</code>',
+      opts: 'Varsayılan döngüde · GPU kontrolü: <code>overlays/sahne3d-deneme.html?kisi=150</code>',
     },
 
     // ---- WIDGET --------------------------------------------------------
+    {
+      file: 'alerts.html',
+      yatay: true,
+      name: '🔔 Uyarılar',
+      desc: 'Hediye, takip, paylaşım ve abonelik geldiğinde köşede kayan uyarı kartı.',
+      opts: 'Yatay (1920×1080) widget · <code>?lite=1</code> · <code>?v=1</code> dikey tuvalde',
+    },
+    {
+      file: 'like-goal.html',
+      yatay: true,
+      name: '🎯 Hedef Çubuğu',
+      desc: 'Beğeni, elmas ya da takipçi hedefine doğru dolan çubuk; dolunca kutlama gösterir.',
+      opts: '<code>?mode=likes|diamonds|follows|shares</code> hangi sayaç · <code>?goal=5000</code> hedef · <code>?label=…</code> başlık · <code>?next=1</code> dolunca hedefi ikiye katla',
+    },
+    {
+      file: 'gift-rain.html',
+      yatay: true,
+      name: '🎁 Hediye Yağmuru',
+      desc: 'Gelen hediyeler ekranda yağmur olur, beğeniler kalp balonu olarak yükselir.',
+      opts: 'Yatay (1920×1080) widget · <code>?lite=1</code> · <code>?v=1</code> dikey tuvalde',
+    },
     {
       file: 'durum.html',
       yatay: true,
@@ -352,7 +349,7 @@
 
   // Ust bilgideki ornegi de gercek porta gore yaz
   const ltm = document.getElementById('ltm');
-  if (ltm) ltm.innerHTML = '<br>Örnek: <code>' + ttlsUrl('bilye.html') + '</code>';
+  if (ltm) ltm.innerHTML = '<br>Örnek: <code>' + ttlsUrl('oyun.html') + '</code>';
 
   const grid = document.getElementById('grid');
 
@@ -511,8 +508,7 @@
 
   // ---- olcum tablosu ------------------------------------------------------
   const OYUN_ADI = {
-    bilye: '🏁 Misket', bilgi: '🧠 Bilgi', pk: '⚔️ PK', at: '🏇 At',
-    halay: '💃 Halay', tencere: '🍲 Düdüklü', tepe: '👑 Tepe (yatay)', kalan: '💀 Son Kalan (yatay)', bilinmiyor: '— tek oyun',
+    at: '🏇 At', halay: '💃 Halay', tencere: '🍲 Düdüklü', bilinmiyor: '— tek oyun',
   };
   function olcum() {
     fetch('/api/istatistik').then((r) => r.json()).then((d) => {
