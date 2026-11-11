@@ -33,8 +33,8 @@ Silinenler (yayıncının isteğiyle, git geçmişinde duruyor): misket, bilgi, 
 (pk), tepe, kalan, ordu, plinko, tırmanış, labirent, bölge, plaka, race, battle,
 boss ve chat.html.
 
-Deneme için: `node server/bridge.js --port 8787` (kullanıcı adı verilmezse deneme
-kipidir, hiçbir yere bağlanmaz), sonra `http://localhost:8787/overlays/oyun.html?lite=1&mock=1`.
+Deneme için: `node server/bridge.js --port 8787` (kullanıcı adı verilmezse mock
+modudur, hiçbir yere bağlanmaz), sonra `http://localhost:8787/overlays/oyun.html?lite=1&mock=1`.
 
 ## 2. Yayıncının istekleri (kendi sözleriyle) ve kalıcı kurallar
 
@@ -52,7 +52,7 @@ kipidir, hiçbir yere bağlanmaz), sonra `http://localhost:8787/overlays/oyun.ht
 - Yetki: "sana bırakıyorum ne yapılacağına sen karar ver … metriklere göre
   gidelim"; "ceo olarak konumlandım seni … hangi model ile yürüteceğine sen karar ver".
 
-Kalıcı kurallar (9 ve 10 dışındakiler test kitinde sınanıyor):
+Kalıcı kurallar. Çoğu test kitinde sınanıyor. 4, 8, 9 ve 10 ile 2'deki 54/40 px ölçüleri sınanmıyor:
 1. Tuval 1080×1920. Yazı x 60..1020 içinde. Yasak bölgeler: y<240; x<540 ve y>1250; y>1760.
 2. 30 pikselin altında yazı yok. İzleyici adı listelerde 54px. Sığmazsa 40px'e iner, sonra sarar. "…" yok.
 3. Üretimde `?lite=1`: filter, box-shadow, text-shadow, backdrop-filter, mask kapalı. Yalnızca transform ve opacity canlandırılır.
@@ -195,17 +195,19 @@ Son tam turun sonuçları (11 Kasım 2026, karşılaştırmak için):
   (verilmezse depo `devir/kit`'in iki üstüdür).
 - Eski bir sürümü sınamak için o sürümü bir klasöre çıkar ve `TT_REPO` ile göster:
   `git archive <commit> overlays server | tar -x -C <klasör>`
-- Testleri sırayla çalıştır, aynı anda tek Chromium. `host-test.js`, `reconnect.js` ve
-  `c4-sim.js` tarayıcı açmaz, ötekiler açar. `PORT=` yalnızca regress, dikey-kit, at-probe,
-  ham-metin, halay-kit ve tencere-kit'te çalışır. Ötekilerin portu sabittir (9062-9069).
+- Testleri sırayla çalıştır, aynı anda tek Chromium. `host-test.js`, `build-fake.js`,
+  `reconnect.js` ve `c4-sim.js` tarayıcı açmaz, ötekiler açar. `PORT=` yalnızca regress,
+  dikey-kit, at-probe, ham-metin, halay-kit ve tencere-kit'te çalışır. Ötekilerin portu
+  sabittir (9061-9069).
 - `kontrol.html` sayfasını testte `?dis=0` ile aç. Bu parametre olmadan sayfa, dış resim
   sınaması için tiktok.com dahil üç siteye istek atar.
 - Oynak iki denetim var. İkisi de incelenmiş eski sürümde (`2fe5d68`) benzer sıklıkta kalıyor:
   - `tencere-kit` denge, "5 izleyici / ara 20 sn": tur bazen patlamadan "pişti" ile biter
-    (basınç 90-99). Denetçide tek başına 9 koşunun 2'sinde kaldı.
-  - `halay-kit` ekran, `kesme: sirada "<ad>" … TAM olarak yok`: aynı 100 ms içinde giren
-    12 kişi tek karşılama satırında birleşir, etiket bütçesi en son gelenlere gider.
-    Denetçide 5 koşunun 4'ünde kaldı, ana oturumun koşusunda geçti.
+    (basınç 90-99). İlk denetçide tek başına 9 koşunun 2'sinde kaldı.
+  - `halay-kit` ekran, `kesme: sirada "<ad>" … TAM olarak yok`: her koşuda başka bir adla
+    çıkar. İlk denetçinin okuması: aynı 100 ms içinde giren 12 kişi tek karşılama satırında
+    birleşir, etiket bütçesi en son gelenlere gider. İki denetçide yeni sürümde 10 koşunun
+    8'inde, eski sürümde 7 koşunun 4'ünde kaldı. Ana oturumun iki koşusunda geçti.
 - `reconnect.js` sahte bir `tiktok-live-connector` paketiyle çalışır. Paketi
   `node build-fake.js` üretir (`kit/node_modules/` altına). Gerçek paketin metnini
   `server/node_modules`'tan okur, çalıştırmaz. Önce `cd server && npm ci` gerekir.
@@ -218,8 +220,9 @@ Son tam turun sonuçları (11 Kasım 2026, karşılaştırmak için):
 - Güvenli bölge ve punto ölçümleri yalnızca kısa (en çok 600 ms) bir giriş ya da çıkış
   animasyonunun ortasındaki öğeyi atlar. Spiker şeridi gibi uzun animasyonlu öğeler ölçülür.
   Atlanan bilinen durum hediye bandının girişidir: bant girerken %3 esner. 29 karakterlik
-  ad kenar payına 133 ms boyunca 8 piksel taşar, bandı tam dolduran bir ad yaklaşık
-  300 ms boyunca 14 piksel taşar. Durağan hâlde ad payın içindedir.
+  ad kenar payına yaklaşık 130 ms boyunca 8 piksel taşar (iki denetçi de ölçtü). Bandı
+  tam dolduran bir ad, ana kareler hesabına göre yaklaşık 250 ms boyunca en çok 14 piksel
+  taşar. Durağan hâlde ad payın içindedir.
 - Köprü istatistik dosyasını, çalıştığı ikili dosyanın yanına yazar. Kit koşularında bu
   `kit/bin/tiktok-istatistik.json` olur ve koşular arasında kalır. Panelde eski oyun
   adları (örneğin "bilye") görünürse bu dosyayı sil.
@@ -267,6 +270,15 @@ Metin geçişinde görülen konular (Windows'ta denenmeli):
 - `TERSINE-MUHENDISLIK.md` araştırma günündeki hâliyle duruyor: 6 oyuncak, bağlayıcı
   2.4.3, `alerts.html` örnekleri, eksik bölüm 3. Başına bunu söyleyen bir not eklendi.
 
+Geçişin dışında bırakılan küçük artıklar:
+
+- Kit çıktılarında ve yorumlarında mock modunun eski adı geçer (`reconnect.js` içindeki
+  "test moduna gecince…" denetim adı, `sec-probe.js` başlığı).
+- Konsola yazılan yorum uzunluğu UTF-16 birimiyle sayılır, bir emoji 2 karakter görünür.
+- Türkçe karaktersiz yazım kuralına uymayan eski üç yer var, üçü de çalışmayı etkilemez:
+  `tools/hosts-ekle.ps1` başlık yorumu ("koruması" ve bir uzun çizgi), `Baslat.bat`
+  içindeki bir REM satırı, `tools/ttls-sahne.js` içindeki `sürümler` değişken adı.
+
 Denetçinin Düdüklü ve ortak bantta bulduğu, bu geçişten eski kusurlar (işçi N ve E'ye):
 
 - "DÜDÜK!" satırı üç uzun adla (29 + 21 + 29 karakter) iki satırlık şeride sığmıyor.
@@ -297,15 +309,18 @@ Denetçinin Düdüklü ve ortak bantta bulduğu, bu geçişten eski kusurlar (i�
 ## Ek: devir anındaki durum (11 Kasım 2026)
 
 - Son exe: https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/42934129788
-  (commit `53e9ce9`). Üç oyun + merkez + `kontrol.html`. Temizlik danışman
-  kontrolünden geçti. `kontrol.html` yalnızca ana oturumca sınandı (köprü deneme
-  kipinde, 1080×1920, 405×720 ve 1280×720).
+  (commit `53e9ce9`, metin geçişinden önce). Geçişi içeren yeni exe derlenince bağlantısı
+  buraya yazılır.
+- **Türkçe metin geçişi kapandı** (`Incelendi: Türkçe metin geçişi` commit'i). Ekran yazıları,
+  panel, kontrol sayfası, köprünün ve araçların konsol iletileri, toplu iş dosyaları,
+  README, `TERSINE-MUHENDISLIK.md` ve bu klasördeki Türkçe belgeler `turkish-anti-ai-skill`
+  kılavuzuyla onarıldı. İki bağımsız denetçi farkı okudu ve kiti kendisi çalıştırdı.
+- Geçişte dokunulmayanlar: kod yorumları, `devir/kit` betiklerinin çıktıları,
+  `recon/tls-recon.ps1`, İngilizce yazılmış plan ve araştırma belgeleri.
+- Yayıncının fark edeceği değişiklikler: sayılarda ondalık virgül (çarpan x1,5), uzun
+  çizgi yerine " · ", köprü penceresinde yorumun metni yerine uzunluğu, her yerde "mock
+  modu" adı.
 - PLAN-INSAN'daki işlerin hiçbirine (M, C, E, K, H, N, A, D) başlanmadı.
-- **Türkçe metin geçişi sürüyor.** Ekran yazıları, panel, köprü iletileri, README ve bu
-  klasördeki Türkçe belgeler `turkish-anti-ai-skill` kılavuzuyla düzeltiliyor. `55f88a0`
-  ve sonrası `WIP (incelenmedi)` commit'leridir. Bu geçiş bir `Incelendi: Türkçe metin
-  geçişi` commit'iyle kapanır. Dalın ucunda o commit yoksa geçiş yarım kalmıştır: ya
-  `devir/kit` ile sınayıp tamamla ya da incelenmiş son duruma (`2fe5d68`) göre çalış.
 - Yayıncıdan beklenen: `kontrol.html` ekran görüntüsü (TikTok LIVE Studio ve OBS).
 - Yayıncıya sorulacak: profil resimleri karakterin yüzünde varsayılan olarak açık mı
   olsun (kendisi istedi, `?yuz=0` ve panel anahtarı planlandı), ÇAY ZİNCİRİ seçimine

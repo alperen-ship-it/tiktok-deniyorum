@@ -26,8 +26,10 @@ sayfası, köprünün konsol iletileri ve yayıncıya yazılan cevaplar dahildir
 - Kod yorumları, konsola yazılan her şey (köprü, araçlar, `.bat`, `.ps1`, `.vbs`) ve örnek
   JSON'daki `_aciklama` alanları bilerek Türkçe karaktersiz yazılır. Bunlara karakter ekleme.
 - Yerleşik yazım kararları:
-  - Ara söz için uzun çizgi kullanılmaz. Etiketten sonra ":", iki cümle arasında nokta ya da virgül gelir.
-  - Ekrandaki satırlarda etiketle ileti arasına " · " konur.
+  - Ara söz için uzun çizgi kullanılmaz. İki cümle arasında nokta ya da virgül gelir.
+  - Etiket bir değeri adlandırıyorsa ":" gelir (`ilk odun: Ali`, `Usta aşçı: @ad`).
+  - Ekrandaki satırlarda başlıkla ileti arasına ve iki ayrı bilgi arasına " · " konur
+    (`TEMPO · Ali halayı hızlandırdı`, `BASINÇ · düdük %33'te`).
   - Aralıkta kısa çizgi (1-8), ekranda ondalık virgül (x1,5).
   - "!" ve "." sonrasında büyük harf, seslenilen addan sonra virgül.
   - Sahte olaylarla çalışan kipin adı her yerde "mock modu". Paneldeki düğme "Sahte veri".
