@@ -235,8 +235,9 @@ Son tam turun sonuçları (11 Kasım 2026, karşılaştırmak için):
 
 ## 8. Bağlantılar
 
-- Son incelenmiş exe (silinen oyunları da içerir): https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/42924043453
-- Temizlik sonrası exe (kontrol sayfasıyla): bu dosyanın sonundaki "Ek" bölümüne bak.
+- Son incelenmiş exe: bu dosyanın sonundaki "Ek" bölümünde.
+- Önceki exe'ler: metin geçişinden önceki https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/42934129788,
+  silinen oyunları da içeren https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/42924043453
 - Telefonda açılan canlı ön izleme sayfası (silinen oyunları hâlâ gösteriyor, güncellenmeli): https://claude.ai/artifact/EHyxMbAbU7BKC22iabo7d8
 
 ## 9. Sonraki sürüm notları
@@ -308,9 +309,9 @@ Denetçinin Düdüklü ve ortak bantta bulduğu, bu geçişten eski kusurlar (i�
 
 ## Ek: devir anındaki durum (11 Kasım 2026)
 
-- Son exe: https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/42934129788
-  (commit `53e9ce9`, metin geçişinden önce). Geçişi içeren yeni exe derlenince bağlantısı
-  buraya yazılır.
+- Son exe: https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/43029184000
+  (commit `69466f0`, incelenmiş durum). Üç oyun, merkez, `kontrol.html` ve Türkçe metin
+  geçişi içinde. Sayfanın altındaki "Artifacts" bölümünden `TikTokOyunlar` iner.
 - **Türkçe metin geçişi kapandı** (`Incelendi: Türkçe metin geçişi` commit'i). Ekran yazıları,
   panel, kontrol sayfası, köprünün ve araçların konsol iletileri, toplu iş dosyaları,
   README, `TERSINE-MUHENDISLIK.md` ve bu klasördeki Türkçe belgeler `turkish-anti-ai-skill`
