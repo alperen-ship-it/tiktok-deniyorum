@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>Durum Kartı — dışarıdan çekilen veri</title>
+<title>Durum Kartı · dışarıdan çekilen veri</title>
 <link rel="stylesheet" href="_shared/base.css">
 <style>
   /* Bu bir OYUN degil, kose widget'i — sıkı alanı kullanmasina gerek yok,
@@ -110,8 +110,8 @@
   function degisimYaz(v) {
     const n = Number(v);
     if (!Number.isFinite(n)) return `<span>${TT.esc(v)}</span>`;
-    if (n > 0) return `<span class="artis">▲ ${n}</span>`;
-    if (n < 0) return `<span class="azalis">▼ ${Math.abs(n)}</span>`;
+    if (n > 0) return `<span class="artis">▲ ${String(n).replace('.', ',')}</span>`;
+    if (n < 0) return `<span class="azalis">▼ ${String(Math.abs(n)).replace('.', ',')}</span>`;
     return `<span style="opacity:.6">— 0</span>`;
   }
 

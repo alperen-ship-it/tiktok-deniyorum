@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>Düdüklü — yaz, ateşi harla, tencereyi birlikte pişir</title>
+<title>Düdüklü · yaz, ateşi harla, tencereyi birlikte pişir</title>
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
@@ -377,7 +377,7 @@ function panoYaz() {
   const ic = $('panoIc'), l = sirala();
   $('panoSay').textContent = l.length ? l.length + ' kişi' : '';
   ic.textContent = '';
-  if (!l.length) { const b = document.createElement('div'); b.className = 'sira bos'; b.textContent = 'ocak sönük — yaz, yak'; ic.appendChild(b); return; }
+  if (!l.length) { const b = document.createElement('div'); b.className = 'sira bos'; b.textContent = 'ocak sönük · yaz, yak'; ic.appendChild(b); return; }
   const n = Math.min(6, l.length);
   for (let i = 0; i < n; i++) {
     const d = l[i];
@@ -617,7 +617,7 @@ function dudukCal(n) {
     const p = ['🔔 DÜDÜK! '];
     l.forEach((d, i) => { if (i) p.push(' · '); p.push({ kim: d.ad }); });
     soyle(p, { oncelik: 3, sure: 4200, anahtar: 'duduk' + n });
-  } else soyle(['🔔 DÜDÜK! tencere ısınıyor'], { oncelik: 3, sure: 3000, anahtar: 'duduk' + n });
+  } else soyle(['🔔 DÜDÜK! Tencere ısınıyor'], { oncelik: 3, sure: 3000, anahtar: 'duduk' + n });
   const h = holderlar();
   for (const d of h) { s.figur.hareket(d.kid, 'zipla'); }
   if (h.length) simge(h[(Math.random() * h.length) | 0].kid, ['duduk'], { renk: '#ffffff', sureMs: 1800 });
@@ -625,7 +625,7 @@ function dudukCal(n) {
 
 function titremeBasla() {
   durum = 'titreme'; titremeKal = TITREME_SN; P = 100;
-  soyle(['⚠ TİTRİYOR! her odun usta aşçıya yazılır'], { oncelik: 3, sure: 3200, anahtar: 'titriyor' });
+  soyle(['⚠ TİTRİYOR! Her odun usta aşçıya yazılır'], { oncelik: 3, sure: 3200, anahtar: 'titriyor' });
   cal('duduk', 300);
 }
 
@@ -695,12 +695,12 @@ function finisGoster() {
   try { s.etiket.ayarla([]); } catch (e) { /* tamam */ }
   const r = sonuc;
   const nok = r.tip === 'patladi' ? 'patladı' : 'kıvamında pişti';
-  if (!r.usta) { Finis.kart(kazananEl, { kupa: '🍲', isim: 'DÜDÜKLÜ', alt: 'ocak sönük kaldı — yaz, ateşi yak' }); return; }
+  if (!r.usta) { Finis.kart(kazananEl, { kupa: '🍲', isim: 'DÜDÜKLÜ', alt: 'ocak sönük kaldı · yaz, ateşi yak' }); return; }
   Finis.kart(kazananEl, { kupa: '👨‍🍳', isim: r.usta.ad,
     alt: (r.usta.bot ? '(demo) ' : '') + 'usta aşçı · ' + r.odun + ' odun · ' + r.kisi + ' kişi pişirdi' });
   if (!r.usta.bot) {
     try {
-      TT.soyle('🍲 Düdüklü ' + nok + '! Usta aşçı: @' + (r.usta.uid || r.usta.ad) + ' — ' + r.kisi + ' kişi birlikte pişirdi 🎉');
+      TT.soyle('🍲 Düdüklü ' + nok + '! Usta aşçı: @' + (r.usta.uid || r.usta.ad) + ' · ' + r.kisi + ' kişi birlikte pişirdi 🎉');
     } catch (e) { /* */ }
   }
 }
@@ -737,7 +737,7 @@ function sarkiBasla(ilk) {
   try { if (window.Ses) { Ses.muzik('tencere'); } } catch (e) { /* */ }
   panoYaz(); numaraYaz(); sagYaz(); sureYaz();
   if (!ilk) {
-    soyle(['🍲 YENİ TUR — ' + YEMEKLER[(tur - 1) % YEMEKLER.length] + ' · yaz, ateşi harla'], { oncelik: 2, sure: 3600 });
+    soyle(['🍲 YENİ TUR: ' + YEMEKLER[(tur - 1) % YEMEKLER.length] + ' · yaz, ateşi harla'], { oncelik: 2, sure: 3600 });
     try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch (e) { /* tek basina */ }
   }
   window.__tencereTurBasi = L;
@@ -836,8 +836,8 @@ function hediyeAl(ev) {
   if (uygulanabilir) hediyeUygula(d, tip);
   else bekleyenHediye.push({ d: { kid: d.kid, ad: d.ad }, tur: tip === 'kepce' ? 'cifte' : tip });
   if (bekleyenHediye.length > 60) bekleyenHediye.shift();
-  const not = uygulanabilir ? (tip === 'odun' ? ' — ateşe odun' : ' — körük çalışıyor') : ' — hediyen sıradaki tura gider';
-  soyle(['🎁 ', { kim: d.ad }, ' sağ ol!' + not], { oncelik: 3, sure: 3400 });
+  const not = uygulanabilir ? (tip === 'odun' ? 'Ateşe odun geldi' : 'Körük çalışıyor') : 'Hediyen sıradaki tura gider';
+  soyle(['🎁 ', { kim: d.ad }, ', sağ ol! ' + not], { oncelik: 3, sure: 3400 });
   if (tip === 'kepce') soyle(['🥄 ', { kim: d.ad }, ' ALTIN KEPÇE'], { oncelik: 3, sure: 3000 });
   d.sonAktif = L; panoKirli = true;
 }

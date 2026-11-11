@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>Hedef çubuğu — beğeni / elmas / takipçi</title>
+<title>Hedef çubuğu · beğeni / elmas / takipçi</title>
 <link rel="stylesheet" href="_shared/base.css">
 <style>
   #box {
@@ -141,7 +141,7 @@
     elCur.textContent = TT.short(cur);
     elGoal.textContent = TT.short(goal);
     elFill.style.width = pct + '%';
-    elPct.textContent = '%' + pct.toFixed(pct < 10 ? 1 : 0);
+    elPct.textContent = '%' + pct.toFixed(pct < 10 ? 1 : 0).replace('.', ',');
   }
 
   function add(n) {

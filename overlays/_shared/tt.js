@@ -592,9 +592,9 @@
     /** 1234 -> "1.2B" (Turkce kisaltma) */
     short(n) {
       n = Number(n) || 0;
-      if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'Mr';
-      if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-      if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'B';
+      if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '').replace('.', ',') + 'Mr';
+      if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '').replace('.', ',') + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '').replace('.', ',') + 'B';
       return String(n);
     },
     /** Kullanici adindan sabit bir renk uret (ayni kisi hep ayni renk). */
@@ -647,9 +647,9 @@
     }
 
     const bolgeler = [
-      { stil: 'top:0;left:0;right:0;height:var(--dz-ust)', ad: 'ÜST — yayıncı bilgisi, en çok hediye gönderenler' },
-      { stil: 'bottom:0;left:0;right:0;height:var(--dz-alt)', ad: 'ALT — yorum akışı, hediye çubuğu (en büyük ölü bölge)' },
-      { stil: 'top:var(--dz-ust);bottom:var(--dz-alt);right:0;width:var(--dz-sag)', ad: 'SAĞ — beğeni / paylaş / hediye ikonları' },
+      { stil: 'top:0;left:0;right:0;height:var(--dz-ust)', ad: 'ÜST: yayıncı bilgisi, en çok hediye gönderenler' },
+      { stil: 'bottom:0;left:0;right:0;height:var(--dz-alt)', ad: 'ALT: yorum akışı, hediye çubuğu (en büyük ölü bölge)' },
+      { stil: 'top:var(--dz-ust);bottom:var(--dz-alt);right:0;width:var(--dz-sag)', ad: 'SAĞ: beğeni / paylaş / hediye ikonları' },
       { stil: 'top:var(--dz-ust);bottom:var(--dz-alt);left:0;width:var(--dz-sol)', ad: 'SOL' },
     ];
 
@@ -671,7 +671,7 @@
     const et = document.createElement('div');
     et.className = 'etiket';
     et.style.cssText = 'top:calc(var(--dz-ust) + 6px);left:calc(var(--dz-sol) + 6px)';
-    et.textContent = 'GEVŞEK — kısa ömürlü uyarılar';
+    et.textContent = 'GEVŞEK: kısa ömürlü uyarılar';
     k.appendChild(et);
 
     const et2 = document.createElement('div');
@@ -679,7 +679,7 @@
     et2.style.cssText =
       'top:calc(var(--dz2-ust) + 6px);left:calc(var(--dz2-sol) + 6px);' +
       'background:rgba(10,70,20,.9)';
-    et2.textContent = 'SIKI — kalıcı widget buraya sığmalı (yanlardan kırpılma dahil)';
+    et2.textContent = 'SIKI: kalıcı widget buraya sığmalı (yanlardan kırpılma dahil)';
     k.appendChild(et2);
 
     for (const b of bolgeler) {
@@ -939,10 +939,10 @@
       // SPIKER satirindan, ad textContent ile (ham HTML yok).
       if (global.Spiker) {
         if (ev.ilk) {
-          Spiker.satir(['👋 ', { kim: ad }, ' ', { b: 'İLK KEZ KATILDI' }, ' — hoş geldin!'],
+          Spiker.satir(['👋 ', { kim: ad }, ' ', { b: 'İLK KEZ KATILDI' }, ', hoş geldin!'],
                        { oncelik: 3, anahtar: 'karsilama', sure: 4600 });
         } else {
-          Spiker.satir(['🔁 ', { kim: ad }, ' geri döndü — tekrar hoş geldin'],
+          Spiker.satir(['🔁 ', { kim: ad }, ' geri döndü, tekrar hoş geldin'],
                        { oncelik: 2, anahtar: 'karsilama', sure: 4000 });
         }
       }
@@ -1023,7 +1023,7 @@
       const n = Number(ev && (ev.viewers ?? ev.count));
       // Tek haneli sayi "oda bos" demenin daha inandirici bir yolu.
       if (!Number.isFinite(n) || n < 5) return;
-      say.textContent = n >= 1000 ? (Math.round(n / 100) / 10) + 'B' : String(n);
+      say.textContent = n >= 1000 ? String(Math.round(n / 100) / 10).replace('.', ',') + 'B' : String(n);
       kutu.style.display = '';
       kcTazele();                    // sayi komut metninin yerini daraltir
     });

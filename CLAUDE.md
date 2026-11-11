@@ -22,5 +22,5 @@ sayfası, köprünün konsol iletileri ve yayıncıya yazılan cevaplar dahildir
 
 - Var olan metni düzeltirken kılavuzun onarım kipini ve olgusal sadakat kilidini uygula: sayı, kural,
   komut, adres ve dosya yolu değişmez; kaynakta olmayan bilgi eklenmez.
-- Oyunların yerleşik terimlerine dokunma: tahmin, çarpan, ödül, usta aşçı, halay başı, coşku, körük.
-- Kod yorumları ve köprünün konsol iletileri bilerek Türkçe karaktersiz yazılır; bunlara karakter ekleme.
+- Oyunların yerleşik terimlerine dokunma: tahmin, çarpan, ödül, usta aşçı, halay başı, coşku, körük, düdük.
+- Kod yorumları ve köprünün konsol iletileri bilerek Türkçe karaktersiz yazılır. Bunlara karakter ekleme.

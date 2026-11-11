@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>At Yarışı — sohbet tahmin yapıyor</title>
+<title>At Yarışı · sohbet tahmin yapıyor</title>
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
@@ -227,7 +227,7 @@
       <div id="baslik">At Yarışı</div>
       <div id="cagri">tahmin açık</div>
     </div>
-    <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">1 – 8 ARASI</span></div>
+    <div id="komut"><span class="yazEt">YAZ</span> <span id="komutMetin">1-8 ARASI</span></div>
     <div id="geriSayimSar">
       <div class="rozetBuyuk" id="turRozet">KOŞU <span id="turNo">1</span></div>
       <div class="rozetBuyuk" id="geriSayim">⏳ <span id="geriSn">0</span></div>
@@ -497,7 +497,7 @@
         r1.append(noEl(i), ad);
         const son = veriAt.son[i].slice(0, 3);
         c.append(r1,
-          h('div', 'h2', (o[i] ? 'x' + o[i].toFixed(1) : '—') + (say[i] ? ' · ' + say[i] + '👤' : '')),
+          h('div', 'h2', (o[i] ? 'x' + o[i].toFixed(1).replace('.', ',') : '—') + (say[i] ? ' · ' + say[i] + '👤' : '')),
           h('div', 'h3', '🏆 ' + galibiyet[i] + (son.length ? ' · ' + son.join('-') : '')));
         return c;
       }));
@@ -505,7 +505,7 @@
       return;
     }
     fazIcEl.innerHTML = ATLAR.map((a, i) =>
-      fSatir(i, o[i] ? 'x' + o[i].toFixed(1) : '—', say[i] ? say[i] + '👤' : '')
+      fSatir(i, o[i] ? 'x' + o[i].toFixed(1).replace('.', ',') : '—', say[i] ? say[i] + '👤' : '')
     ).join('');
   }
 
@@ -550,7 +550,7 @@
       dagitilan.slice(0, 5).forEach((d) => fazIcEl.append(izlSatir(d.kid, d.ad, '+' + d.kazanc)));
       sigdirListe(dagitilan.length);
     } else {
-      fazIcEl.append(h('div', 'fSatir bos', 'kimse bilemedi — sıradaki koşuda dene'));
+      fazIcEl.append(h('div', 'fSatir bos', 'kimse bilemedi, sıradaki koşuda dene'));
     }
   }
 
@@ -607,8 +607,8 @@
       rayLobi(); sayacCiz();
     }
     if (demoTur) {
-      document.getElementById('cagri').textContent = cagriMetni('koşu başlıyor — sıradakinde sen de tahmin yap', 'koşu başlıyor');
-      Spiker.soyle('👇 <b>1 – 8 ARASI YAZ</b> — sıradaki koşuda tahminin geçerli', { oncelik: 2, sure: 4200 });
+      document.getElementById('cagri').textContent = cagriMetni('koşu başlıyor, sıradakinde sen de tahmin yap', 'koşu başlıyor');
+      Spiker.soyle('👇 <b>1-8 ARASI YAZ</b> · tahminin sıradaki koşuda geçerli', { oncelik: 2, sure: 4200 });
     }
     durum = 'yaris';
     ilerleme = ATLAR.map(() => 0);
@@ -620,8 +620,8 @@
     tezahurat = ATLAR.map(() => 0);
     sahaEl.classList.add('kosuyor'); sahaEl.classList.remove('tahmin');
     Ses.muzik('at');
-    document.getElementById('cagri').textContent = cagriMetni('koşu sürüyor — yaz & beğen, atına güç ver!', 'koşu sürüyor');
-    Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> — ${bahisler.size} tahmin`, { oncelik: 3 });
+    document.getElementById('cagri').textContent = cagriMetni('koşu sürüyor · yaz & beğen, atına güç ver!', 'koşu sürüyor');
+    Spiker.soyle(`🚦 <b>KAPILAR AÇILDI</b> · ${bahisler.size} tahmin`, { oncelik: 3 });
   }
 
   let sonZaman = 0, rayZaman = 0;
@@ -763,7 +763,7 @@
       const fazla = gercekKazanan.length > 3 ? ` +${gercekKazanan.length - 3} kişi` : '';
       TT.soyle(`🏇 ${at.ad} kazandı! Tebrikler ${etiketler}${fazla} 🎉`);
     } else if (!demoTur) {
-      TT.soyle(`🏇 ${at.ad} kazandı — kimse görmedi! Sıradaki koşuda tahminini yap 🎯`);
+      TT.soyle(`🏇 ${at.ad} kazandı, kimse görmedi! Sıradaki koşuda tahminini yap 🎯`);
     }
     // demo kosuda sohbete hic yazma — bos odaya bot mesaji spam olur
 
@@ -775,11 +775,11 @@
       url: at.formaBuyukURL,
       isim: at.ad,
       alt: dagitilan.length
-        ? `#${i + 1} · çarpan x${o.toFixed(1)} · ${dagitilan.length} kişi bildi`
-        : `#${i + 1} · kimse bilemedi — sürpriz koşu`,
+        ? `#${i + 1} · çarpan x${o.toFixed(1).replace('.', ',')} · ${dagitilan.length} kişi bildi`
+        : `#${i + 1} · kimse bilemedi · sürpriz koşu`,
     };
     document.getElementById('cagri').textContent = at.ad + ' kazandı';
-    Spiker.soyle(`🏆 <b>${at.ad}</b> ` + (dagitilan.length ? `— ${dagitilan.length} kişi bildi` : '— kimse görmedi bunu'),
+    Spiker.soyle(`🏆 <b>${at.ad}</b> ` + (dagitilan.length ? `· ${dagitilan.length} kişi bildi` : '· kimse görmedi bunu'),
       { oncelik: 3, sure: 4500 });
     rayOdeme(i, dagitilan);
     liderlikCiz();
@@ -801,7 +801,7 @@
     document.getElementById('cagri').textContent = 'tahmin açık';
     lobiSayfa = 0; lobiSn = 0;
     rayLobi(); sayacCiz();
-    Spiker.soyle(`🏇 <b>${turNo}. KOŞU</b> — 1-${ATLAR.length} yaz, tahminini yap`, { oncelik: 2 });
+    Spiker.soyle(`🏇 <b>${turNo}. KOŞU</b> · 1-${ATLAR.length} yaz, tahminini yap`, { oncelik: 2 });
   }
 
   setInterval(() => {
@@ -817,14 +817,14 @@
     }
   }, 250);
 
-  const DURUM_METNI = () => durum === 'bahis' ? '— tahminin geçerli' : '— tahminin sıradaki koşuda geçerli';
+  const DURUM_METNI = () => durum === 'bahis' ? 'tahminin geçerli' : 'tahminin sıradaki koşuda geçerli';
   /* ILK TEMAS — oyun hangi durumda olursa olsun yazana karsilik ver.
      Olculen kusur: dongunun buyuk kismi "olu pencere"ydi; o aralikta
      yazan kisi ekranda hicbir sey gormuyordu. */
   TT.on('ilktemas', (e) => {
     const p = Profil.ekle(e.kid, isim(e.user), { mesaj: 1, xp: 2 });
     const oz = Profil.ozet(e.kid);
-    Spiker.satir([{ kim: isim(e.user) }, ' ' + DURUM_METNI() + ' · ', oz ? oz : { b: 'İLK KEZ' }],
+    Spiker.satir([{ kim: isim(e.user) }, ', ' + DURUM_METNI() + ' · ', oz ? oz : { b: 'İLK KEZ' }],
          { oncelik: 2, anahtar: 'temas' });
     if (window.Ses) Ses.cal('katil', 150);
   });
@@ -924,16 +924,16 @@
     if (durum === 'yaris') {
       if (b) {
         tezVer(kid, 5);
-        Spiker.satir(['🎁 Sağ ol ', { kim: ad }, ' — ', { b: ATLAR[b.at].ad }, ' tribünü coştu'], { oncelik: 2 });
+        Spiker.satir(['🎁 Sağ ol ', { kim: ad }, ', ', { b: ATLAR[b.at].ad }, ' tribünü coştu'], { oncelik: 2 });
       } else {
-        Spiker.satir(['🎁 Sağ ol ', { kim: ad }, ' — sıradaki koşuda ', { b: '1-' + ATLAR.length }, ' yaz, tahminini yap'], { oncelik: 2 });
+        Spiker.satir(['🎁 Sağ ol ', { kim: ad }, ', sıradaki koşuda ', { b: '1-' + ATLAR.length }, ' yaz, tahminini yap'], { oncelik: 2 });
       }
       return;
     }
     const sira = durum === 'bahis' ? '' : ' sıradaki koşuda';
     Spiker.satir(b
-      ? ['🎁 Sağ ol ', { kim: ad }, ' — tahminin ', { b: ATLAR[b.at].ad }, ', tribün seninle']
-      : ['🎁 Sağ ol ', { kim: ad }, ' —' + sira + ' ', { b: '1-' + ATLAR.length }, ' yaz, tahminini yap'], { oncelik: 3 });
+      ? ['🎁 Sağ ol ', { kim: ad }, ', tahminin ', { b: ATLAR[b.at].ad }, ', tribün seninle']
+      : ['🎁 Sağ ol ', { kim: ad }, ',' + sira + ' ', { b: '1-' + ATLAR.length }, ' yaz, tahminini yap'], { oncelik: 3 });
   });
 
   // ---- basla ---------------------------------------------------------------

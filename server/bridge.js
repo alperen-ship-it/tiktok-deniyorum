@@ -84,11 +84,11 @@ TikTok LIVE koprusu
   --bekle <sn>       Yayin kapaliysa kac saniyede bir tekrar denensin (varsayilan 15)
   --tarayici         Acilista kontrol panelini varsayilan tarayicida ac
   --key, -k <k>      EulerStream imzalama anahtari (ya da EULER_API_KEY ortam degiskeni)
-  --gifts            Hediye katalogunu da cek (ikon URL'leri icin) — UCRETLI uc,
+  --gifts            Hediye katalogunu da cek (ikon URL'leri icin). UCRETLI uc,
                      varsayilan kapali. Kapaliyken hediye adi/elmas degeri yine gelir.
   --no-80            Port 80'i da dinleme (varsayilan: dener)
   --lan              Agdaki diger cihazlar da baglanabilsin (varsayilan: SADECE bu
-                     bilgisayar — 127.0.0.1 ve ::1). Acinca ayni Wi-Fi'daki herkes
+                     bilgisayar: 127.0.0.1 ve ::1). Acinca ayni Wi-Fi'daki herkes
                      paneli ve sohbet olaylarini gorebilir; sadece guvendigin agda kullan.
   --host <a,b>       Izinli ek alan adlari (virgulle). Hazir izinli: localhost,
                      127.0.0.1, localtest.me, hosts dosyasinda 127.0.0.1'e yazdigin
@@ -158,7 +158,7 @@ function erisimDenetle(req) {
   const ad = guv.hostAdi(req.headers.host);
   if (!guv.hostIzinli(ad)) {
     if (guv.ilkRed('host:' + ad)) {
-      log(`!! izin verilmeyen adres reddedildi: "${ad || '(bos)'}" — gerekiyorsa:  --host ${ad || '<ad>'}`);
+      log(`!! izin verilmeyen adres reddedildi: "${ad || '(bos)'}". Gerekiyorsa:  --host ${ad || '<ad>'}`);
     }
     return `Bu adres izinli degil (${ad || 'bos'}). Bu adla acmak icin kopruyu --host ${ad || '<ad>'} ile baslat.`;
   }
@@ -170,15 +170,15 @@ function erisimDenetle(req) {
     const portFarki = oAd && guv.hostIzinli(oAd);     // ad izinli ama baska porttan geliyor
     if (guv.ilkRed('origin:' + o)) {
       log(dosyaMi
-        ? `!! dosyadan acilan sayfa reddedildi (Origin ${o}) — izin icin:  --host null`
+        ? `!! dosyadan acilan sayfa reddedildi (Origin ${o}). Izin icin:  --host null`
         : portFarki
           ? `!! baska porttan gelen istek reddedildi: Origin ${o} (bu sunucu: ${req.headers.host})`
-          : `!! baska siteden gelen istek reddedildi: Origin ${o} — gerekiyorsa:  --host ${oAd || '<ad>'}`);
+          : `!! baska siteden gelen istek reddedildi (Origin ${o}). Gerekiyorsa:  --host ${oAd || '<ad>'}`);
     }
     return dosyaMi
       ? `Dosyadan acilan sayfa (${o}) izinli degil. Izin icin kopruyu --host null ile baslat.`
       : portFarki
-        ? `Bu porttan erisim izinli degil (${o}); sayfa bu sunucudan acilmali (${req.headers.host}).`
+        ? `Bu porttan erisim izinli degil (${o}). Sayfa bu sunucudan acilmali (${req.headers.host}).`
         : `Bu siteden erisim izinli degil (${o}). Izin icin kopruyu --host ${oAd || '<ad>'} ile baslat.`;
   }
   return null;
@@ -429,7 +429,7 @@ function tekrarPlanla(hata, kullanici) {
     if (!baglanti.cevrimdisiAt) baglanti.cevrimdisiAt = Date.now();
     if (Date.now() - baglanti.cevrimdisiAt >= SEYRELT_MS) {
       if (Math.max(10, Number(args.bekle) || 15) < SEYRELT_BEKLE) {
-        if (!baglanti.seyreltildi) log(`   uzun suredir yayin yok — yoklama ${SEYRELT_BEKLE} sn'de bire seyreltildi.`);
+        if (!baglanti.seyreltildi) log(`   uzun suredir yayin yok, yoklama ${SEYRELT_BEKLE} sn'de bire seyreltildi.`);
         baglanti.seyreltildi = true;
         bekle = SEYRELT_BEKLE;
       }
@@ -489,7 +489,7 @@ function bekciKur(nesil, kullanici) {
     // Ilk normal olay (yorum, hediye...) esigi 1x'e dondurur; yalniz ham kare
     // (kalp atisi cevabi) dondurmez.
     baglanti.sessizCarpan = Math.min(8, baglanti.sessizCarpan * 2);
-    log(`!! ${Math.round(sessiz / 1000)} sn boyunca hic veri gelmedi — baglanti yenileniyor` +
+    log(`!! ${Math.round(sessiz / 1000)} sn boyunca hic veri gelmedi, baglanti yenileniyor` +
         (baglanti.sessizCarpan > 1 ? ` (sonraki esik ${Math.round(sessizMs() / 1000)} sn).` : '.'));
     state.connected = false;
     if (Date.now() - baglanti.baglandiAt < SAGLAM_MS) baglanti.basarisiz = baglanti.kayit;
@@ -886,7 +886,7 @@ async function startLive(username) {
         lib.IsLiveRouteConfig.skipFetchRoomIdFromEulerRoute = true;
         log('EulerStream oda-kimligi yedegi kapatildi (ucretli uc; yalnizca imzalama kullanilir).');
       } else {
-        log('uyari: RoomIdRouteConfig bulunamadi — EulerStream oda yedegi kapatilamadi (eski paket?).');
+        log('uyari: RoomIdRouteConfig bulunamadi, EulerStream oda yedegi kapatilamadi (eski paket?).');
       }
     } catch (e) { log('Euler yedegi kapatilamadi:', e?.message || e); }
   }
@@ -904,7 +904,7 @@ async function startLive(username) {
     if (apiKey && SignConfig) {
       log('EulerStream imzalama anahtari ayarlandi.');
     } else {
-      log('EulerStream anahtari yok — anonim limitle deneniyor.');
+      log('EulerStream anahtari yok, anonim limitle deneniyor.');
       log('  Limite takilirsan eulerstream.com uzerinden ucretsiz anahtar al,');
       log('  sonra:  set EULER_API_KEY=<anahtar>   (Windows CMD)');
     }
@@ -986,7 +986,7 @@ async function startLive(username) {
     bekciDurdur();
     // Yayin bitti diye programi kapatma; ayni oturumda tekrar yayin acabilir.
     const k = tekrarPlanla({ olay: 'streamEnd' }, username);
-    log('yayin bitti — yeniden yayin beklemeye geciliyor.');
+    log('yayin bitti, yeniden yayin bekleniyor.');
     if (!k) durumYayinla();
   });
   conn.on('disconnected', () => {
@@ -998,7 +998,7 @@ async function startLive(username) {
     // cagri yok sayilir -> tek dongu.
     const k = tekrarPlanla({ olay: 'disconnected' }, username);
     durumYayinla();
-    if (k) log('baglanti koptu — ' + k.message);
+    if (k) log('baglanti koptu: ' + k.message);
   });
   // Kutuphane hata olayinda cogu zaman Error degil, icinde tam stack olan bir
   // nesne yolluyor. Ham haliyle basilinca konsol okunmaz oluyor — ozetliyoruz.
@@ -1038,7 +1038,7 @@ async function startLive(username) {
       return;
     }
     state.connected = true;
-    if (state.bekliyor) log('YAYIN BASLADI — baglaniliyor.');
+    if (state.bekliyor) log('YAYIN BASLADI, baglaniliyor.');
     state.bekliyor = false;
     state.denemeSayisi = 0;
     baglanti.tavsiye = false;
@@ -1070,7 +1070,7 @@ async function startLive(username) {
       if (!state.bekliyor) {
         state.bekliyor = true;
         state.mode = 'bekliyor';
-        log(`@${username} henuz yayinda degil — YAYIN BEKLENIYOR.`);
+        log(`@${username} henuz yayinda degil. YAYIN BEKLENIYOR.`);
         log('   Yayina gectiginde kendiliginden baglanacak, bu pencereyi kapatma.');
       }
       // Uzun sure hic baglanamiyorsak kullanici adi yanlis yazilmis olabilir.
@@ -1109,19 +1109,19 @@ async function startLive(username) {
       log('');
       log('   Siradaki adimlar, ucuzdan pahaliya:');
       log('');
-      log('   1) UCRETSIZ ANAHTAR DENE — anonim istek reddediliyor olabilir,');
+      log('   1) UCRETSIZ ANAHTAR DENE: anonim istek reddediliyor olabilir,');
       log('      anahtarli ucretsiz katman calisabilir:');
       log('        https://www.eulerstream.com  -> kaydol, API key al');
       log('        $env:EULER_API_KEY="<anahtar>"   (PowerShell)');
       log('        node server/bridge.js --user ' + username);
       log('');
-      log('   2) TIKFINITY — imzalamayi kendisi hallediyor, bizim overlay\'ler');
+      log('   2) TIKFINITY: imzalamayi kendisi hallediyor, bizim overlay\'ler');
       log('      onun yerel WebSocket\'ini zaten konusuyor. Kopruye gerek kalmaz:');
       log('        tikfinity.zerody.one -> Desktop uygulamasini kur, hesabina bagla');
       log('        sonra overlay\'i ac:  overlays/oyun.html?src=tikfinity&lite=1');
       log('        (TikFinity ws://127.0.0.1:21213 uzerinden yayin yapiyor)');
       log('');
-      log('   3) Ucretli EulerStream plani — aylik ucret.');
+      log('   3) Ucretli EulerStream plani: aylik ucret.');
     } else if (tur === 'limit') {
       log('   Imzalama limiti doldu. Ucretsiz anahtar al: https://www.eulerstream.com');
       log('   sonra:  $env:EULER_API_KEY="<anahtar>"');
@@ -1151,7 +1151,7 @@ function tarayiciAc(url) {
     // sunucu oluyor, sirf tarayici acilamadi diye. Yutup devam ediyoruz:
     // adres zaten konsolda yaziyor, elle yapistirilabilir.
     cocuk.on('error', () => {
-      console.log('  [kopru] tarayici otomatik acilamadi — adresi elle ac:', url);
+      console.log('  [kopru] tarayici otomatik acilamadi, adresi elle ac:', url);
     });
     cocuk.unref();
   } catch { /* tarayici acilamadiysa adres zaten konsolda yaziyor */ }
@@ -1201,11 +1201,11 @@ server.listen(args.port, DINLE_ADRES, async () => {
       tur arasinda yapar, bos odada demo calistirir. Istersen oyunlari
       tek tek de ekleyebilirsin:
 
-   >> Oyunlar — sohbet oynuyor, sen hicbir sey yapmiyorsun <<
-     at.html      At Yarisi (2D) — 8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
-     halay.html   Halay (3D) — yaz/begen = halaya gir, @isim ya da numara = dansa kaldir
-     tencere.html Duduklu (3D) — yaz, atesi harla, tencereyi birlikte pisir
-     (3D oyunlar da varsayilan donguede; OBS'te donanim hizlandirma acik olmali)
+   >> Oyunlar: sohbet oynuyor, sen hicbir sey yapmiyorsun <<
+     at.html      At Yarisi (2D): 8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
+     halay.html   Halay (3D): yaz/begen = halaya gir, @isim ya da numara = dansa kaldir
+     tencere.html Duduklu (3D): yaz, atesi harla, tencereyi birlikte pisir
+     (3D oyunlar da varsayilan dongude; OBS'te donanim hizlandirma acik olmali)
 
       Hepsi kendi kendine donuyor: katilim penceresi acilir, oyun
       oynanir, kazanan cikar, yeni tur baslar. Mudahale gerekmiyor.
@@ -1217,7 +1217,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
                   blur/golge kapaniyor, akici kaliyor. HEP KULLAN.)
      (?v=1 / ?y=1 -> yonelimi elle zorla; normalde gerekmez)
 
-   >> OBS icin (Tarayici Kaynagi) — seffaflik dogrudan calisir <<
+   >> OBS icin (Tarayici Kaynagi): seffaflik dogrudan calisir <<
      ${base}/overlays/oyun.html?lite=1   (dikey 1080x1920, tek link)
 
    localtest.me acilmiyorsa (modem DNS-rebind korumasi):
@@ -1227,7 +1227,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
 `);
 
   if (args.lan) {
-    log('!! UYARI: --lan acik — ayni agdaki HERKES paneli, sohbet olaylarini ve');
+    log('!! UYARI: --lan acik. Ayni agdaki HERKES paneli, sohbet olaylarini ve');
     log('   test/baglan/kapat dugmelerini kullanabilir. Sadece guvendigin agda kullan.');
     log('   Erisim adresleri: ' + (guv.lan.length ? guv.lan.map((ip) => `http://${ip}:${args.port}/`).join('  ') : '(LAN adresi bulunamadi)'));
   }
@@ -1295,9 +1295,9 @@ function ekDinleyici(port, adres, acikla) {
   alt.on('upgrade', (req, socket, head) => server.emit('upgrade', req, socket, head));
   alt.on('error', (e) => {
     if (e.code === 'EADDRNOTAVAIL' || e.code === 'EAFNOSUPPORT') {
-      if (args.verbose) log(`${acikla}: bu adres yok (${e.code}) — sorun degil.`);
+      if (args.verbose) log(`${acikla}: bu adres yok (${e.code}), sorun degil.`);
     } else if (e.code === 'EADDRINUSE' || e.code === 'EACCES') {
-      log(`${acikla} kullanilamadi (${e.code}) — sorun degil.`);
+      log(`${acikla} kullanilamadi (${e.code}), sorun degil.`);
     } else {
       log(`${acikla} hatasi:`, e.code || e.message);
     }

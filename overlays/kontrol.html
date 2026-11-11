@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Yayın Kontrolü — bu kaynak oyunları çalıştırabiliyor mu?</title>
+<title>Yayın Kontrolü · bu kaynak oyunları çalıştırabiliyor mu?</title>
 <!--
   KONTROL SAYFASI — OBS tarayici kaynagi ya da TikTok LIVE Studio "Link" kaynagi
   bu oyunlari calistirabiliyor mu? Sayfa kendi kendini sinar ve sonucu buyuk
@@ -134,10 +134,10 @@
       ozet.textContent = 'SORUN VAR: ' + kotu.map(function (a) { return a === 'kopru' ? 'köprüye bağlanamadı' : 'çizim çok yavaş'; }).join(', ');
     } else if (sonuc.resim === 'kotu') {
       ozet.className = 'iyi';
-      ozet.textContent = 'OYUNLAR ÇALIŞIR — profil fotoğrafları bu kaynakta yüklenmiyor';
+      ozet.textContent = 'OYUNLAR ÇALIŞIR ama profil fotoğrafları bu kaynakta yüklenmiyor';
     } else {
       ozet.className = 'iyi';
-      ozet.textContent = 'HAZIR — oyunlar bu kaynakta çalışır';
+      ozet.textContent = 'HAZIR: oyunlar bu kaynakta çalışır';
     }
   }
 
@@ -149,7 +149,7 @@
       : window.obsstudio ? 'OBS ' + (window.obsstudio.pluginVersion || '')
       : /OBS\//.test(ua) ? 'OBS' : 'Tarayıcı';
     yaz.ortam('bilgi', nerede.trim() + ' · Chrome ' + (chrome || '?') + ' · pencere ' + window.innerWidth + '×' + window.innerHeight
-      + ' · oran ' + (window.devicePixelRatio || 1));
+      + ' · oran ' + String(window.devicePixelRatio || 1).replace('.', ','));
   })();
 
   // ---- 2. Kopru: /api/status + WebSocket (ikisi de AYNI host) --------------
@@ -159,7 +159,7 @@
       if (bitti || http === null || ws === null) return; bitti = true;
       if (http.ok && ws) yaz.kopru('iyi', 'bağlı · ' + (http.mode === 'live' ? (http.connected ? 'yayına bağlı' : 'yayın bekleniyor') : 'deneme kipi'));
       else if (http.ok) yaz.kopru('kotu', 'sayfa geldi ama canlı bağlantı (WebSocket) kurulamadı');
-      else yaz.kopru('kotu', 'köprü cevap vermiyor — uygulama açık mı, adres paneldeki gibi mi?');
+      else yaz.kopru('kotu', 'köprü cevap vermiyor. Uygulama açık mı, adres paneldeki gibi mi?');
     }
     try {
       fetch('/api/status', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
@@ -211,10 +211,10 @@
     }
     function bitir() {
       var ort = isMs / Math.max(1, kare), fps = kare > 1 ? (kare - 1) * 1000 / (son - ilk) : 0;
-      var metin = 'kare ' + ort.toFixed(1) + ' ms · ' + fps.toFixed(0) + ' fps';
-      if (ort <= 20 && fps >= 24) yaz.cizim('iyi', metin + ' — rahat');
-      else if (ort <= 33 && fps >= 18) yaz.cizim('iyi', metin + ' — yeterli');
-      else yaz.cizim('kotu', metin + ' — yavaş');
+      var metin = 'kare ' + ort.toFixed(1).replace('.', ',') + ' ms · ' + fps.toFixed(0) + ' fps';
+      if (ort <= 20 && fps >= 24) yaz.cizim('iyi', metin + ' · rahat');
+      else if (ort <= 33 && fps >= 18) yaz.cizim('iyi', metin + ' · yeterli');
+      else yaz.cizim('kotu', metin + ' · yavaş');
     }
     requestAnimationFrame(ciz);
     setTimeout(function () { if (!sonuc.cizim) yaz.cizim('kotu', 'çizim başlamadı (sayfa arka planda olabilir)'); }, 9000);
@@ -224,12 +224,12 @@
   (function () {
     try {
       var t = document.createElement('canvas'), gl = t.getContext('webgl2') || t.getContext('webgl');
-      if (!gl) { yaz.kart('bilgi', 'yok — sorun değil, oyunlar 2D çizer'); return; }
+      if (!gl) { yaz.kart('bilgi', 'yok. Sorun değil, oyunlar 2D çizer'); return; }
       var uz = gl.getExtension('WEBGL_debug_renderer_info');
       var ad = uz ? String(gl.getParameter(uz.UNMASKED_RENDERER_WEBGL) || '') : String(gl.getParameter(gl.RENDERER) || '');
       var yazilim = /swiftshader|llvmpipe|softpipe|basic render|software/i.test(ad);
       yaz.kart('bilgi', (yazilim ? 'yazılımla çiziyor: ' : 'var: ') + ad.replace(/^ANGLE \(|\)$/g, '').slice(0, 90));
-    } catch (e) { yaz.kart('bilgi', 'yok — sorun değil, oyunlar 2D çizer'); }
+    } catch (e) { yaz.kart('bilgi', 'yok. Sorun değil, oyunlar 2D çizer'); }
   })();
 
   // ---- 5 + 6. Dis resim ve tuvale cizme ------------------------------------
@@ -242,13 +242,13 @@
     function son() {
       if (biten < ADRESLER.length) return;
       if (yuklenen.length) yaz.resim('iyi', ADRESLER.length + ' siteden ' + yuklenen.length + ' tanesi yüklendi');
-      else yaz.resim('kotu', 'hiçbiri yüklenmedi — bu kaynak dış resimleri engelliyor ya da internet yok');
+      else yaz.resim('kotu', 'hiçbiri yüklenmedi: bu kaynak dış resimleri engelliyor ya da internet yok');
       if (!yuklenen.length) { yaz.yuz('bilgi', 'dış resim yüklenmediği için sınanamadı'); return; }
       try {
         var t = document.createElement('canvas'); t.width = 64; t.height = 64;
         var c = t.getContext('2d'); c.beginPath(); c.arc(32, 32, 30, 0, 6.3); c.clip();
         c.drawImage(yuklenen[0], 0, 0, 64, 64); cizildi = true;     // bu tuval bir daha OKUNMAZ
-        yaz.yuz('iyi', 'oldu — profil fotoğrafı karakterin yüzüne çizilebilir');
+        yaz.yuz('iyi', 'oldu: profil fotoğrafı karakterin yüzüne çizilebilir');
       } catch (e) { yaz.yuz('kotu', 'resim yüklendi ama tuvale çizilemedi'); }
     }
     ADRESLER.forEach(function (u) {

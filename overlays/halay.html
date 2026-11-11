@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>Halay — yaz, halaya gir; @isim yaz, dansa kaldır</title>
+<title>Halay · yaz, halaya gir · @isim yaz, dansa kaldır</title>
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
@@ -1237,17 +1237,17 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
         dorukTut = simdi() + 2500;
         for (const d of dans.values()) { d.zipla = 0.42; if (d.fig) S3.figur.hareket(d.kid, 'zipla'); }
         Juice.parla(coskuDoluEl);
-        anonsEkle({ ust: '🔥 HALAY COŞTU!', alt: 'bar doldu — beğenmeye devam, tempo düşmesin', sure: 2400, renk: 'var(--altin)' });
+        anonsEkle({ ust: '🔥 HALAY COŞTU!', alt: 'bar doldu · beğenmeye devam, tempo düşmesin', sure: 2400, renk: 'var(--altin)' });
         soyle('🔥 <b>HALAY COŞTU!</b> bar doldu, herkes döktürüyor', { oncelik: 3, sure: 3600, anahtar: 'sev2' });
         if (!konfetiAtildi) { konfetiAtildi = true; Juice.konfeti({ y: 0.34, adet: 60 }); }   // bir havada bir kez
       } else {
         anonsEkle({ ust: '🥁 HAVA OYNAKLAŞTI', alt: '❤️ beğenin, bar dolsun', sure: 1800 });
-        soyle('🥁 <b>HAVA OYNAKLAŞTI</b> — ❤️ beğenin, bar dolsun', { oncelik: 2, anahtar: 'sev1' });
+        soyle('🥁 <b>HAVA OYNAKLAŞTI</b> · ❤️ beğenin, bar dolsun', { oncelik: 2, anahtar: 'sev1' });
       }
     } else {
       // Yavaslama: muzikHizli 1'in altina inemiyor; mutlak tempoyu ayarla.
       if (Ses.muzikTempo) Ses.muzikTempo(BPM[yeni] / BPM[0]);
-      soyle('🥁 hava ağırlaştı — ❤️ beğenin, yine coşsun', { oncelik: 1, anahtar: 'sevin' });
+      soyle('🥁 hava ağırlaştı · ❤️ beğenin, yine coşsun', { oncelik: 1, anahtar: 'sevin' });
     }
   }
 
@@ -1352,7 +1352,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     basNeden = 'hediye';
     basYap(d);
     if (!d.bot) Profil.ekle(d.kid, d.ad, { xp: 15, halayBas: 1 });
-    soyle(`🎁 ${adYer(d.ad)} <b>HALAY BAŞI</b> — mendil ${Math.round(hediyeBas.sure)} sn sende`, { oncelik: 3, sure: 4000 });
+    soyle(`🎁 ${adYer(d.ad)} <b>HALAY BAŞI</b> · mendil ${Math.round(hediyeBas.sure)} sn sende`, { oncelik: 3, sure: 4000 });
     return true;
   }
 
@@ -1373,7 +1373,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     basNeden = 'katilim';
     basYap(lider);
     if (durum === 'oyun' && lider.puan > 0) {
-      soyle(`👋 ${adYer(lider.ad)} <b>halay başı</b> — mendil sende`, { oncelik: 2, anahtar: 'bas' });
+      soyle(`👋 ${adYer(lider.ad)} <b>halay başı</b> · mendil sende`, { oncelik: 2, anahtar: 'bas' });
       if (!lider.bot && !basOdul.has(lider.kid)) {
         basOdul.add(lider.kid);
         Profil.ekle(lider.kid, lider.ad, { xp: 10, halayBas: 1 });
@@ -1400,7 +1400,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
   }
   function tempoHediye(d, ad) {
     const verildi = tempoCosku();
-    soyle(`🥁 <b>TEMPO</b> — ${adYer(ad)} ` + (verildi ? 'halayı hızlandırdı' : 'sağ ol, tempo şu an dolu'), { oncelik: 3, sure: 3000 });
+    soyle(`🥁 <b>TEMPO</b> · ${adYer(ad)}` + (verildi ? ' halayı hızlandırdı' : ', sağ ol, tempo şu an dolu'), { oncelik: 3, sure: 3000 });
     if (anonsSay() < 2) anonsEkle({ ust: '🥁 TEMPO', ad, alt: verildi ? 'coşku +8' : 'sağ ol', sure: 1800 });
     if (d) { balonSistem(d, ['🎁', 'tempo']); if (d.fig) S3.figur.hareket(d.kid, 'zipla'); }
     if (window.Ses) Ses.cal('hediye');
@@ -1440,7 +1440,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
         basKuyruk.push({ kid: d.kid, sure, guc });
         if (cikan) {                             // yerini kaybedene de yumusak, gorunur bir soz
           balonSistem(cikan, ['siraDoldu', '🎁']);
-          soyle(`🎁 ${adYer(cikan.ad)} — sıra doldu; hediyen için sağ ol, bir sonrakinde mendil sende`, { oncelik: 2, sure: 3600 });
+          soyle(`🎁 ${adYer(cikan.ad)}, sıra doldu · hediyen için sağ ol, bir sonrakinde mendil sende`, { oncelik: 2, sure: 3600 });
         }
       } else alindi = false;
     }
@@ -1454,7 +1454,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
       const alt = hemen ? 'altın rozet yayın boyunca onda' : kacinci ? `altın rozet onda · mendil sırası: ${kacinci}.`
         : alindi ? 'altın rozet yayın boyunca onda' : 'altın rozet onda · mendil sırası şu an dolu';
       anonsEkle({ ust: '💛 TAKI TÖRENİ', ad: d.ad, alt, sure: 3200, renk: 'var(--altin)' });
-      soyle(`💛 <b>TAKI TÖRENİ</b> — ${adYer(d.ad)} altın rozeti taktı`, { oncelik: 3, sure: 4200 });
+      soyle(`💛 <b>TAKI TÖRENİ</b> · ${adYer(d.ad)} altın rozeti taktı`, { oncelik: 3, sure: 4200 });
       // MEYDAN GOSTERISI (>= 1000): 8 sn halkalar hizlica ters doner, herkesin kollari havada; halay basi sirasina EK.
       meydanBasla();
       anonsEkle({ ust: '🎪 MEYDAN GÖSTERİSİ', ad: d.ad, alt: 'halkalar hızlandı · kollar havada · 8 sn', sure: 3000, renk: 'var(--oyun-renk)' });
@@ -1462,17 +1462,17 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
       // tur uzadi: adi zaten plakada / sirada; kendi danscisinda ve seritte soyle
       const kalan = hemen ? Math.ceil((hediyeBas.bitis - t) / 1000) : Math.round(bekleyen.sure);
       balonSistem(d, hemen ? ['🎁', Math.max(0, kalan | 0), 'snDaha'] : ['🎁', 'sira', kacinci, 'uzadi']);
-      soyle(`🎁 ${adYer(d.ad)} ` + (hemen ? `mendili ${kalan} sn daha tutuyor` : `sırasını uzattı — ${kacinci}. sırada · ${kalan} sn`), { oncelik: 3, sure: 3400 });
+      soyle(`🎁 ${adYer(d.ad)} ` + (hemen ? `mendili ${kalan} sn daha tutuyor` : `sırasını uzattı · ${kacinci}. sırada · ${kalan} sn`), { oncelik: 3, sure: 3400 });
     } else if (!hemen && alindi) {
       // Sirada bekleyecek: adi yine de HEMEN ve iri gorunsun, sirasi yaninda.
-      const girdi = anonsEkle({ ust: '🎁 HALAY BAŞI SIRASINDA', ad: d.ad, alt: `${kacinci}. sırada — mendil birazdan sende`, sure: 2400 });
+      const girdi = anonsEkle({ ust: '🎁 HALAY BAŞI SIRASINDA', ad: d.ad, alt: `${kacinci}. sırada · mendil birazdan sende`, sure: 2400 });
       balonSistem(d, ['🎁', 'sira', kacinci]);
-      if (!girdi) soyle(`🎁 ${adYer(d.ad)} halay başı sırasında — ${kacinci}. sırada`, { oncelik: 3, sure: 3000 });
+      if (!girdi) soyle(`🎁 ${adYer(d.ad)} halay başı sırasında · ${kacinci}. sırada`, { oncelik: 3, sure: 3000 });
     } else if (!alindi) {
       // Sira dolu ve bekleyenlerin hepsi en az bu kademede: siraya giremedi.
-      const girdi = anonsEkle({ ust: '🎁 SAĞ OL!', ad: d.ad, alt: 'mendil sırası şu an dolu — az sonra yine dene', sure: 2400 });
+      const girdi = anonsEkle({ ust: '🎁 SAĞ OL!', ad: d.ad, alt: 'mendil sırası şu an dolu · az sonra yine dene', sure: 2400 });
       balonSistem(d, ['siraDolu', '🎁']);
-      if (!girdi) soyle(`🎁 ${adYer(d.ad)} — sağ ol! mendil sırası şu an dolu`, { oncelik: 3, sure: 3000 });
+      if (!girdi) soyle(`🎁 ${adYer(d.ad)}, sağ ol! Mendil sırası şu an dolu`, { oncelik: 3, sure: 3000 });
     }
     basSureYaz();
     if (window.Ses) Ses.cal('hediye');
@@ -1655,10 +1655,10 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
   /** Sozun turu: ayni seritte yalnizca ayni turden sozler birlesir (baslik herkese dogru olsun). */
   const cesit = (g) => (g.dolu ? 'dolu' : g.takip ? (g.tekrar ? 'takip' : 'takipyeni') : g.yine ? 'yine' : 'yeni');
   const SELAM_UST = {
-    tek: { dolu: '🥁 halay dolu — yer açılınca sıra sende', takip: '🥁 takip etti — sağ ol!',
-      takipyeni: '🥁 takip etti — hoş geldin!', yine: '🥁 yine hoş geldin!', yeni: '🥁 hoş geldin, halaya!' },
-    cok: { dolu: '🥁 halay dolu — yer açılınca sıra sizde', takip: '🥁 takip ettiler — sağ olun!',
-      takipyeni: '🥁 takip ettiler — hoş geldiniz!', yine: '🥁 yine hoş geldiniz!', yeni: '🥁 hoş geldiniz, halaya!' },
+    tek: { dolu: '🥁 halay dolu · yer açılınca sıra sende', takip: '🥁 takip etti, sağ ol!',
+      takipyeni: '🥁 takip etti, hoş geldin!', yine: '🥁 yine hoş geldin!', yeni: '🥁 hoş geldin, halaya!' },
+    cok: { dolu: '🥁 halay dolu · yer açılınca sıra sizde', takip: '🥁 takip ettiler, sağ olun!',
+      takipyeni: '🥁 takip ettiler, hoş geldiniz!', yine: '🥁 yine hoş geldiniz!', yeni: '🥁 hoş geldiniz, halaya!' },
   };
   /*
    * KARSILAMA KUYRUGU — kimse dusmez, bekleme SINIRLI:
@@ -1884,10 +1884,10 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     const N = yeni.length;
     let enBuyukNo = 0;
     for (const d of yeni) if (d.no > enBuyukNo) enBuyukNo = d.no;
-    const g = [{ ad: 'SON GİRENLER', sag: N ? `yaz: 1–${enBuyukNo}` : '', sure: 8000, satir: yeni.slice(0, SATIR_MAX).map((d) => ({ d })) }];
+    const g = [{ ad: 'SON GİRENLER', sag: N ? `yaz: 1-${enBuyukNo}` : '', sure: 8000, satir: yeni.slice(0, SATIR_MAX).map((d) => ({ d })) }];
     // COSTURANLAR: bu havada en cok begenenler (botlar yok).
     const begenen = yeni.filter((d) => d.begeni > 0 && !d.bot).sort((a, b) => b.begeni - a.begeni).slice(0, SATIR_MAX);
-    g.push({ ad: 'COŞTURANLAR', sag: '❤️ bu hava', sure: begenen.length ? 5500 : 3000, bos: '❤️ beğen — adın burada, coşturanlar arasında',
+    g.push({ ad: 'COŞTURANLAR', sag: '❤️ bu hava', sure: begenen.length ? 5500 : 3000, bos: '❤️ beğen · adın burada, coşturanlar arasında',
              satir: begenen.map((d) => ({ d, deger: '❤️ ' + TT.short(d.begeni) })) });
     // DESTEKCILER: en son veren ustte; yaninda sadece kac hediye (elmas tutari yok).
     const des = [...destek.values()].sort((a, b) => b.son - a.son).slice(0, SATIR_MAX);
@@ -2009,7 +2009,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
   }
   function cagriYaz() {
     const metin = durum === 'bitti' ? 'gecenin yıldızı'
-      : gercekSayi() === 0 ? '🤖 demo — yaz, halaya gir' : '❤️ beğen de olur';
+      : gercekSayi() === 0 ? '🤖 demo · yaz, halaya gir' : '❤️ beğen de olur';
     const e = el('cagri');
     if (e.textContent !== metin) e.textContent = metin;
   }
@@ -2045,7 +2045,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     if (!ilk) S3.kaliteSifirla();
     cagriYaz(); sureYaz(); botDuzenle();
     if (!ilk) {
-      soyle('🥁 <b>YENİ HAVA</b> — yaz ya da ❤️ beğen, halaya gir', { oncelik: 2, sure: 3600 });
+      soyle('🥁 <b>YENİ HAVA</b> · yaz ya da ❤️ beğen, halaya gir', { oncelik: 2, sure: 3600 });
       // Oyun merkezi (oyun.html) gecisi TUR ARASINDA yapar; diger oyunlardaki ayni mesaj.
       try { if (parent !== window) parent.postMessage({ tt: 'tur-bitti' }, '*'); } catch { /* tek basina */ }
     }
@@ -2088,7 +2088,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     Finis.kart(kazananEl, {
       url: Kimlik.al(yildiz.kid).url,
       isim: yildiz.ad,
-      alt: yildiz.bot ? '⭐ gecenin yıldızı (demo) — yaz, sıradaki sen ol'
+      alt: yildiz.bot ? '⭐ gecenin yıldızı (demo) · yaz, sıradaki sen ol'
         : `⭐ gecenin yıldızı · ${Math.round(yildiz.puan)} katılım` + (yildiz.duet ? ` · ${yildiz.duet} düet` : ''),
     });
     // Karttaki gorsel: profil fotografi yuklendiyse o. CSSOM ile atanir —
@@ -2101,7 +2101,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     }
     soyle(`⭐ <b>GECENİN YILDIZI</b> ${adYer(yildiz.ad)}`, { oncelik: 3, sure: 4500 });
     // Botlar gercek sohbete hicbir sey yazdirmaz.
-    if (!yildiz.bot) TT.soyle(`💃 Gecenin yıldızı: @${yildiz.uid || yildiz.ad} — halayı o döktürdü! 🎉`);
+    if (!yildiz.bot) TT.soyle(`💃 Gecenin yıldızı: @${yildiz.uid || yildiz.ad}, halayı o döktürdü! 🎉`);
   }
 
   /** 100 ms'lik tik: 3D ile mantigi esler (giris bitisi, figur yeniden kurma, etiketler, balon kaydi). */
@@ -2155,7 +2155,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     if (d.bot) return;
     const oz = Profil.ozet(d.kid);
     soyle(`${Kimlik.cip(d.kid, 26)} ${adYer(d.ad)} ` +
-      (durum === 'oyun' ? 'halaya giriyor' : '— sıradaki havada halayda') +
+      (durum === 'oyun' ? 'halaya giriyor' : 'sıradaki havada halayda') +
       (oz ? ` <span class="ok">·</span> ${oz}` : ' <span class="ok">·</span> <b>İLK KEZ</b>'),
       { oncelik: 2, anahtar: 'gir' + d.kid });
   }
@@ -2187,7 +2187,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     doluSoz.set(kid, t);
     if (doluSoz.size > 400) doluSoz.delete(doluSoz.keys().next().value);
     selamEkle({ kid, ad, dolu: true });
-    soyle(`💃 ${adYer(ad)} — halay dolu, yer açılınca sıra sende`, { oncelik: 2, anahtar: 'dolu' + kid });
+    soyle(`💃 ${adYer(ad)}, halay dolu, yer açılınca sıra sende`, { oncelik: 2, anahtar: 'dolu' + kid });
   }
 
   /**
@@ -2214,13 +2214,13 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     } else if (kod === 'bekle') {
       const kalan = Math.max(1, Math.ceil((DAVET_ARA_SN * 1000 - (simdi() - sonDavet.get(a.kid))) / 1000));
       balonSistem(a, ['bekle', kalan, 'snSonra']);
-      soyle(`⏳ ${adYer(a.ad)} — ${kalan} sn sonra yine ortaya çağırabilirsin`, { oncelik: 2, anahtar: 'bekle' + a.kid });
+      soyle(`⏳ ${adYer(a.ad)}, ${kalan} sn sonra yine ortaya çağırabilirsin`, { oncelik: 2, anahtar: 'bekle' + a.kid });
     } else if (kod === 'hedefbekle') {
       balonSistem(a, ['oncekiOrta']);
-      soyle(`💃 ${adYer(b.ad)} az önce ortadaydı — ${adYer(a.ad)}, başka birini kaldır`, { oncelik: 2, anahtar: 'hb' + a.kid });
+      soyle(`💃 ${adYer(b.ad)} az önce ortadaydı · ${adYer(a.ad)}, başka birini kaldır`, { oncelik: 2, anahtar: 'hb' + a.kid });
     } else if (kod === 'dolu') {
       balonSistem(a, ['ortaDolu']);
-      soyle(`🎪 ${adYer(a.ad)} — orta şu an dolu, az sonra yine dene`, { oncelik: 2, anahtar: 'dolu' + a.kid });
+      soyle(`🎪 ${adYer(a.ad)}, orta şu an dolu, az sonra yine dene`, { oncelik: 2, anahtar: 'dolu' + a.kid });
     } else if (kod === 'zaten') {
       const k = kacinci();
       balonSistem(a, orta && orta.kim === a.kid ? ['ortadasin'] : k ? ['siradasin', k] : ['siraSende']);
@@ -2271,7 +2271,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
         let enNo = 0;
         for (const x of dans.values()) if (x.no > enNo) enNo = x.no;
         balonSistem(d, ['birIle', enNo, 'arasiYaz']);
-        soyle(`🔢 numara yaz: <b>1–${enNo}</b> arası → dansa kaldır`, { oncelik: 1, anahtar: 'nohint' });
+        soyle(`🔢 numara yaz: <b>1-${enNo}</b> arası → dansa kaldır`, { oncelik: 1, anahtar: 'nohint' });
         return;
       }
       istekSonuc(ortaIste(d, h), d, h);
@@ -2286,7 +2286,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
     const nolar = r.belirsiz.slice(0, 4).map((kid) => dans.get(kid)).filter(Boolean).map((x) => x.no).join(' · ');
     if (!d.gorunur) sahneyeAl(d);
     balonSistem(d, ['numara', ...r.belirsiz.slice(0, 3).map((kid) => dans.get(kid)).filter(Boolean).map((x) => x.no)]);
-    soyle(`🔎 bu adda birden fazla kişi var — numarasını yaz: <b>${nolar}</b>`, { oncelik: 1, anahtar: 'belirsiz' });
+    soyle(`🔎 bu adda birden fazla kişi var · numarasını yaz: <b>${nolar}</b>`, { oncelik: 1, anahtar: 'belirsiz' });
   });
 
   TT.on('like', (ev) => {
@@ -2325,8 +2325,8 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
       listeKirli = true;
       // Danscisi yok: kendi balonu da olamaz. Serit satiri HEMEN, iri anons sirasi gelince.
       if (elmas < 10) tempoCosku();
-      anonsEkle({ ust: '🎁 SAĞ OL!', ad: g.ad, alt: 'halay şu an dolu — yer açılınca mendil sende', sure: 2400 });
-      soyle(`🎁 ${adYer(g.ad)} — sağ ol! halay şu an dolu, yer açılınca mendil sende`, { oncelik: 3, sure: 3400 });
+      anonsEkle({ ust: '🎁 SAĞ OL!', ad: g.ad, alt: 'halay şu an dolu · yer açılınca mendil sende', sure: 2400 });
+      soyle(`🎁 ${adYer(g.ad)}, sağ ol! Halay şu an dolu, yer açılınca mendil sende`, { oncelik: 3, sure: 3400 });
       if (window.Ses) Ses.cal('hediye');
       return;
     }

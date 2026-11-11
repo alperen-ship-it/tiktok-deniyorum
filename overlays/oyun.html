@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>Oyun Merkezi — tek link, tam otomasyon</title>
+<title>Oyun Merkezi · tek link, tam otomasyon</title>
 <style>
   /* TEK LINK MODU.
      Yayinci LIVE Studio'ya SADECE bu sayfayi ekler; oyunlar burada doner.
@@ -152,7 +152,7 @@
       // sohbetten de gorsun. Kopru yoksa fetch sessizce duser.
       try {
         fetch('/api/soyle?text=' + encodeURIComponent(
-          `🎮 Sıradaki oyun: ${o.ikon} ${o.ad} — ekrana bak, katıl!`),
+          `🎮 Sıradaki oyun: ${o.ikon} ${o.ad}. Ekrana bak, katıl!`),
           { method: 'POST', headers: { 'X-TT': '1' } }).catch(() => {});
       } catch { /* olsun */ }
     }

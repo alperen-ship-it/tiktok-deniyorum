@@ -5,20 +5,20 @@ Tam tasarım `devir/PLAN-INSAN.md` bölüm 11.2'de (`overlays/cay.html`, merkez 
 
 ## Oyun tek cümleyle
 
-Sıcak bir bardak çay izleyiciden izleyiciye dolaşır; soğumadan birine uzat, oda
+Sıcak bir bardak çay izleyiciden izleyiciye dolaşır: soğumadan birine uzat, oda
 birlikte bir zincir kursun.
 
-- Yorum yazan (ne yazarsa yazsın) el kaldırır ve sıraya girer; yazdığı metin atılır.
-- Bardak sendeyken `@isim` ya da bir etiket numarası yazarsan bardağı ona uzatırsın;
-  başka bir şey yazarsan en uzun bekleyene gider.
+- Yorum yazan (ne yazarsa yazsın) el kaldırıp sıraya girer. Yazdığı metin atılır.
+- Bardak sendeyken `@isim` ya da bir etiket numarası yazarsan bardağı ona uzatırsın.
+  Başka bir şey yazarsan bardak en uzun bekleyene gider.
 - Beğeni çayı demler: bardakların süresini uzatır.
 - Hediye süre ekler ve göndereni öne çıkarır (yakın çekim, çaycının yüzünde profil
-  resmi); zincire halka eklemez, turu bitirmez.
+  resmi). Zincire halka eklemez, turu bitirmez.
 - Kimse elenmez. Süresi dolan bardak sıradakine geçer ama o halka sayılmaz ve
   kimsenin adı yazılmaz.
-- Hedef dolunca "TEPSİ DOLDU"; dolmazsa 150 saniyede "ÇAY BİTTİ — N halka".
+- Hedef dolunca "TEPSİ DOLDU", dolmazsa 150 saniyede "ÇAY BİTTİ — N halka" yazar.
 
-## Sıralama (danışman; 45 üzerinden)
+## Sıralama (danışman, 45 üzerinden)
 
 | Aday | Puan |
 |---|---|
@@ -38,12 +38,12 @@ kötüye kullanım / hassasiyet; platform kuralı.
 
 - Üç araştırmacı birbirinden bağımsız aynı mekaniği önerdi (pas zinciri).
 - Tek nesne, tek sayaç, bir anda tek ad ve yüz: okunması en kolay ekran.
-- Her pas, yeni bir izleyicinin yakın çekimidir; "dansa kaldır" ile aynı fiil.
+- Her pas yeni bir izleyicinin yakın çekimidir ve "dansa kaldır" ile aynı fiildir.
 
 ## Zayıf yanı
 
 Önemli hamle yalnızca bardağı tutandadır. Tasarım bunu aynı anda en çok 4 bardak,
-herkes için "el kaldır" ve süreyi uzatan beğenilerle hafifletir; yine de 300 kişilik
+herkes için "el kaldır" ve süreyi uzatan beğenilerle hafifletir. Yine de 300 kişilik
 odada çoğu izleyici bekler (danışman bu ölçüte 5 üzerinden 3 verdi).
 
 ## İkinci sıradaki
@@ -56,5 +56,5 @@ hemen yanında durur ve izleyiciden izleyiciye eylemi azdır.
 ## Uyarı
 
 Hiçbir adayın arkasında izlenme verisi yok. Puanlar ölçütlere göre verilmiş
-yargıdır; sayılar (15 sn tutma süresi, hedef formülü) ilk değerlerdir ve bir
+yargıdır. Sayılar (15 sn tutma süresi, hedef formülü) ilk değerlerdir ve bir
 benzetimle ayarlanmalıdır.

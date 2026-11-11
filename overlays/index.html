@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TikTok Yayın Oyuncakları — kontrol paneli</title>
+<title>TikTok Yayın Oyuncakları · kontrol paneli</title>
 <style>
   :root {
     --bg: #0b0d14;
@@ -207,25 +207,25 @@
     <br><br>
     <b>TikTok LIVE Studio:</b> <code>Kaynak ekle → Link</code> → aşağıdaki adresi yapıştır.
     Sonuna <code>?lite=1</code> ekle (gömülü tarayıcıda GPU yok, ağır efektler kare hızını
-    düşürüyor). 3D oyunlar (Halay, Düdüklü) varsayılan döngüde; OBS'te donanım hızlandırma açık olmalı.
+    düşürüyor). 3D oyunlar (Halay, Düdüklü) varsayılan döngüde. OBS'te donanım hızlandırma açık olmalı.
     <br><br>
-    <b>Adres kabul edilmezse:</b> Link kaynağı bazı sürümlerde <code>localhost</code> ve ham IP
-    reddediyor. O zaman <code>localhost</code> yerine <code>localtest.me</code> yaz —
-    aynı makineye çözülen gerçek bir alan adı, her durumda çalışır.
+    <b>Adres kabul edilmezse:</b> Link kaynağı bazı sürümlerde <code>localhost</code>'u ve ham IP'yi
+    reddediyor. O zaman <code>localhost</code> yerine <code>localtest.me</code> yaz:
+    aynı makineye çözülen gerçek bir alan adıdır, her durumda çalışır.
     <span id="ltm"></span>
     <br><br>
-    <b>OBS:</b> <code>Tarayıcı Kaynağı</code>'na olduğu gibi yapıştır (genişlik 1080, yükseklik 1920) —
-    şeffaflık doğrudan çalışır, <code>?lite=1</code> gerekmez.
+    <b>OBS:</b> <code>Tarayıcı Kaynağı</code>'na olduğu gibi yapıştır (genişlik 1080, yükseklik 1920).
+    Şeffaflık doğrudan çalışır, <code>?lite=1</code> gerekmez.
     <br><br>
     <b>Kendi başına çalışır:</b> Oyunu açıp bırakabilirsin. Oda boşken turlar
-    🤖 işaretli demo botlarla döner — gelen izleyici oyunu izleyerek anlar,
+    🤖 işaretli demo botlarla döner. Gelen izleyici oyunu izleyerek anlar,
     sohbete yazdığı an sıradaki tur gerçek olur. Demo kazananları sohbet botunu
     tetiklemez, puan tablolarına girmez.
     <br><br>
     <b>Sohbet botu:</b> Oyunlar kazananları duyurur. Varsayılan: ekranda + konsolda.
     GERÇEK TikTok sohbetine yazması için köprüyü <code>--oturum &lt;sessionid&gt;</code>
-    ile başlat (tiktok.com çerezlerinden) — <u>ayrıca EulerStream'in ücretli planı
-    gerekir</u>; yoksa bot kendini kapatır, oyunlar etkilenmez.
+    ile başlat (tiktok.com çerezlerinden). <u>Ayrıca EulerStream'in ücretli planı
+    gerekir</u>, yoksa bot kendini kapatır. Oyunlar etkilenmez.
   </div>
 
   <div class="bar">
@@ -248,7 +248,7 @@
     <div id="olcumTablo" style="margin-top:10px;overflow-x:auto"></div>
     <div style="margin-top:8px;font-size:14px;opacity:.75">
       Veri sadece bu makinede (<code>tiktok-istatistik.json</code>), hiçbir yere gönderilmiyor.
-      <b>Kişi başı mesaj</b> oyunları karşılaştırmanın en dürüst ölçüsü — çok mesaj az kişiden de gelebilir.
+      <b>Kişi başı mesaj</b> oyunları karşılaştırmanın en dürüst ölçüsü: çok mesaj az kişiden de gelebilir.
     </div>
   </div>
 
@@ -266,7 +266,7 @@
     {
       oyun: true,
       file: 'oyun.html',
-      name: '🎮 OYUN MERKEZİ — tek link (önerilen)',
+      name: '🎮 OYUN MERKEZİ · tek link (önerilen)',
       desc: 'SADECE BUNU EKLE, gerisi otomatik: üç oyun (At Yarışı, Halay, Düdüklü) sırayla döner, geçişler tur arasında yapılır (tur ortasında ekran değişmez), oda boşken demo turları çalışır, geçişlerde sohbet botu duyuru bırakır. Yayın boyunca hiçbir şeye dokunmazsın.',
       opts: '<code>?dk=6</code> oyun başına dakika · <code>?oyunlar=at,halay,tencere</code> hangi oyunlar, hangi sıra (varsayılan bu) · <code>?duyuru=0</code> geçiş duyurusu kapat · diğer tüm parametreler (<code>?lite=1&sag=24</code>...) oyunlara aynen geçer',
     },
@@ -275,7 +275,7 @@
       oyun: true,
       file: 'at.html',
       name: '🏇 At Yarışı + Tahmin',
-      desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür — formu okuyan öne geçer). Çarpan havuzdan. Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı — sonucu yine form + şans belirler). Varış sırası tam koşulur, podyum gösterilir. Doğru tahmin edenler sohbet botuyla @etiketlenir.',
+      desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür, formu okuyan öne geçer). Çarpan havuzdan. Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı: sonucu yine form + şans belirler). Varış sırası tam koşulur, podyum gösterilir. Doğru tahmin edenler sohbet botuyla @etiketlenir.',
       opts: '<code>?tahmin=25</code> tahmin süresi (sn) · <code>?sure=20</code> koşu uzunluğu · puanlar ve galibiyetler kalıcı (localStorage)',
     },
     {
@@ -321,7 +321,7 @@
       file: 'durum.html',
       yatay: true,
       name: '📊 Durum Kartı',
-      desc: 'Dışarıdan çektiğin veriyi köşede gösterir: Valorant rankın, çalan şarkı, hava durumu. İsteği köprü atıyor — CORS derdi yok ve API anahtarın yayında ekranda görünmüyor. Başlamak için <code>server/veri-kaynaklari.ornek.json</code> dosyasını <code>veri-kaynaklari.json</code> adıyla kopyala.',
+      desc: 'Dışarıdan çektiğin veriyi köşede gösterir: Valorant rankın, çalan şarkı, hava durumu. İsteği köprü attığı için CORS derdi yok ve API anahtarın yayında ekranda görünmüyor. Başlamak için <code>server/veri-kaynaklari.ornek.json</code> dosyasını <code>veri-kaynaklari.json</code> adıyla kopyala.',
       opts: '<code>?kaynak=valorant</code> hangi kaynak · <code>?baslik=RANK</code> · <code>?ana=rank</code> büyük değer · <code>?alt=puan,sonMac</code> alt satır · <code>?gorsel=gorsel</code> · <code>?kose=sag-ust</code>',
     },
   ];
@@ -403,7 +403,7 @@
     if (c) {
       navigator.clipboard.writeText(c.dataset.copy)
         .then(() => flash('Adres kopyalandı'))
-        .catch(() => flash('Kopyalanamadı — elle seç'));
+        .catch(() => flash('Kopyalanamadı, elle seç'));
     }
     const on = e.target.closest('[data-onizle]');
     if (on) {
@@ -435,7 +435,7 @@
     fetch('/api/fire?type=' + encodeURIComponent(type), TT_POST)
       .then((r) => r.json())
       .then((d) => flash(`${type} → ${d.sentTo} katmana gönderildi`))
-      .catch(() => flash('Köprü kapalı — sadece önizlemeler çalışıyor'));
+      .catch(() => flash('Köprü kapalı, sadece önizlemeler çalışıyor'));
   }
 
   // ---- kumanda: bağlan / sahte veri / durdur -------------------------------
@@ -491,7 +491,7 @@
           statusTxt.textContent = 'mock modu (sahte olaylar)';
         } else {
           dot.className = 'dot off';
-          statusTxt.textContent = d.user ? `@${d.user} — ${d.detay || 'bağlanılamadı'}` : 'boşta';
+          statusTxt.textContent = d.user ? `@${d.user}: ${d.detay || 'bağlanılamadı'}` : 'boşta';
         }
         statsBox.style.display = '';
         document.getElementById('stats').textContent =
@@ -499,7 +499,7 @@
       })
       .catch(() => {
         dot.className = 'dot off';
-        statusTxt.textContent = 'köprü kapalı — node server/bridge.js --mock';
+        statusTxt.textContent = 'köprü kapalı · node server/bridge.js --mock';
         statsBox.style.display = 'none';
       });
   }
@@ -508,7 +508,7 @@
 
   // ---- olcum tablosu ------------------------------------------------------
   const OYUN_ADI = {
-    at: '🏇 At', halay: '💃 Halay', tencere: '🍲 Düdüklü', bilinmiyor: '— tek oyun',
+    at: '🏇 At', halay: '💃 Halay', tencere: '🍲 Düdüklü', bilinmiyor: 'tek oyun',
   };
   function olcum() {
     fetch('/api/istatistik').then((r) => r.json()).then((d) => {
@@ -522,7 +522,7 @@
         .sort((a, b) => b[1].kisi - a[1].kisi);
       const el = document.getElementById('olcumTablo');
       if (!satirlar.length) {
-        el.innerHTML = '<div style="opacity:.6">Henüz veri yok — yayın açılınca dolar.</div>';
+        el.innerHTML = '<div style="opacity:.6">Henüz veri yok. Yayın açılınca dolar.</div>';
         return;
       }
       el.innerHTML =
@@ -537,7 +537,7 @@
             `<td style="padding:3px 14px 3px 0">${OYUN_ADI[ad] || ad}${aktif ? ' ●' : ''}</td>` +
             `<td style="padding:3px 14px 3px 0">${o.kisi}</td>` +
             `<td style="padding:3px 14px 3px 0">${o.mesaj}</td>` +
-            `<td style="padding:3px 14px 3px 0">${o.kisiBasi}</td>` +
+            `<td style="padding:3px 14px 3px 0">${String(o.kisiBasi).replace('.', ',')}</td>` +
             `<td style="padding:3px 14px 3px 0">${o.ilkKez}</td>` +
             `<td style="padding:3px 14px 3px 0">${o.begeni}</td>` +
             `<td style="padding:3px 14px 3px 0">${o.hediye}</td>` +
