@@ -236,7 +236,11 @@
   // Profil fotograflari TikTok'un sunucularindan gelir. Bu kaynak baska
   // sitelerden resim yukleyebiliyor mu? Uc ayri site denenir; biri yeterli.
   // Istekle hicbir kisisel veri gitmez (referrer kapali, cerez yok).
+  // ?dis=0 bu sinamayi atlar: otomatik testler disariya (tiktok.com dahil) hic istek atmasin.
   (function () {
+    if (/[?&]dis=0(&|$)/.test(location.search)) {
+      yaz.resim('bilgi', 'sınanmadı (dis=0)'); yaz.yuz('bilgi', 'sınanmadı (dis=0)'); return;
+    }
     var ADRESLER = ['https://www.tiktok.com/favicon.ico', 'https://www.google.com/favicon.ico', 'https://github.com/favicon.ico'];
     var yuklenen = [], biten = 0, cizildi = false;
     function son() {

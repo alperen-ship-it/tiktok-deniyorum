@@ -134,7 +134,7 @@
   const elDone = document.getElementById('done');
 
   document.getElementById('label').textContent = q.get('label') || P.label;
-  document.getElementById('doneSub').textContent = P.unit + ' ' + (q.get('label') || P.label).toLowerCase();
+  document.getElementById('doneSub').textContent = P.unit + ' ' + (q.get('label') || P.label).toLocaleLowerCase('tr');   // Turkce kucuk harf kurali: toLowerCase() buyuk I'lari bozuyordu
 
   function render() {
     const pct = Math.min(100, (cur / goal) * 100);
