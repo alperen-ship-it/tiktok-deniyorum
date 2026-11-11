@@ -463,7 +463,7 @@ Scores 1 (poor) to 5 (good); for the two risk columns 5 means low risk. Evidence
 - Timeout: the glass goes to the longest-waiting hand with the bubble "SOĞUMASIN!". That link is drawn grey and **does not count**. The holder is not named in any text.
 - A counted link = a pass made by the holder's own comment. A pass to a named person is worth the same as an unnamed one; naming is its own reward (the close-up).
 - Goal `HEDEF = clamp(8 + round(A / 2), 12, 60)`, recomputed until 30 s into the round, then fixed.
-- Round ends at the goal ("TEPSİ DOLDU") or at 150 s ("ÇAY BİTTİ — N halka"). Celebration 10 s, then `tur-bitti`.
+- Round ends at the goal ("TEPSİ DOLDU") or at 150 s ("ÇAY BİTTİ · N halka"). Celebration 10 s, then `tur-bitti`.
 - Expected length: 6 participants about 75 s; 30 about 100 s; 150 about 100 s.
 
 #### Anti-solo and fairness
@@ -488,7 +488,7 @@ Scores 1 (poor) to 5 (good); for the two risk columns 5 means low risk. Evidence
 
 #### Words
 - Bubbles (fixed table): "BUYUR!", "AFİYET!", "BANA DA!", "SOĞUMASIN!", "sıra sende", "o şimdi içti", "sağ ol".
-- Strip: "☕ {ad} → {ad}", "🫖 {ad} demledi", "🎁 {ad} sağ ol! — taze dem".
+- Strip: "☕ {ad} → {ad}", "🫖 {ad} demledi", "🎁 {ad}, sağ ol! Taze dem".
 - Card at the goal: title "TEPSİ DOLDU", name line = last holder, second name line = demleyen, sub-line "N halkalık zincir · K kişi içti".
 - Chat line: "☕ Çay zinciri: N halka! Son yudum @x, demleyen @y 🎉".
 - No word from the betting list; nothing is "won".

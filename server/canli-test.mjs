@@ -140,7 +140,7 @@ for (const kullanici of hedefler) {
   const sayac = { yorum: 0, hediye: 0, begeni: 0, takip: 0, paylasim: 0, katilan: 0 };
 
   c.on('chat', (d) => {
-    if (sayac.yorum < 5) console.log(`   yorum    ${d.user?.uniqueId}: ${d.comment}`);
+    if (sayac.yorum < 5) console.log(`   yorum    ${d.user?.uniqueId} (${String(d.comment ?? '').length} karakter)`);
     sayac.yorum++;
   });
   c.on('gift', (d) => {

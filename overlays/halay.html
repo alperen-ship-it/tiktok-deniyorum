@@ -1238,7 +1238,7 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
         for (const d of dans.values()) { d.zipla = 0.42; if (d.fig) S3.figur.hareket(d.kid, 'zipla'); }
         Juice.parla(coskuDoluEl);
         anonsEkle({ ust: '🔥 HALAY COŞTU!', alt: 'bar doldu · beğenmeye devam, tempo düşmesin', sure: 2400, renk: 'var(--altin)' });
-        soyle('🔥 <b>HALAY COŞTU!</b> bar doldu, herkes döktürüyor', { oncelik: 3, sure: 3600, anahtar: 'sev2' });
+        soyle('🔥 <b>HALAY COŞTU!</b> Bar doldu, herkes döktürüyor', { oncelik: 3, sure: 3600, anahtar: 'sev2' });
         if (!konfetiAtildi) { konfetiAtildi = true; Juice.konfeti({ y: 0.34, adet: 60 }); }   // bir havada bir kez
       } else {
         anonsEkle({ ust: '🥁 HAVA OYNAKLAŞTI', alt: '❤️ beğenin, bar dolsun', sure: 1800 });
@@ -1656,9 +1656,9 @@ import { Sahne3D, THREE } from './_shared/sahne3d.js';
   const cesit = (g) => (g.dolu ? 'dolu' : g.takip ? (g.tekrar ? 'takip' : 'takipyeni') : g.yine ? 'yine' : 'yeni');
   const SELAM_UST = {
     tek: { dolu: '🥁 halay dolu · yer açılınca sıra sende', takip: '🥁 takip etti, sağ ol!',
-      takipyeni: '🥁 takip etti, hoş geldin!', yine: '🥁 yine hoş geldin!', yeni: '🥁 hoş geldin, halaya!' },
+      takipyeni: '🥁 takip etti, hoş geldin!', yine: '🥁 yine hoş geldin!', yeni: '🥁 halaya hoş geldin!' },
     cok: { dolu: '🥁 halay dolu · yer açılınca sıra sizde', takip: '🥁 takip ettiler, sağ olun!',
-      takipyeni: '🥁 takip ettiler, hoş geldiniz!', yine: '🥁 yine hoş geldiniz!', yeni: '🥁 hoş geldiniz, halaya!' },
+      takipyeni: '🥁 takip ettiler, hoş geldiniz!', yine: '🥁 yine hoş geldiniz!', yeni: '🥁 halaya hoş geldiniz!' },
   };
   /*
    * KARSILAMA KUYRUGU — kimse dusmez, bekleme SINIRLI:

@@ -16,7 +16,7 @@ birlikte bir zincir kursun.
   resmi). Zincire halka eklemez, turu bitirmez.
 - Kimse elenmez. Süresi dolan bardak sıradakine geçer ama o halka sayılmaz ve
   kimsenin adı yazılmaz.
-- Hedef dolunca "TEPSİ DOLDU", dolmazsa 150 saniyede "ÇAY BİTTİ — N halka" yazar.
+- Hedef dolunca "TEPSİ DOLDU", dolmazsa 150 saniyede "ÇAY BİTTİ · N halka" yazar.
 
 ## Sıralama (danışman, 45 üzerinden)
 

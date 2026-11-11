@@ -66,7 +66,7 @@ dosyaları yerinde düzenliyor)*
 | `TTStore\store.json` | Uygulama durumu (`source` anahtarını silmek tuvali temizler) |
 | `TTStore\localStore.json` | Efekt önbelleği |
 | `logs\renderer.log` | Renderer logu, içinde protobuf dökümleri var |
-| `Network\Cookies` | Chromium SQLite çerez veritabanı |
+| `Network\Cookies` | Chromium SQLite çerez veri tabanı |
 | `gecko_cache\` | ByteDance Gecko sıcak güncelleme paketleri |
 
 `services.json` şeması:

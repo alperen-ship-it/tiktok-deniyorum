@@ -71,7 +71,7 @@ async function kullaniciAdi(argumandan) {
   if (!process.stdin.isTTY) {
     console.log('');
     console.log('  Kullanici adi ayarlanmamis ve soru sorulacak bir konsol yok.');
-    console.log('  TEST modunda aciliyor. Kontrol panelinden kullanici adini');
+    console.log('  MOCK modunda aciliyor. Kontrol panelinden kullanici adini');
     console.log('  girip "Baglan" dersen kaydedilir ve bir daha sormaz.');
     console.log('');
     return null;
@@ -84,7 +84,7 @@ async function kullaniciAdi(argumandan) {
   console.log('   TikTok kullanici adin ne? (@ isaretini yazma)');
   console.log('   Ornek: dalpirin');
   console.log('');
-  console.log('   Bos birakip Enter\'a basarsan TEST MODU acilir:');
+  console.log('   Bos birakip Enter\'a basarsan MOCK MODU acilir:');
   console.log('   sahte yorumlar gelir, oyunlari denersin.');
   console.log('');
 
@@ -92,7 +92,7 @@ async function kullaniciAdi(argumandan) {
   const temiz = String(cevap || '').replace(/^@/, '').trim();
 
   if (!temiz) {
-    console.log('\n   Test modu seciliyor. Sonra degistirmek icin kontrol panelini kullan.\n');
+    console.log('\n   Mock modu seciliyor. Sonra degistirmek icin kontrol panelini kullan.\n');
     return null;
   }
 

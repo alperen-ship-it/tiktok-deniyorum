@@ -2,7 +2,7 @@
 #
 # NASIL CALISTIRILIR
 #   Depo sayfasi > Actions > "EXE uret" > sagdaki "Run workflow" dugmesi.
-#   ~3 dakika sonra ayni sayfanin altindaki "Artifacts" bolumunden
+#   ~1 dakika sonra ayni sayfanin altindaki "Artifacts" bolumunden
 #   TikTokOyunlar.zip inersin, icinden TikTokOyunlar.exe cikar.
 #
 #   Etiket atarsan (git tag v1.0.0 && git push --tags) ayrica

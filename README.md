@@ -39,7 +39,7 @@ paneli tarayıcıda açılır. Yayında değilsen bekler, yayına geçince kendi
    sitelerden resim yüklenip yüklenmediği (profil fotoğrafları TikTok'un kendi sunucularından gelir) ve
    böyle bir resmin tuvale çizilip çizilemediği. Ekran kartı (WebGL) ve ses yalnızca bilgi olarak yazılır.
    Üstteki özet satırı "HAZIR" diyorsa sorun yok. Sonra adresi oyunun adresine geri çevir.
-5. **Kontrol et** (yayına çıkmadan önce bir kez): adresin sonuna `&guvenli=1` ekle. Kırmızı gölgeli yerler
+5. **Güvenli bölgeye bak** (yayına çıkmadan önce bir kez): adresin sonuna `&guvenli=1` ekle. Kırmızı gölgeli yerler
    TikTok'un kendi düğmelerinin ve yorumların duracağı yerlerdir. Oyunun yazıları kırmızının içine girmemeli.
    Baktıktan sonra `&guvenli=1` kısmını sil.
 6. **3D kontrolü (halay ve Düdüklü varsayılan döngüde):** OBS → Ayarlar → Gelişmiş → *Tarayıcı Kaynağı Donanım Hızlandırmasını
@@ -61,7 +61,7 @@ paneli tarayıcıda açılır. Yayında değilsen bekler, yayına geçince kendi
 
 ### 🏇 At yarışı
 8 sabit at var. Her atın kalıcı adı, forması, koşudan koşuya taşınan galibiyetleri ve son 5 koşudaki formu
-vardır. Tahmin yapan izleyici yazı-tura atmaz, formu okur. İzleyici `1-8` ya da at adı yazarak ücretsiz
+vardır. İzleyici atların formuna bakar, `1-8` ya da at adı yazarak ücretsiz
 tahminini yapar. Çarpan havuzdan hesaplanır: az kişinin seçtiği at doğru çıkarsa
 çarpan büyür, kalabalığın tersine tahmin yapmak daha çok puan getirir. Doğru bilen
 `10 × çarpan` puan alır. Puanlar yalnızca skor tablosunda birikir. Koşu sırasında
@@ -76,7 +76,7 @@ Yarışmasız, ortak bir dans sahnesi. Gerçek 3D bir meydan: ortada platform, e
 - Düet için `@isim` ya da halkadaki bir **numara** yazarak birini dansa kaldırırsın. O da kabul eder ve ortada ikiniz oynarsınız.
 - **Halay başı** mendili taşır, ilk sırada durur.
 - **Coşku** yazdıkça ve beğeni geldikçe yükselir.
-- Küçük hediye **TEMPO** getirir: coşku artar, göndericinin adı yazılır. Çok büyük hediye **MEYDAN GÖSTERİSİ** başlatır:
+- Küçük hediye **TEMPO** getirir: coşku artar, gönderenin adı yazılır. Çok büyük hediye **MEYDAN GÖSTERİSİ** başlatır:
   halkalar kısa bir süre hızlanır, herkesin kolları havada.
 - Kafaların üstündeki balonlar yalnızca tezahürat (HEY! / HOP! / HOPPA! / OLEY!) ve parti emojisi gösterir.
   İzleyicinin yazdığı metin asla çıkmaz.
@@ -125,7 +125,7 @@ Kaynak: `overlays/tencere.html`.
 | **Oda boş** | Turlar 🤖 demo botlarıyla döner. Gelen izleyici oyunu izleyerek anlar. Yazdığı an sıradaki tur gerçek olur. |
 | **Kazanan çıktı** | Sohbet botu kazananı `@etiketler` (aşağıda). Puanlar ve at galibiyetleri kalıcı (localStorage). |
 
-**Sohbet botu için dürüst not:** Oyunlar kazananları duyurur. Varsayılan olarak
+**Sohbet botu için not:** Oyunlar kazananları duyurur. Varsayılan olarak
 duyuru **ekranda ve konsolda** görünür. *Gerçek TikTok sohbetine* yazması için
 köprüyü `--oturum <sessionid>` ile başlatman **ve** EulerStream'in ücretli planı
 gerekir (kütüphanenin `sendMessage`'ı onların bulutundan geçiyor). Yetki yoksa

@@ -838,7 +838,7 @@
         durumEl.textContent = 'yayın açık · ilk yorumu bekliyorum';
       } else if (status === 'mock') {
         perde.dataset.durum = 'canli';
-        durumEl.textContent = 'test modu';
+        durumEl.textContent = 'mock modu';
       } else if (status === 'live') {
         perde.dataset.durum = 'canli';
         durumEl.textContent = 'bağlandı · ilk yorumu bekliyorum';

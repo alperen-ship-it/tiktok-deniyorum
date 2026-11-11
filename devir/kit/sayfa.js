@@ -89,9 +89,10 @@ function PUNTO(esik) {
     for (let e = el; e; e = e.parentElement) { const c = getComputedStyle(e); op *= Number(c.opacity); if (c.display === 'none' || c.visibility === 'hidden') gizli = true; }
     if (gizli || op < 0.05) continue;
     if (kutu.right < 0 || kutu.bottom < 0 || kutu.left > innerWidth || kutu.top > innerHeight) continue;
-    // giris/cikis animasyonunun ORTASINDAKI eleman olculmez (scaleX .2 -> 1 gibi gecici olcekler punto degildir)
+    // KISA (<=600 ms) giris/cikis animasyonunun ORTASINDAKI eleman olculmez (scaleX .2 -> 1 gibi gecici olcekler
+    // punto degildir). Uzun sonlu animasyonlar (spiker seridi: kayDikey 3,4 sn, butun gorunur omru) OLCULUR.
     let canli = false;
-    for (let e = el; e && e !== document.documentElement; e = e.parentElement) { if (e.getAnimations && e.getAnimations().some((a) => a.playState === 'running' && a.effect && a.effect.getComputedTiming().iterations !== Infinity)) { canli = true; break; } }
+    for (let e = el; e && e !== document.documentElement; e = e.parentElement) { if (e.getAnimations && e.getAnimations().some((a) => { if (a.playState !== 'running' || !a.effect) return false; const z = a.effect.getComputedTiming(); return z.iterations !== Infinity && Number(z.activeDuration) <= 600; })) { canli = true; break; } }
     if (canli) continue;
     // donusum olcegi
     let s = 1;
@@ -230,10 +231,11 @@ function GUVENLI(o) {
     const el = n.parentElement; if (!el || /^(SCRIPT|STYLE)$/.test(el.tagName)) continue;
     let op = 1, gizli = false; for (let e = el; e; e = e.parentElement) { const c = getComputedStyle(e); op *= Number(c.opacity); if (c.display === 'none' || c.visibility === 'hidden') gizli = true; }
     if (gizli || op < 0.05) continue;
-    // giris/cikis animasyonunun ORTASINDAKI eleman olculmez (PUNTO ile ayni kural): gecici olcek
-    // (bant girisindeki scaleX 1.03 gibi) durgun yerlesim degildir. Sonsuz animasyonlar olculur.
+    // KISA (<=600 ms) giris/cikis animasyonunun ORTASINDAKI eleman olculmez (PUNTO ile ayni kural): gecici
+    // olcek (bant girisindeki scaleX 1.03 gibi) durgun yerlesim degildir. Sonsuz ve uzun sonlu animasyonlar
+    // (spiker seridi) olculur.
     let canli = false;
-    for (let e = el; e && e !== document.documentElement; e = e.parentElement) { if (e.getAnimations && e.getAnimations().some((a) => a.playState === 'running' && a.effect && a.effect.getComputedTiming().iterations !== Infinity)) { canli = true; break; } }
+    for (let e = el; e && e !== document.documentElement; e = e.parentElement) { if (e.getAnimations && e.getAnimations().some((a) => { if (a.playState !== 'running' || !a.effect) return false; const z = a.effect.getComputedTiming(); return z.iterations !== Infinity && Number(z.activeDuration) <= 600; })) { canli = true; break; } }
     if (canli) continue;
     const r = document.createRange(); r.selectNodeContents(n);
     for (const k of r.getClientRects()) {

@@ -86,10 +86,10 @@ TikTok LIVE koprusu
   --key, -k <k>      EulerStream imzalama anahtari (ya da EULER_API_KEY ortam degiskeni)
   --gifts            Hediye katalogunu da cek (ikon URL'leri icin). UCRETLI uc,
                      varsayilan kapali. Kapaliyken hediye adi/elmas degeri yine gelir.
-  --no-80            Port 80'i da dinleme (varsayilan: dener)
+  --no-80            Port 80'i de dinleme (varsayilan: dener)
   --lan              Agdaki diger cihazlar da baglanabilsin (varsayilan: SADECE bu
                      bilgisayar: 127.0.0.1 ve ::1). Acinca ayni Wi-Fi'daki herkes
-                     paneli ve sohbet olaylarini gorebilir; sadece guvendigin agda kullan.
+                     paneli ve sohbet olaylarini gorebilir. Sadece guvendigin agda kullan.
   --host <a,b>       Izinli ek alan adlari (virgulle). Hazir izinli: localhost,
                      127.0.0.1, localtest.me, hosts dosyasinda 127.0.0.1'e yazdigin
                      adlar (yayin.local gibi). Baska bir adla acarsan 403 gorursun.
@@ -97,14 +97,14 @@ TikTok LIVE koprusu
                      baglan (varsayilan 180, en az 30)
   --oturum <sid>     Sohbet botu icin TikTok sessionid cerezi (bir kez ver,
                      ayarlara kaydedilir). GERCEK sohbete yazmak ayrica
-                     EulerStream'in ucretli planini gerektirir; yoksa bot
+                     EulerStream'in ucretli planini gerektirir. Yoksa bot
                      mesajlari sadece ekranda/konsolda gorunur.
   --idc <bolge>      tt-target-idc cerezi (varsayilan: useast1a)
   --klasor <yol>     Oyun dosyalarini bu klasorden oku (guncelleme icin).
                      Verilmezse exe'nin yanindaki overlays/ klasoru varsa
-                     otomatik kullanilir; yoksa exe'ye gomulu surum calisir.
+                     otomatik kullanilir. Yoksa exe'ye gomulu surum calisir.
   --gomulu           Yanindaki overlays/ klasorunu YOKSAY, gomulu surumu kullan
-  --verbose, -v      Her olayi konsola bas
+  --verbose, -v      Her olayi konsola bas (yorumun metni yazilmaz, yalnizca uzunlugu)
 `);
   process.exit(0);
 }
@@ -172,7 +172,7 @@ function erisimDenetle(req) {
       log(dosyaMi
         ? `!! dosyadan acilan sayfa reddedildi (Origin ${o}). Izin icin:  --host null`
         : portFarki
-          ? `!! baska porttan gelen istek reddedildi: Origin ${o} (bu sunucu: ${req.headers.host})`
+          ? `!! baska porttan gelen istek reddedildi (Origin ${o}, bu sunucu: ${req.headers.host})`
           : `!! baska siteden gelen istek reddedildi (Origin ${o}). Gerekiyorsa:  --host ${oAd || '<ad>'}`);
     }
     return dosyaMi
@@ -627,7 +627,8 @@ function emit(ev) {
     const who = ev.user?.nickname || ev.user?.uniqueId || '';
     let ayrinti = '';
     switch (ev.type) {
-      case 'chat':    ayrinti = ev.comment ?? ''; break;
+      // Yorum METNI konsola da yazilmaz (konsol penceresi yayina alinabilir): yalnizca uzunlugu.
+      case 'chat':    ayrinti = 'yorum (' + String(ev.comment ?? '').length + ' karakter)'; break;
       case 'gift':    ayrinti = `${ev.gift?.name} x${ev.gift?.count} (${ev.gift?.value} elmas)`; break;
       case 'like':    ayrinti = `+${ev.likes}` + (ev.totalLikes ? ` (toplam ${ev.totalLikes})` : ''); break;
       case 'viewers': ayrinti = `${ev.count} izleyici`; break;   // eskiden bos basiyordu
@@ -1205,7 +1206,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
      at.html      At Yarisi (2D): 8 sabit at, 1-8 yaz tahminini yap, carpan havuzdan
      halay.html   Halay (3D): yaz/begen = halaya gir, @isim ya da numara = dansa kaldir
      tencere.html Duduklu (3D): yaz, atesi harla, tencereyi birlikte pisir
-     (3D oyunlar da varsayilan dongude; OBS'te donanim hizlandirma acik olmali)
+     (3D oyunlar da varsayilan dongude. OBS'te donanim hizlandirma acik olmali.)
 
       Hepsi kendi kendine donuyor: katilim penceresi acilir, oyun
       oynanir, kazanan cikar, yeni tur baslar. Mudahale gerekmiyor.
@@ -1215,7 +1216,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
 
      (?lite=1  -> LIVE Studio'nun gomulu tarayicisinda GPU yok,
                   blur/golge kapaniyor, akici kaliyor. HEP KULLAN.)
-     (?v=1 / ?y=1 -> yonelimi elle zorla; normalde gerekmez)
+     (?v=1 / ?y=1 -> yonelimi elle zorla, normalde gerekmez)
 
    >> OBS icin (Tarayici Kaynagi): seffaflik dogrudan calisir <<
      ${base}/overlays/oyun.html?lite=1   (dikey 1080x1920, tek link)
@@ -1257,7 +1258,7 @@ server.listen(args.port, DINLE_ADRES, async () => {
   if (args.tarayici) tarayiciAc(base + '/');
 
   if (args.mock || !args.user) {
-    if (!args.mock) log('kullanici adi yok, TEST moduna geciliyor.');
+    if (!args.mock) log('kullanici adi yok, MOCK moduna geciliyor.');
     startMock();
   } else {
     startLive(args.user).catch((e) => {

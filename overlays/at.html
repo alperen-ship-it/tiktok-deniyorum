@@ -763,7 +763,7 @@
       const fazla = gercekKazanan.length > 3 ? ` +${gercekKazanan.length - 3} kişi` : '';
       TT.soyle(`🏇 ${at.ad} kazandı! Tebrikler ${etiketler}${fazla} 🎉`);
     } else if (!demoTur) {
-      TT.soyle(`🏇 ${at.ad} kazandı, kimse görmedi! Sıradaki koşuda tahminini yap 🎯`);
+      TT.soyle(`🏇 ${at.ad} kazandı, kimse bilemedi! Sıradaki koşuda tahminini yap 🎯`);
     }
     // demo kosuda sohbete hic yazma — bos odaya bot mesaji spam olur
 
@@ -779,7 +779,7 @@
         : `#${i + 1} · kimse bilemedi · sürpriz koşu`,
     };
     document.getElementById('cagri').textContent = at.ad + ' kazandı';
-    Spiker.soyle(`🏆 <b>${at.ad}</b> ` + (dagitilan.length ? `· ${dagitilan.length} kişi bildi` : '· kimse görmedi bunu'),
+    Spiker.soyle(`🏆 <b>${at.ad}</b> ` + (dagitilan.length ? `· ${dagitilan.length} kişi bildi` : '· kimse bilemedi'),
       { oncelik: 3, sure: 4500 });
     rayOdeme(i, dagitilan);
     liderlikCiz();

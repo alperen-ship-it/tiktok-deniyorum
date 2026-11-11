@@ -25,9 +25,9 @@ olarak eklenen sayfalardır. Dikey 1080×1920.
 | Kontrol sayfası | `overlays/kontrol.html` | Yeni, kaynağın oyunları çalıştırıp çalıştıramadığını sınar |
 | 3D çekirdek | `overlays/_shared/sahne3d.js` + `vendor/three.module.min.js` | Çalışıyor, plan gereği üründen çıkacak |
 | Ortak kabuk | `overlays/_shared/` (tt.js, oyun-tema.css, finis.js, spiker.js, ulti.js …) | İncelendi |
-| Yayıncı araçları | alerts, like-goal, gift-rain, durum (.html) | Dokunulmadı |
+| Yayıncı araçları | alerts, like-goal, gift-rain, durum (.html) | Yalnızca yazıları düzeltildi (alerts, like-goal, durum) |
 | Köprü | `server/bridge.js`, `guvenlik.js`, `yeniden.js` | İncelendi (güvenlik + yeniden bağlanma) |
-| Exe derleme | `.github/workflows/exe-uret.yml` (yalnızca elle tetiklenir) | — |
+| Exe derleme | `.github/workflows/exe-uret.yml` (elle ya da `v*` etiketiyle tetiklenir) | — |
 
 Silinenler (yayıncının isteğiyle, git geçmişinde duruyor): misket, bilgi, kapışma
 (pk), tepe, kalan, ordu, plinko, tırmanış, labirent, bölge, plaka, race, battle,
@@ -52,7 +52,7 @@ kipidir, hiçbir yere bağlanmaz), sonra `http://localhost:8787/overlays/oyun.ht
 - Yetki: "sana bırakıyorum ne yapılacağına sen karar ver … metriklere göre
   gidelim"; "ceo olarak konumlandım seni … hangi model ile yürüteceğine sen karar ver".
 
-Kalıcı kurallar (hepsi test kitinde sınanıyor):
+Kalıcı kurallar (9 ve 10 dışındakiler test kitinde sınanıyor):
 1. Tuval 1080×1920. Yazı x 60..1020 içinde. Yasak bölgeler: y<240; x<540 ve y>1250; y>1760.
 2. 30 pikselin altında yazı yok. İzleyici adı listelerde 54px. Sığmazsa 40px'e iner, sonra sarar. "…" yok.
 3. Üretimde `?lite=1`: filter, box-shadow, text-shadow, backdrop-filter, mask kapalı. Yalnızca transform ve opacity canlandırılır.
@@ -154,39 +154,78 @@ yok, dört yayıncı aracı üç kipte hatasız, README kodla uyumlu).
 
 ## 7. Test kiti (`devir/kit/`)
 
-Danışmanın yazdığı bağımsız testler. Depoya yazmaz. `kit/out/`, `kit/stage/`, `kit/bin/` altına çıktı üretir.
+Danışmanın yazdığı bağımsız testler. Depoya yazmaz. Çıktılarını `kit/out/`, `kit/stage/`,
+`kit/bin/`, `kit/head/` ve `kit/node_modules/` altına üretir. Hiçbiri git'e girmez.
 
 ```
 cd devir/kit
 PORT=9092 node regress.js repo --dikey      # üç oyun + merkez: hata, NaN, taşma
 PORT=9093 node regress.js repo --yatay
-PORT=9066 node dikey-kit.js repo at.html    # güvenli bölge, 30px tabanı, adlar
-node ham-metin.js halay.html --dikey        # sohbet metni hiçbir yerde görünmüyor mu
+PORT=9066 node dikey-kit.js repo at.html halay.html tencere.html   # güvenli bölge, 30px tabanı, adlar
+node ham-metin.js halay.html --dikey        # sohbet metni görünüyor mu (at.html ve tencere.html için de çalıştır)
 node at-probe.js repo                       # at yarışı: sözcükler, eşit ödül, hediye
-node halay-kit.js / tencere-kit.js          # oyun mantığı
+node halay-kit.js repo                      # halay: oyun mantığı
+node tencere-kit.js                         # Düdüklü: oyun mantığı
 node sec-probe.js                           # köprü güvenliği
 node host-test.js                           # --host / --lan bayrakları, 403 iletisi
+node dosya-test.js repo                     # file:// ile açılan sayfa köprüden olay alamaz
+node port80-test.js repo                    # LIVE Studio yolu: portsuz localtest.me adresi
 node build-fake.js && node reconnect.js repo   # yeniden bağlanma: sahte bağlantı, sanal saat
 node ses-karsilastir.js                     # ses.js geriye uyum
 node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 ```
 
-- Playwright ve Chromium gerekir. Chromium yolu `TT_CHROMIUM`, depo yolu `TT_REPO`
-  ortam değişkeniyle verilebilir (verilmezse depo `devir/kit`'in iki üstüdür).
-- Testleri sırayla çalıştır, aynı anda tek Chromium. Birkaç denetim zamana duyarlıdır:
-  `tencere-kit`'in denge benzetimi yük altında kırmızı verebilir, tek başına geçer.
+Son tam turun sonuçları (11 Kasım 2026, karşılaştırmak için):
+
+| Test | Sonuç |
+|---|---|
+| `regress.js` dikey / yatay | 4/4 ve 2/2 |
+| `dikey-kit.js` (üç sayfa) | 3/3 |
+| `at-probe.js` | 0 bulgu |
+| `ham-metin.js` (üç oyun) | sızıntı yok |
+| `tencere-kit.js` | 41 geçti (denge denetimi oynak, aşağıda) |
+| `halay-kit.js` | 55 geçti (bir kesme denetimi oynak, aşağıda) |
+| `sec-probe.js` | 117 deneme, 0 bulgu |
+| `reconnect.js` | 134 geçti, 1 kaldı (bilinen, aşağıda) |
+| `ses-karsilastir.js` | aynı |
+
+- Kurulum: kit `playwright` paketini ister. Önceki oturumun kabında genel kuruluydu.
+  Bilgisayarda `devir/kit` içinde `npm i playwright` ve `npx playwright install chromium`
+  çalıştır. Chromium yolu `TT_CHROMIUM`, depo yolu `TT_REPO` ortam değişkeniyle verilebilir
+  (verilmezse depo `devir/kit`'in iki üstüdür).
+- Eski bir sürümü sınamak için o sürümü bir klasöre çıkar ve `TT_REPO` ile göster:
+  `git archive <commit> overlays server | tar -x -C <klasör>`
+- Testleri sırayla çalıştır, aynı anda tek Chromium. `host-test.js`, `reconnect.js` ve
+  `c4-sim.js` tarayıcı açmaz, ötekiler açar. `PORT=` yalnızca regress, dikey-kit, at-probe,
+  ham-metin, halay-kit ve tencere-kit'te çalışır. Ötekilerin portu sabittir (9062-9069).
+- `kontrol.html` sayfasını testte `?dis=0` ile aç. Bu parametre olmadan sayfa, dış resim
+  sınaması için tiktok.com dahil üç siteye istek atar.
+- Oynak iki denetim var. İkisi de incelenmiş eski sürümde (`2fe5d68`) benzer sıklıkta kalıyor:
+  - `tencere-kit` denge, "5 izleyici / ara 20 sn": tur bazen patlamadan "pişti" ile biter
+    (basınç 90-99). Denetçide tek başına 9 koşunun 2'sinde kaldı.
+  - `halay-kit` ekran, `kesme: sirada "<ad>" … TAM olarak yok`: aynı 100 ms içinde giren
+    12 kişi tek karşılama satırında birleşir, etiket bütçesi en son gelenlere gider.
+    Denetçide 5 koşunun 4'ünde kaldı, ana oturumun koşusunda geçti.
 - `reconnect.js` sahte bir `tiktok-live-connector` paketiyle çalışır. Paketi
-  `node build-fake.js` üretir (`kit/node_modules/` altına, git'e girmez). Gerçek paketin
-  metnini `server/node_modules`'tan okur, çalıştırmaz. Önce `cd server && npm ci` gerekir.
-  Sahte paket yoksa köprü sessizce deneme kipine düşer ve senaryolar anlamsız sonuç verir.
+  `node build-fake.js` üretir (`kit/node_modules/` altına). Gerçek paketin metnini
+  `server/node_modules`'tan okur, çalıştırmaz. Önce `cd server && npm ci` gerekir.
+  Sahte paket yoksa köprü sessizce mock moduna düşer ve senaryolar anlamsız sonuç verir.
 - `reconnect.js` 135 denetimden 1'inde kalır (`ucusta-basari`): hesap değiştirilirken iki
   bağlantı kısa süre birlikte CONNECTED görünür, sonunda tek bağlantı kalır. İncelenmiş
   eski sürümlerde de aynıdır.
-- `ses-karsilastir.js` karşılaştırma tabanını `kit/head/` altında arar (git'e girmez).
-  Bir kez hazırla: `mkdir -p head && (cd ../.. && git archive 6d2594b overlays server) | tar -x -C head`
-- Güvenli bölge ve punto ölçümleri giriş ya da çıkış animasyonunun ortasındaki öğeyi
-  atlar, durağan hâli ölçer. Hediye bandı girerken %3 esner. Banda tam sığan bir ad bu
-  150 ms içinde kenar payına 8 piksel taşar, durağan hâlde payın içindedir.
+- `ses-karsilastir.js` karşılaştırma tabanını `kit/head/` altında arar. Bir kez hazırla:
+  `mkdir -p head && (cd ../.. && git archive 6d2594b overlays server) | tar -x -C head`
+- Güvenli bölge ve punto ölçümleri yalnızca kısa (en çok 600 ms) bir giriş ya da çıkış
+  animasyonunun ortasındaki öğeyi atlar. Spiker şeridi gibi uzun animasyonlu öğeler ölçülür.
+  Atlanan bilinen durum hediye bandının girişidir: bant girerken %3 esner. 29 karakterlik
+  ad kenar payına 133 ms boyunca 8 piksel taşar, bandı tam dolduran bir ad yaklaşık
+  300 ms boyunca 14 piksel taşar. Durağan hâlde ad payın içindedir.
+- Köprü istatistik dosyasını, çalıştığı ikili dosyanın yanına yazar. Kit koşularında bu
+  `kit/bin/tiktok-istatistik.json` olur ve koşular arasında kalır. Panelde eski oyun
+  adları (örneğin "bilye") görünürse bu dosyayı sil.
+- Yasak sözcük listeleri üç ayrı yerde durur ve birbirinden farklıdır: `at-probe.js`,
+  `halay-kit.js`, `tencere-kit.js`. Yeni oyuna kendi listesini yaz ya da listeleri
+  `lib.js`'te topla.
 - `kabuk-*.js`, `bilye-*.js`, `d3-*.js` ve `oyun-ek.js`'in bilgi/pk kısmı silinen
   ya da çıkacak parçalara aittir. Tarihsel olarak duruyor.
 - Yeni yazılacaklar PLAN-INSAN bölüm 10.1'de: `s2-kit.js`, `yonetmen-kit.js`, `yuz-kit.js`.
@@ -195,7 +234,7 @@ node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 
 - Son incelenmiş exe (silinen oyunları da içerir): https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/42924043453
 - Temizlik sonrası exe (kontrol sayfasıyla): bu dosyanın sonundaki "Ek" bölümüne bak.
-- Telefonda açılan canlı önizleme sayfası (silinen oyunları hâlâ gösteriyor, güncellenmeli): https://claude.ai/artifact/EHyxMbAbU7BKC22iabo7d8
+- Telefonda açılan canlı ön izleme sayfası (silinen oyunları hâlâ gösteriyor, güncellenmeli): https://claude.ai/artifact/EHyxMbAbU7BKC22iabo7d8
 
 ## 9. Sonraki sürüm notları
 
@@ -205,7 +244,7 @@ node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 - İlk gerçek yayından sonra bak: 60px kenar payı, gerçek profil resimleri, hoparlörde ses seviyesi, telefonda okunurluk.
 - Hiçbir oyun gerçek bir TikTok yayınında ve gerçek ekran kartında sınanmadı.
 
-Metin geçişinde görülen, dokunulmayan konular (hepsi Windows'ta denenmeli):
+Metin geçişinde görülen konular (Windows'ta denenmeli):
 
 - `Baslat.bat` kullanıcı adını kaydetmiyor olabilir. Kayıt satırı, adın sorulduğu
   parantezli bloğun içinde. `%TT_USER%` blok okunurken boş genişler. Doğruysa satırı
@@ -217,14 +256,29 @@ Metin geçişinde görülen, dokunulmayan konular (hepsi Windows'ta denenmeli):
   5.1 BOM'suz dosyayı ANSI okuduğu için bu çizgi büyük olasılıkla dizgiyi erken
   kapatıyordu (burada doğrulanamadı). Çizgi metin geçişinde kalktı. Betiği ilk
   çalıştırmada gözle.
-- `server/canli-test.mjs` gelen ilk 5 yorumu konsola yazar. Ekrana basmaz. Konsol
-  penceresi yayına alınıyorsa o satırı kapat.
+- Köprü `--verbose` ile her olayı konsola yazar ve `Baslat.bat` köprüyü bu bayrakla
+  başlatır. Yorumun metni eskiden bu pencerede görünüyordu. Artık yalnızca uzunluğu
+  yazılıyor (`chat  ad  yorum (12 karakter)`). `server/canli-test.mjs` de aynı.
+  Yayıncı metni konsolda görmek isterse `bridge.js` içindeki `case 'chat'` satırına bak.
 - `server/bridge.js` kopmada aynı sözü iki kez yazıyor: "baglanti koptu: baglanti koptu
   (N. deneme), …".
 - `overlays/_shared/gorsel/OKUBENI.md` eski bir oturumun ağzından yazılmış bir cümle
   taşıyor ("Ben bu makineden bu sitelere çıkamıyorum"). Klasör şu an kullanılmıyor.
 - `TERSINE-MUHENDISLIK.md` araştırma günündeki hâliyle duruyor: 6 oyuncak, bağlayıcı
   2.4.3, `alerts.html` örnekleri, eksik bölüm 3. Başına bunu söyleyen bir not eklendi.
+
+Denetçinin Düdüklü ve ortak bantta bulduğu, bu geçişten eski kusurlar (işçi N ve E'ye):
+
+- "DÜDÜK!" satırı üç uzun adla (29 + 21 + 29 karakter) iki satırlık şeride sığmıyor.
+  Üçüncü ad çizilmiyor ve satır sol alttaki yasak bölgeye iniyor (`tencere.html`, `dudukCal`).
+- Üç adlı teşekkür bandı, üç 29 karakterlik adla üç satıra çıkıyor. Etiketi y<240
+  bölgesine 3 piksel giriyor (`tencere.html`, hediye seli).
+- Çok geniş bir adla (30 tane "W") ad taşıyan spiker satırlarının çoğu üç satıra
+  çıkıyor ve sonu kesiliyor.
+- Düdüklü'nün komut şeridindeki 'HEDİYE → KÖRÜK' sabit "YAZ" çipinin yanında duruyor
+  ve "YAZ HEDİYE → KÖRÜK" diye okunuyor.
+- `overlays/_shared/ulti.js` içindeki giriş animasyonunda `scaleX(1.03)` 1 yapılırsa
+  bant taşması da kitteki istisna da gereksiz kalır.
 
 ## 10. Bu klasörde ne var
 

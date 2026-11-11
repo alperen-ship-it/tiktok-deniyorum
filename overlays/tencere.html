@@ -438,7 +438,7 @@ function numaraYaz() {
   if (durum === 'titreme') { t2 = '⚠ TİTRİYOR!'; titrek = true; }
   else if (durum === 'patladi') t2 = '💥 PATLADI!';
   else if (durum === 'pisti') t2 = '✔ KIVAMINDA PİŞTİ';
-  else t2 = esik === 0 ? "BASINÇ · düdük %33'te" : esik === 1 ? "BASINÇ · düdük %66'da" : 'BASINÇ · %100 patlar';
+  else t2 = esik === 0 ? "BASINÇ · düdük %33'te" : esik === 1 ? "BASINÇ · düdük %66'da" : "BASINÇ · %100'de patlar";
   if (du.textContent !== t2) du.textContent = t2;
   du.classList.toggle('titrek', titrek);
 }

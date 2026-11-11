@@ -222,7 +222,7 @@
     sohbete yazdığı an sıradaki tur gerçek olur. Demo kazananları sohbet botunu
     tetiklemez, puan tablolarına girmez.
     <br><br>
-    <b>Sohbet botu:</b> Oyunlar kazananları duyurur. Varsayılan: ekranda + konsolda.
+    <b>Sohbet botu:</b> Oyunlar kazananları duyurur. Varsayılan: ekranda ve konsolda.
     GERÇEK TikTok sohbetine yazması için köprüyü <code>--oturum &lt;sessionid&gt;</code>
     ile başlat (tiktok.com çerezlerinden). <u>Ayrıca EulerStream'in ücretli planı
     gerekir</u>, yoksa bot kendini kapatır. Oyunlar etkilenmez.
@@ -275,7 +275,7 @@
       oyun: true,
       file: 'at.html',
       name: '🏇 At Yarışı + Tahmin',
-      desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür, formu okuyan öne geçer). Çarpan havuzdan. Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı: sonucu yine form + rastlantı belirler). Varış sırası tam koşulur, podyum gösterilir. Doğru tahmin edenler sohbet botuyla @etiketlenir.',
+      desc: '8 SABİT at: kalıcı isim, forma, galibiyet + son 5 koşu formu (kulvarda görünür, formu okuyan öne geçer). Çarpan havuzdan. Koşu sırasında MESAJ ve BEĞENİ kendi atına tezahürat gücü verir (tavanlı: sonucu yine atın formu ve koşunun gidişi belirler). Varış sırası tam koşulur, podyum gösterilir. Doğru tahmin edenler sohbet botuyla @etiketlenir.',
       opts: '<code>?tahmin=25</code> tahmin süresi (sn) · <code>?sure=20</code> koşu uzunluğu · puanlar ve galibiyetler kalıcı (localStorage)',
     },
     {
@@ -291,7 +291,7 @@
       file: 'tencere.html',
       hub: 'oyun.html?lite=1&oyunlar=tencere',
       name: '🍲 Düdüklü (3D)',
-      desc: 'Herkes birlikte düdüklü tencereyi doldurur: yazmak = odun, beğeni de sayılır. 33 ve 66’da düdük öter, 100’de patlar. USTA AŞÇI en çok katkı yapandır; tek kişi tek başına patlatamaz. Oda boşken 🤖 botlar yardım eder. Hediye sınırlı destek verir, son itiş olmaz. Tur en çok ~2,5 dk.',
+      desc: 'Herkes birlikte düdüklü tencereyi doldurur: yazmak = odun, beğeni de sayılır. 33 ve 66’da düdük öter, 100’de patlar. USTA AŞÇI en çok katkı yapandır. Tek kişi tek başına patlatamaz. Oda boşken 🤖 botlar yardım eder. Hediye sınırlı destek verir, son itiş olmaz. Tur en çok ~2,5 dk.',
       opts: 'Varsayılan döngüde · GPU kontrolü: <code>overlays/sahne3d-deneme.html?kisi=150</code>',
     },
 
@@ -365,7 +365,7 @@
         <div class="desc">${o.desc}</div>
       </div>
       <div class="preview${o.yatay ? ' yatay' : ''}">${o.hub
-        ? `<button class="onizle" data-onizle="${url}?mock=1&rate=2">▶ önizle</button>`
+        ? `<button class="onizle" data-onizle="${url}?mock=1&rate=2">▶ ön izle</button>`
         : `<iframe src="${url}?mock=1&rate=2" loading="lazy"></iframe>`}</div>
       <div class="opts">${o.opts}</div>
       <div class="foot">
@@ -435,7 +435,7 @@
     fetch('/api/fire?type=' + encodeURIComponent(type), TT_POST)
       .then((r) => r.json())
       .then((d) => flash(`${type} → ${d.sentTo} katmana gönderildi`))
-      .catch(() => flash('Köprü kapalı, sadece önizlemeler çalışıyor'));
+      .catch(() => flash('Köprü kapalı, sadece ön izlemeler çalışıyor'));
   }
 
   // ---- kumanda: bağlan / sahte veri / durdur -------------------------------
@@ -495,7 +495,7 @@
         }
         statsBox.style.display = '';
         document.getElementById('stats').textContent =
-          `${d.clients} katman · ${d.events} olay · ${d.uptime}sn`;
+          `${d.clients} katman · ${d.events} olay · ${d.uptime} sn`;
       })
       .catch(() => {
         dot.className = 'dot off';

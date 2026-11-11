@@ -157,7 +157,7 @@
     var http = null, ws = null, bitti = false;
     function bitir() {
       if (bitti || http === null || ws === null) return; bitti = true;
-      if (http.ok && ws) yaz.kopru('iyi', 'bağlı · ' + (http.mode === 'live' ? (http.connected ? 'yayına bağlı' : 'yayın bekleniyor') : 'deneme kipi'));
+      if (http.ok && ws) yaz.kopru('iyi', 'bağlı · ' + (http.mode === 'live' ? (http.connected ? 'yayına bağlı' : 'yayın bekleniyor') : 'mock modu'));
       else if (http.ok) yaz.kopru('kotu', 'sayfa geldi ama canlı bağlantı (WebSocket) kurulamadı');
       else yaz.kopru('kotu', 'köprü cevap vermiyor. Uygulama açık mı, adres paneldeki gibi mi?');
     }
