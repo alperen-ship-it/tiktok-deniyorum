@@ -209,8 +209,12 @@ node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
   (commit `53e9ce9`). Üç oyun + merkez + `kontrol.html`. Temizlik danışman
   kontrolünden geçti. `kontrol.html` yalnızca ana oturumca sınandı (köprü deneme
   kipinde, 1080×1920, 405×720 ve 1280×720).
-- Çalışan alt ajan kalmadı. Bitmemiş uygulama işi yok: PLAN-INSAN'daki işlerin
-  hiçbirine (M, C, E, K, H, N, A, D) başlanmadı.
+- PLAN-INSAN'daki işlerin hiçbirine (M, C, E, K, H, N, A, D) başlanmadı.
+- **Türkçe metin geçişi sürüyor.** Ekran yazıları, panel, köprü iletileri, README ve bu
+  klasördeki Türkçe belgeler `turkish-anti-ai-skill` kılavuzuyla düzeltiliyor. `55f88a0`
+  ve sonrası `WIP (incelenmedi)` commit'leridir. Bu geçiş bir `Incelendi: Türkçe metin
+  geçişi` commit'iyle kapanır. Dalın ucunda o commit yoksa geçiş yarım kalmıştır: ya
+  `devir/kit` ile sınayıp tamamla ya da incelenmiş son duruma (`2fe5d68`) göre çalış.
 - Yayıncıdan beklenen: `kontrol.html` ekran görüntüsü (TikTok LIVE Studio ve OBS).
 - Yayıncıya sorulacak: profil resimleri karakterin yüzünde varsayılan olarak açık mı
   olsun (kendisi istedi, `?yuz=0` ve panel anahtarı planlandı), ÇAY ZİNCİRİ seçimine
