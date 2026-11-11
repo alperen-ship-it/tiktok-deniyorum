@@ -1,5 +1,9 @@
 # Scout A1 report: free 3D people for sprite baking
 
+> Handoff note: the scratch folder named below no longer exists. The scripts are now in
+> `tools/sprite-pisir/arac/`, the previews in `devir/varlik-onizleme/`, and the chosen pack in
+> `tools/sprite-pisir/varlik/quaternius-animated-people/`. The other downloads were not kept.
+
 Folder: /tmp/claude-0/-home-user-tiktok-deniyorum/641b8bd3-baa8-54a7-9936-ea040ee0b2a8/scratchpad/varlik/
 Scripts: varlik/_arac/ (inspect.mjs = GLB parser, splat.py = rough preview renderer, previews kk_a.png, qm.png, qa.png).
 Nothing downloaded was executed. Only tool run: `fbx2gltf` from npm (FBX -> GLB converter), used as a converter on FBX data.

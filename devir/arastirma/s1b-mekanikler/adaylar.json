@@ -1,0 +1,1201 @@
+[
+ {
+  "repo": "workaipvlinh-byte/lop-hoc-chu",
+  "url": "https://github.com/workaipvlinh-byte/lop-hoc-chu",
+  "segment": "s1b-mekanikler",
+  "what": "Vietnamese 9:16 'classroom' word-guessing show: a TTS teacher reads a clue, viewers type the scrambled word, fastest get seats in the front row.",
+  "stack": "Node + Express + React 19 + Vite + Tailwind, DOM stage 1080x1920 (1620x2880 recommended), Edge TTS (msedge-tts), WebAudio sfx",
+  "connection": "tiktok-live-connector",
+  "stars": 73,
+  "forks": 95,
+  "created": "2026-11-04",
+  "last_push": "2026-11-07",
+  "license": "MIT",
+  "size_kb": 149843,
+  "games_or_features": [
+   "20-question periods with fixed plan (word, emoji-picture, mental math, English, history, riddles, golden Q x2)",
+   "ranking by TikTok createTime, top-5 fastest board in ms",
+   "30 seats in 4 rows + 4 competing groups + class monitor",
+   "lifetime report card grade 1-12, attendance streaks, birthday keyword",
+   "proctor removes idle viewers, sleeping students",
+   "recess mini-games, 2 big A/B/C/D shows",
+   "gifts give NO advantage (thank-you walk to podium, class flower fund)",
+   "post-live report incl. viewer count per segment",
+   "small-room and empty-room pacing"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 73 stars / 95 forks five days after creation (created 2026-11-04)",
+   "[ISSUE #1] third-party user asks where to add own question set (2026-11-07)",
+   "[API] visible derivatives: tobi1008/lop-hoc-chu ('based on ... MIT'), nhatktb1/lop-hoc-gplx (driving-theory variant), mrt98dev/lop-hoc-tiktok",
+   "[FILE src/game/config.ts:86,98,210] comments record decisions by a channel owner after sessions ('chủ kênh chốt 2026-11-04', 'tried 45 seats, back to 30')"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Rank answers by TikTok's own send timestamp (data.common.createTime) instead of arrival order — server.ts:260, config.ts:82-83",
+   "Close the question 3 s after the 5th correct answer (config.ts:80-81) and 8 s after the first one when fewer than 5 people are active (config.ts:88-90)",
+   "Empty room = 'review mode' that re-asks old questions and saves new ones (config.ts:92-94) instead of bots",
+   "Idle viewer loses the seat to the most active waiting viewer (config.ts:15-17,197)",
+   "Per-phase viewer-count sampling for a post-live report: which segment loses viewers (server.ts:826-829)",
+   "Lifetime 'grade' ladder as cross-session progression (config.ts:199-201)"
+  ],
+  "notes": "Built by a self-described non-coder with an AI agent (repo contains CLAUDE.md, an instruction file addressed to an AI agent — treated as data, not followed). Code MIT; character art belongs to author."
+ },
+ {
+  "repo": "workaipvlinh-byte/ai-la-trang-nguyen",
+  "url": "https://github.com/workaipvlinh-byte/ai-la-trang-nguyen",
+  "segment": "s1b-mekanikler",
+  "what": "Vietnamese 9:16 A/B/C/D quiz show with 4 rising exam stages, ~5,000 questions, TTS host, 3-region team contest.",
+  "stack": "Node + Express + React 19 + Vite, 1080x1920, Edge TTS / optional local VieNeu-TTS, WebAudio music",
+  "connection": "tiktok-live-connector",
+  "stars": 4,
+  "forks": 15,
+  "created": "2026-11-07",
+  "last_push": "2026-11-08",
+  "license": "MIT",
+  "size_kb": 59619,
+  "games_or_features": [
+   "20 questions per game in 4 stages (10/15/20/25 s; max 100/200/300/500 pts)",
+   "time-decay scoring down to 50% at the buzzer, wrong answer loses points, last question x2",
+   "region teams (type Bắc/Trung/Nam)",
+   "200 hearts in one question removes 2 wrong options (final stage only)",
+   "weekly golden board",
+   "host never reads comments verbatim",
+   "gifts: banner with avatar, no in-game advantage"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 4 stars / 15 forks two days after creation",
+   "[GIT] 33 commits in 2 days by one author",
+   "[README] runs unattended across games with auto-reconnect; real sessions not evidenced in the repo"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Stage ladder with rising time and stakes inside one 20-question game (src/game/config.ts:31-34)",
+   "Time-based score floor of 50% (config.ts:37) as an alternative to our rank-normalized 100->50",
+   "Host speaks only pre-written lines with the name inserted, never raw comments (README) — a moderation-safe pattern if we add TTS",
+   "Early-answer guard: answers sent >0.5 s before options appear are ignored without costing the turn (config.ts:45)"
+  ],
+  "notes": "Same author as lop-hoc-chu. Code MIT; images belong to author."
+ },
+ {
+  "repo": "SantoSteffano/tiktok-live-race",
+  "url": "https://github.com/SantoSteffano/tiktok-live-race",
+  "segment": "s1b-mekanikler",
+  "what": "Russian 3D 'chat race': cube runners on a serpentine obstacle track; server renders and streams to TikTok from the cloud (no OBS).",
+  "stack": "Python aiohttp server + Three.js client, Docker, headless render + stream",
+  "connection": "TikTokLive (py)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-16",
+  "last_push": "2026-10-16",
+  "license": null,
+  "size_kb": 354,
+  "games_or_features": [
+   "any comment joins; lobby 22 s, 1500 m race (min 60 s), results 12 s",
+   "max 16 racers, bots fill to 5",
+   "like = x1.15 for 1 s, follow = x2.2 for 5 s, share = jetpack 40 m",
+   "gift ladder by diamonds: >=1 turbo, >=10 jetpack 120 m, >=30 lightning on leader 2.5 s, >=100 nuke",
+   "persistent 'aura' points and meme titles",
+   "Roblox skin by typing a Roblox nick",
+   "director camera, music-drop synced to GO"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 10 commits, single day (2026-10-16), one author",
+   "[FILE Dockerfile, docker-compose.yml] cloud deployment files present; no evidence of a public stream"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Follow and share as race boosts (config.json:23-25) — our marble race ignores like/follow/share",
+   "Diamond ladder where mid tiers hit the LEADER (config.json:34-39) and repeat is capped at 10 (config.json:40)",
+   "Persistent status ladder visible above the name (config.json:42-56)",
+   "Music drop aligned with the start signal (README)"
+  ],
+  "notes": "No licence file: ideas only."
+ },
+ {
+  "repo": "Chahmetski/live-loop-racers",
+  "url": "https://github.com/Chahmetski/live-loop-racers",
+  "segment": "s1b-mekanikler",
+  "what": "Automatic 3D car races for TikTok LIVE with up to 1,000 participants, ten gift effects, streamer panel, tests and an offline simulator.",
+  "stack": "Node (ES modules) + ws + Three.js, optional Electron; server-authoritative sim at 30 Hz",
+  "connection": "own signing (vendored ttl-live transport)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-31",
+  "last_push": "2026-10-31",
+  "license": "MIT",
+  "size_kb": 19630,
+  "games_or_features": [
+   "a FOLLOW creates your car (persisted across streams)",
+   "likes boost",
+   "gift ladder 1 / 5 / 30 / 199 / 500 / 1000 / 2988 / 5000 coins with distinct effects",
+   "portrait and landscape layouts",
+   "persistent ratings",
+   "bots off by default, one-click bot removal before going live"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] single commit 2026-10-31",
+   "[README] 'Screenshots show simulated participants, not a live customer broadcast'; automated tests and soak test described"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Follow-to-enter as the join action (README_RU.md:75) — worth knowing, but see TikTok rule notes before copying",
+   "Gift effects that act on rivals without deleting progress (README_RU.md:38-47)",
+   "A 'remove bots and test users' button before a real broadcast"
+  ],
+  "notes": "MIT for code [FILE LICENSE]; gift images and transport schemas have separate terms [README]. Connector detail -> s4."
+ },
+ {
+  "repo": "doncabrone-lab/tiktok-race-game",
+  "url": "https://github.com/doncabrone-lab/tiktok-race-game",
+  "segment": "s1b-mekanikler",
+  "what": "'Jockey Racing Bot': viewers !race to become one of 9 jockeys, others !pick a horse; 12-horse progression, SQLite persistence, host tournaments.",
+  "stack": "Node + Express + socket.io + React + Vite, sql.js, built in Google AI Studio",
+  "connection": "tik.tools (@tiktool/live)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-06",
+  "last_push": "2026-10-01",
+  "license": null,
+  "size_kb": 21111,
+  "games_or_features": [
+   "JOIN NOW 15 s (!race) -> 30 s pick window (!pick 1-9) -> 3 s countdown -> race -> winner + unlock ceremonies",
+   "fair random draw if >9 applicants, 2-race cooldown for recent racers",
+   "pick pays fixed +20/+10/+5 points for 1st/2nd/3rd",
+   "likes and gifts boost the lane you picked; gifts add stamina then speed points"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 73 commits 2026-09-06..2026-10-01, one author",
+   "[API] 0 stars, 0 forks; no homepage"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Command renamed from !bet to !pick ('!pick is the official command; !bet remains ... alias', server/gameEngine.ts:2454-2458) — wording moved away from betting",
+   "Fixed place payouts for 1st/2nd/3rd (gameEngine.ts:1175-1207) instead of odds",
+   "Rotation fairness: 2-race cooldown and random draw when oversubscribed (gameEngine.ts:628,1936)",
+   "Picks stay open during the race so late arrivals still get a horse (gameEngine.ts:2456-2465)"
+  ],
+  "notes": "No licence file: ideas only."
+ },
+ {
+  "repo": "acccaccc248-crypto/dua-ghe-ngo",
+  "url": "https://github.com/acccaccc248-crypto/dua-ghe-ngo",
+  "segment": "s1b-mekanikler",
+  "what": "Vietnamese two-team boat race (ghe ngo): type red/green to sit on the boat with avatar+name, hearts and gifts push it.",
+  "stack": "Single self-contained HTML (12 MB with embedded images), DOM/CSS animation",
+  "connection": "none/mock (expects a user-supplied WebSocket relay)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-09",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 8702,
+  "games_or_features": [
+   "comment with team word = join + 6 m",
+   "like = 0.4 m each (max 50 per event)",
+   "gift = diamonds clamped to 15..150 m",
+   "8 named seats with avatars per boat",
+   "demo bots toggle"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 6 commits, all on 2026-11-09",
+   "[FILE index.html:543] page itself says to use it for demo clips until the channel can go LIVE"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Clamp a single gift's effect to a band (index.html:1275) so one gift cannot end the round",
+   "Author's research note: small channels should let comment/heart push too, rounds 2-5 min, ~20-50 concurrent viewers needed for two teams (index.html:548)"
+  ],
+  "notes": "No licence file. Cites Livecade as a design reference (index.html:555)."
+ },
+ {
+  "repo": "carlotata/DuckRaceGame-TikTokLive",
+  "url": "https://github.com/carlotata/DuckRaceGame-TikTokLive",
+  "segment": "s1b-mekanikler",
+  "what": "Seven country ducks race across a river; each country has its own gift (+5%) and chat command (+0.3%).",
+  "stack": "Vanilla JS + Tailwind single page + Node ws bridge",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-04-03",
+  "last_push": "2026-04-06",
+  "license": null,
+  "size_kb": 54,
+  "games_or_features": [
+   "one gift and one /command per country",
+   "catch-up 'surge' momentum",
+   "win board per country",
+   "auto-restart 3 s after a winner"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 6 commits 2026-04-03..06, 2 authors",
+   "[API] 0 stars"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Gift identity as the team vote (README table) — no need to type a team first",
+   "Catch-up surges keyed to the gap (index.html:421)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "ElProfessor-spain/tiktok-horse-race",
+  "url": "https://github.com/ElProfessor-spain/tiktok-horse-race",
+  "segment": "s1b-mekanikler",
+  "what": "'Gift Derby': each horse is locked to one gift; it advances by the NUMBER of gifts sent, not their diamond value.",
+  "stack": "Node + Express + socket.io, single HTML track page",
+  "connection": "tik.tools / tiktok-live-connector (README names both)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-07-08",
+  "last_push": "2026-07-09",
+  "license": null,
+  "size_kb": 169,
+  "games_or_features": [
+   "gift count moves the horse",
+   "combo ticks move it live",
+   "setup panel to add horses and upload icons"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 36 commits 2026-07-08..09",
+   "[README] Render deployment instructions"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Count-based (not value-based) gift movement keeps cheap gifts meaningful"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "ommelayo25/TikTok-Marble-Race",
+  "url": "https://github.com/ommelayo25/TikTok-Marble-Race",
+  "segment": "s1b-mekanikler",
+  "what": "Tiny Matter.js marble race page with Supabase; no TikTok event code found.",
+  "stack": "HTML + Matter.js + Supabase",
+  "connection": "none/mock",
+  "stars": 1,
+  "forks": 0,
+  "created": "2025-03-18",
+  "last_push": "2025-03-18",
+  "license": null,
+  "size_kb": 3,
+  "games_or_features": [
+   "marble drop"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 1 commit (2025-03-18)",
+   "[FILE] 143 lines total, no connector"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "The only web 'marble race' code repo the searches returned."
+ },
+ {
+  "repo": "himmothyhimpton/tiktokhorseracing",
+  "url": "https://github.com/himmothyhimpton/tiktokhorseracing",
+  "segment": "s1b-mekanikler",
+  "what": "78-line single-page horse race prototype.",
+  "stack": "single HTML",
+  "connection": "none/mock",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-05-08",
+  "last_push": "2026-05-09",
+  "license": null,
+  "size_kb": 45,
+  "games_or_features": [
+   "horse race"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 16 commits 2026-05-08..09",
+   "[FILE index.html] 78 lines, no connector"
+  ],
+  "relevance": 1,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": ""
+ },
+ {
+  "repo": "duongtn811/english-live-quiz",
+  "url": "https://github.com/duongtn811/english-live-quiz",
+  "segment": "s1b-mekanikler",
+  "what": "Vietnamese->English vocabulary guessing overlay with control studio and demo mode.",
+  "stack": "Node + Express + ws, vanilla overlay 1080x1920 (transparent mode available)",
+  "connection": "tiktok-live-connector",
+  "stars": 1,
+  "forks": 1,
+  "created": "2026-11-02",
+  "last_push": "2026-11-02",
+  "license": null,
+  "size_kb": 50,
+  "games_or_features": [
+   "30 s rounds + 6 s reveal",
+   "10 base + up to 10 speed bonus, one score per viewer per round",
+   "a gift reveals the next letter for everyone (one reveal per giver per 2.5 s)",
+   "1,000-word deck",
+   "simulated viewers"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] single commit 2026-11-02",
+   "[API] 1 star, 1 fork"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Gift = public clue for the whole room (server/game.js:341-355) with a per-giver cooldown",
+   "Speed bonus as a linear share of remaining time (server/game.js:312-313)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "sonlamdev/emoji-quiz-tiktok-live",
+  "url": "https://github.com/sonlamdev/emoji-quiz-tiktok-live",
+  "segment": "s1b-mekanikler",
+  "what": "Vietnamese emoji-guessing quiz with AI virtual MC, TTS, daily/weekly/all-time boards, packaged Windows exe.",
+  "stack": "Node + Express + ws, Electron desktop build, Edge TTS / VieNeu-TTS",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-02",
+  "last_push": "2026-11-02",
+  "license": "MIT",
+  "size_kb": 2836,
+  "games_or_features": [
+   "top-3 fastest score",
+   "x2 from 3 correct in a row",
+   "leaderboard today / week / all",
+   "avatar rings on the board",
+   "uses localtest.me for LIVE Studio"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] tag v1.0.0 present",
+   "[README] prebuilt release zip mentioned",
+   "[API] 0 stars"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Three leaderboards (today / week / all-time) so newcomers can still top a board (public/game.js:20,285)",
+   "Named streak tiers at 3/5/10 (public/game.js:263-265)"
+  ],
+  "notes": "MIT [API]."
+ },
+ {
+  "repo": "alexdhg/tiktok-printer-live",
+  "url": "https://github.com/alexdhg/tiktok-printer-live",
+  "segment": "s1b-mekanikler",
+  "what": "Virtual 'printer' that prints chat/gift/like/follow lines plus a built-in word game with TTS; meant to be left AFK.",
+  "stack": "Node + Express + socket.io, jQuery page",
+  "connection": "tiktok-live-connector",
+  "stars": 89,
+  "forks": 25,
+  "created": "2022-07-03",
+  "last_push": "2025-12-22",
+  "license": "MIT",
+  "size_kb": 24782,
+  "games_or_features": [
+   "chat/gift/like/social/member lines printed",
+   "word guessing game with timeout",
+   "language packs"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 89 stars, 25 forks, created 2022-07-03",
+   "[ISSUE #1-#6] six different users 2022-2023 (connection errors, own-language word lists)"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Recognition toy first, game second: every event prints the viewer's name (public/assets/js/app.js:308-348)"
+  ],
+  "notes": "MIT. Last code push 2025."
+ },
+ {
+  "repo": "philkraft1/wheel-of-fortune",
+  "url": "https://github.com/philkraft1/wheel-of-fortune",
+  "segment": "s1b-mekanikler",
+  "what": "Turn-based Wheel-of-Fortune word puzzle driven by chat commands.",
+  "stack": "Node + ws, vanilla overlay + host desk, tests",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-14",
+  "last_push": "2026-11-06",
+  "license": null,
+  "size_kb": 333,
+  "games_or_features": [
+   "/join queue, /s spin, /g letter, /solve",
+   "20 s per turn",
+   "overlay kept to the upper half of the phone frame"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 8 commits 2026-10-14..11-06",
+   "[API] homepage on vercel"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Layout rule: fit the game in the upper half, leave the bottom for chat (README)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "aminmaskur88/tebak-kata",
+  "url": "https://github.com/aminmaskur88/tebak-kata",
+  "segment": "s1b-mekanikler",
+  "what": "Indonesian guess-the-word game for Facebook and TikTok LIVE with near-miss highlighting and TTS.",
+  "stack": "React + Vite + Tailwind, Node bridge",
+  "connection": "tiktok-live-connector / tik.tools",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-26",
+  "last_push": "2026-10-26",
+  "license": null,
+  "size_kb": 98,
+  "games_or_features": [
+   "near-miss comments turn green (1-letter typo or >70% similarity)",
+   "TTS reads comments with profanity filter",
+   "top-5 board",
+   "portrait and landscape modes"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] homepage tebak-kata-pearl.vercel.app",
+   "[GIT] 16 commits on 2026-10-26"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Near-miss feedback ('almost right') as a visible reward for trying (README; src/utils/similarity.js)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "fitrimahadzir/tiktok-live-wordle-game",
+  "url": "https://github.com/fitrimahadzir/tiktok-live-wordle-game",
+  "segment": "s1b-mekanikler",
+  "what": "Wordle-style and 'find the odd one' live game from Google AI Studio.",
+  "stack": "React + Express + socket.io",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-05-15",
+  "last_push": "2026-05-30",
+  "license": null,
+  "size_kb": 3977,
+  "games_or_features": [
+   "wordle board 4-7 letters",
+   "leaderboard with avatars"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[API] homepage tekata-live.vercel.app",
+   "[GIT] 26 commits in May 2026"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "hamid49174/gift-wars",
+  "url": "https://github.com/hamid49174/gift-wars",
+  "segment": "s1b-mekanikler",
+  "what": "Viewers become circles with profile pictures in an arena; gifts add points and size, stronger KO weaker; 3-minute rounds.",
+  "stack": "Node + Express + socket.io + React + Canvas",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-07",
+  "last_push": "2026-09-09",
+  "license": "MIT",
+  "size_kb": 3834,
+  "games_or_features": [
+   "comment = join + 1 point",
+   "gift points from diamonds; repeat within 15 s builds combo up to x1.6",
+   "power tiers at 10/100/1000/5000",
+   "3 min round + 10 s winner",
+   "16:9 arena plus 9:16 phone-capture mode"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 10 commits 2026-05-05..09-10",
+   "[FILE DEPLOY.md, deploy/] deployment bundle present",
+   "[API] 0 stars"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Same 10/100/1000 diamond ladder as ours, but tiers grant a timed speed/score boost (server/src/game/GameEngine.js:27-31)",
+   "Combo window for repeated gifts (GameEngine.js:22-23,613-621)"
+  ],
+  "notes": "MIT [API]."
+ },
+ {
+  "repo": "RafaelCorreaj/tiktok-battle",
+  "url": "https://github.com/RafaelCorreaj/tiktok-battle",
+  "segment": "s1b-mekanikler",
+  "what": "Open 'Girls vs Boys' comment battle: every matching comment hits the other side; knockout at the edge.",
+  "stack": "Node + Express + socket.io, vanilla page, synthesized sfx, pt-BR announcer",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-07-16",
+  "last_push": "2026-07-16",
+  "license": null,
+  "size_kb": 24475,
+  "games_or_features": [
+   "comments only",
+   "round 180 s",
+   "knockout when the gap reaches 8 hits",
+   "combo text for quick same-team streaks",
+   "realistic simulator"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 8 commits on 2026-07-16",
+   "[README] status 'active development'"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Early knockout ends the round when one side dominates (server.js:22)",
+   "Hit lands on the OPPONENT visually while the scorer steps forward (README)"
+  ],
+  "notes": "No per-user rate limit: every matching comment counts (server.js:280-285). | licence note: README badge says MIT but no LICENSE file in tree"
+ },
+ {
+  "repo": "Pauluwu18/guerra-live-tiktok",
+  "url": "https://github.com/Pauluwu18/guerra-live-tiktok",
+  "segment": "s1b-mekanikler",
+  "what": "Spanish 2D medieval war: 20v20, 1v1 duel and boss raid with hand-made sprites.",
+  "stack": "Node server + vanilla ES modules canvas, tests",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-23",
+  "last_push": "2026-09-24",
+  "license": null,
+  "size_kb": 7158,
+  "games_or_features": [
+   "join with !jugar / !jade / !coral",
+   "20 roses = level-10 knight, +10 roses = frenzy",
+   "three modes"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[README] playable build on GitHub Pages",
+   "[GIT] 15 commits 2026-09-23..24"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Cumulative gift thresholds that upgrade the viewer's unit permanently for the match (README)"
+  ],
+  "notes": " | licence note: README badge says MIT but no LICENSE file in tree"
+ },
+ {
+  "repo": "lean1835/tiktok-dog-battle",
+  "url": "https://github.com/lean1835/tiktok-dog-battle",
+  "segment": "s1b-mekanikler",
+  "what": "Vietnamese 9:16 3D dog battle 5v5 with barking, cheering crowd, TTS and documented asset licences.",
+  "stack": "Node + ws + Three.js, Edge TTS (msedge-tts)",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 1,
+  "created": "2026-11-07",
+  "last_push": "2026-11-07",
+  "license": null,
+  "size_kb": 9280,
+  "games_or_features": [
+   "2 min match / 3 min break",
+   "always bot-filled to 5v5, 10 bait bots",
+   "hearts or typing 'gâu' = bark = points",
+   "chat bubbles above each dog (4.5 s, max 6)",
+   "viewer hidden after 3 min idle",
+   "gift dedupe across reconnects (10,000 ids)"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[README] author states it is a candidate build not yet validated in a real LIVE session",
+   "[GIT] 2 commits on 2026-11-07"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Honour board that explicitly awards nothing ('only honours, no coins or prizes', README)",
+   "Persist the viewer's avatar choice across matches (README)",
+   "Asset licence ledger per model/sound (assets/licenses/, docs/ASSET-SOURCES.md)"
+  ],
+  "notes": "No licence file for own code; inherits MIT code from another project per README."
+ },
+ {
+  "repo": "SKARCH218/tiktok-ball-battle",
+  "url": "https://github.com/SKARCH218/tiktok-ball-battle",
+  "segment": "s1b-mekanikler",
+  "what": "Korean Electron team ball battle: type A/B to join, gifts fire skills.",
+  "stack": "Electron + canvas",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-20",
+  "last_push": "2026-10-20",
+  "license": null,
+  "size_kb": 151,
+  "games_or_features": [
+   "team key in chat",
+   "1 gift = 3 turns of that gift's skill (max 15)",
+   "like/follow = rose effect 5 s once per person",
+   "no respawn"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] single commit 2026-10-20"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "k0d1r/tiktok-live-interactive-game",
+  "url": "https://github.com/k0d1r/tiktok-live-interactive-game",
+  "segment": "s1b-mekanikler",
+  "what": "'Live Tower Battle': red vs blue towers; chat picks team and spawns a soldier, likes fill a power bar, gifts deal damage.",
+  "stack": "Node + Express + socket.io, vanilla client",
+  "connection": "tiktok-live-connector",
+  "stars": 11,
+  "forks": 10,
+  "created": "2026-04-17",
+  "last_push": "2026-04-17",
+  "license": null,
+  "size_kb": 352,
+  "games_or_features": [
+   "match 5 min + 15 s wait",
+   "1 damage per diamond",
+   "likes fill a shared power bar -> 60 s power mode",
+   "sudden death x5",
+   "daily damage leaderboard file",
+   "VIP by session diamonds or follower count"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 11 stars, 10 forks",
+   "[GIT] single commit 2026-04-17"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Sudden-death multiplier instead of a draw (server.js:32)",
+   "Like and gift batching constants for crowded rooms (server.js:23-26)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "osmanek93/HalatSavasi",
+  "url": "https://github.com/osmanek93/HalatSavasi",
+  "segment": "s1b-mekanikler",
+  "what": "Turkish 3D tug-of-war prototype; buttons are demo only, no TikTok connection yet.",
+  "stack": "single HTML + Three.js",
+  "connection": "none/mock",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-09",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 11,
+  "games_or_features": [
+   "60 s round",
+   "join +1",
+   "gifts rose 1 / heart 3 / lion 10"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 3 commits on 2026-11-09",
+   "[FILE index.html:65] 'buttons are for demo in this version'"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "alex54210/Territory-Live",
+  "url": "https://github.com/alex54210/Territory-Live",
+  "segment": "s1b-mekanikler",
+  "what": "Four-country territory game where each country is bound to one gift; meant to run from a cloud host and be shown from a phone.",
+  "stack": "Node + Express + ws, single HTML",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-23",
+  "last_push": "2026-10-24",
+  "license": null,
+  "size_kb": 20,
+  "games_or_features": [
+   "gift name -> team",
+   "streak counted once at repeatEnd"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 8 commits 2026-10-23..24"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "CarlJohnCarrascal/TiktokLive-King-Of-Hill",
+  "url": "https://github.com/CarlJohnCarrascal/TiktokLive-King-Of-Hill",
+  "segment": "s1b-mekanikler",
+  "what": "Gift-only king of the hill: HP = gift coins; challenger damage beyond the king's HP becomes the new king's HP.",
+  "stack": "Node + Express + ws + React (AI Studio), portrait and landscape overlay",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-05",
+  "last_push": "2026-11-05",
+  "license": null,
+  "size_kb": 151,
+  "games_or_features": [
+   "first gifter becomes king",
+   "leftover damage carries over",
+   "king heals by gifting",
+   "optional HP decay"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 3 commits 2026-11-05..06"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "'No wasted coins' carry-over rule (README)"
+  ],
+  "notes": "No licence file. Opposite philosophy to ours: chat has no role."
+ },
+ {
+  "repo": "MatiasJMB/plinko-live",
+  "url": "https://github.com/MatiasJMB/plinko-live",
+  "segment": "s1b-mekanikler",
+  "what": "Plinko overlay where each gift drops a marble carrying the sender's @ and avatar; diamond tiers add powers.",
+  "stack": "Node http + ws, Canvas + Matter.js, no build",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-17",
+  "last_push": "2026-10-17",
+  "license": "MIT",
+  "size_kb": 61,
+  "games_or_features": [
+   "tiers at 1 / 5 / 100 / 500 / 5000 diamonds",
+   "T2 magnet + second marble + x2",
+   "T4 full-screen boss mode",
+   "persistent champions in localStorage"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[README] simulator works; no real broadcast test documented",
+   "[GIT] single commit 2026-10-16"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Value = diamondCount x repeatCount as the single source of truth, names only as examples (src/giftMap.js:4-6)"
+  ],
+  "notes": "MIT [FILE LICENSE]. Gift-only entry, unlike our comment-drops-a-ball plinko."
+ },
+ {
+  "repo": "TochdownBoy/tiktok-tower-defense",
+  "url": "https://github.com/TochdownBoy/tiktok-tower-defense",
+  "segment": "s1b-mekanikler",
+  "what": "2D tower defence where gifts, follows and likes become in-game events; React dashboard for the streamer.",
+  "stack": "React 19 + Pixi.js 8 + Vite, TypeScript ws backend",
+  "connection": "tik.tools (@tiktool/live)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-08-04",
+  "last_push": "2026-08-08",
+  "license": null,
+  "size_kb": 39261,
+  "games_or_features": [
+   "gift -> action pipeline",
+   "live-flow test dashboard with stress test"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 6 commits 2026-08-04..08, 2 authors"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Stress-test panel that fires bursts through the real pipeline (README)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "kitikazis/tiktok-maze-game",
+  "url": "https://github.com/kitikazis/tiktok-maze-game",
+  "segment": "s1b-mekanikler",
+  "what": "Streamer-controlled snake; gifts spawn apples, bombs and power-ups; top-gifter ranking with avatars.",
+  "stack": "Node + Express + socket.io + Phaser 3",
+  "connection": "tiktok-live-connector",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-07-18",
+  "last_push": "2026-07-18",
+  "license": null,
+  "size_kb": 50,
+  "games_or_features": [
+   "gift -> item spawn",
+   "top gifters with avatars"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] single commit 2026-07-18"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "Clempiq/flag-battle-royale",
+  "url": "https://github.com/Clempiq/flag-battle-royale",
+  "segment": "s1b-mekanikler",
+  "what": "Automatic circular battle-royale tournament of flags for 24/7 vertical streams; no chat input at all.",
+  "stack": "Static HTML + canvas, localStorage",
+  "connection": "none/mock",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-08-14",
+  "last_push": "2026-10-28",
+  "license": null,
+  "size_kb": 115,
+  "games_or_features": [
+   "auto tournament rounds",
+   "five themes",
+   "persistent champions board",
+   "bottom half left free for TikTok UI"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] homepage flag-battle-royale.vercel.app",
+   "[GIT] 15 commits 2026-08-14..10-28"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Explicit layout rule: lower half of the 9:16 frame stays free for comments and gifts (README)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "lexkral31321/tiktok-stad-oyunu",
+  "url": "https://github.com/lexkral31321/tiktok-stad-oyunu",
+  "segment": "s1b-mekanikler",
+  "what": "Turkish football-club stadium battle with club presets (e.g. Fenerbahçe) and a gift bound to each club.",
+  "stack": "Node + Express + ws, canvas",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-04",
+  "last_push": "2026-10-04",
+  "license": null,
+  "size_kb": 587,
+  "games_or_features": [
+   "club presets with badges",
+   "gift -> club mapping",
+   "chat/like/gift events",
+   "admin panel"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 3 commits on 2026-10-04"
+  ],
+  "relevance": 3,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Local-flavour sides (football clubs) for a Turkish audience (teams.js)"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "kadirkrga25/tiktok-live-cark-oyunu",
+  "url": "https://github.com/kadirkrga25/tiktok-live-cark-oyunu",
+  "segment": "s1b-mekanikler",
+  "what": "Turkish wheel game from Google AI Studio using a free non-Euler connector.",
+  "stack": "React + Vite + Express",
+  "connection": "piratetok-live-js (plus tiktok-live-connector-legacy)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-03",
+  "last_push": "2026-11-04",
+  "license": null,
+  "size_kb": 221,
+  "games_or_features": [
+   "wheel",
+   "avatars",
+   "gift catalogue"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 12 commits 2026-11-03..04"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Connector choice -> s4."
+ },
+ {
+  "repo": "omerabc2006-cpu/taraftar-arena-server",
+  "url": "https://github.com/omerabc2006-cpu/taraftar-arena-server",
+  "segment": "s1b-mekanikler",
+  "what": "Turkish 'fan arena' server: gifts mapped to football clubs (TS/FB/GS/BJK/Amed).",
+  "stack": "Node + ws",
+  "connection": "piratetok-live-js",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-06",
+  "last_push": "2026-11-07",
+  "license": null,
+  "size_kb": 17,
+  "games_or_features": [
+   "gift -> club points"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 7 commits 2026-11-06..07"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "Connector choice -> s4."
+ },
+ {
+  "repo": "northoniserhardt/tiktok-live-game",
+  "url": "https://github.com/northoniserhardt/tiktok-live-game",
+  "segment": "s1b-mekanikler",
+  "what": "Brazilian tutorial project (259 lines): building an interactive TikTok Live game.",
+  "stack": "Node + ws + vanilla",
+  "connection": "tiktok-live-connector",
+  "stars": 28,
+  "forks": 13,
+  "created": "2023-10-06",
+  "last_push": "2024-08-24",
+  "license": null,
+  "size_kb": 5274,
+  "games_or_features": [
+   "tutorial"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[API] 28 stars, 13 forks",
+   "[GIT] 24 commits 2023-10..2024-08, 4 authors",
+   "[FILE] 259 lines of code"
+  ],
+  "relevance": 1,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "Seed checked: small tutorial, not a product."
+ },
+ {
+  "repo": "Kintull/tik_tok_toe",
+  "url": "https://github.com/Kintull/tik_tok_toe",
+  "segment": "s1b-mekanikler",
+  "what": "Elixir/Phoenix tic-tac-toe played from stream comments (2022).",
+  "stack": "Elixir + Phoenix",
+  "connection": "unknown",
+  "stars": 20,
+  "forks": 3,
+  "created": "2022-01-19",
+  "last_push": "2022-12-01",
+  "license": null,
+  "size_kb": 385,
+  "games_or_features": [
+   "tic-tac-toe rooms"
+  ],
+  "deploy_grade": "D",
+  "deploy_evidence": [
+   "[API] last push 2022-12-01",
+   "[FILE] no TikTok connector string found in the tree"
+  ],
+  "relevance": 1,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "Seed checked: abandoned."
+ },
+ {
+  "repo": "nguyenthisockha1194-oss/chua-online-3d",
+  "url": "https://github.com/nguyenthisockha1194-oss/chua-online-3d",
+  "segment": "s1b-mekanikler",
+  "what": "298-line Three.js 'online temple' scene, no connection code.",
+  "stack": "single HTML + Three.js",
+  "connection": "none/mock",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-09",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 5,
+  "games_or_features": [
+   "temple scene"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 2 commits on 2026-11-09"
+  ],
+  "relevance": 1,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "Seed checked: a copy-cat of the di-chua-online genre."
+ },
+ {
+  "repo": "workaipvlinh-byte/di-chua-online",
+  "url": "https://github.com/workaipvlinh-byte/di-chua-online",
+  "segment": "s1b-mekanikler",
+  "what": "Vietnamese 3D 'online temple': viewers appear as worshippers, offerings by gift, TTS.",
+  "stack": "React + Three.js + Express, Edge TTS",
+  "connection": "tiktok-live-connector",
+  "stars": 58,
+  "forks": 81,
+  "created": "2026-11-01",
+  "last_push": "2026-11-02",
+  "license": null,
+  "size_kb": 31553,
+  "games_or_features": [
+   "social scene, not a contest"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 58 stars / 81 forks eight days after first commit",
+   "[API] look-alikes: Thuongnguyenstudi/di-chua-online-linh-son, nguyentatkiem/lay-phat-live, nguyenthisockha1194-oss/chua-online-3d"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [
+   "The 'social scene' genre (be present as a character, no winner) is the most-forked web genre this month"
+  ],
+  "notes": "LICENSE file present in tree (MIT text); API reports no SPDX id. Not analyzed beyond triage."
+ },
+ {
+  "repo": "Lehaneploxo/donation-race",
+  "url": "https://github.com/Lehaneploxo/donation-race",
+  "segment": "s1b-mekanikler",
+  "what": "HANDOFF s1a: despite the name, a nine-game hub (boxing, street fighters, kart, fantasy arena...) with Postgres ratings and a streamer allow-list.",
+  "stack": "Node + Express + ws + Three.js pages, Postgres, Railway",
+  "connection": "tiktok-live-connector",
+  "stars": 6,
+  "forks": 4,
+  "created": "2026-03-10",
+  "last_push": "2026-11-07",
+  "license": null,
+  "size_kb": 101535,
+  "games_or_features": [
+   "kart race",
+   "arena fighters",
+   "daily tops",
+   "bots"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[GIT] 838 commits 2026-03-10..2026-11-08",
+   "[FILE РАЗРЕШЁННЫЕ_АККАУНТЫ.md] allow-list of TikTok accounts permitted to open a room",
+   "[FILE railway.json] hosted deployment"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Read the author's TikTok-rules self-audit (ПРАВИЛА_TIKTOK.md:99-111): random outcome for a gift = high risk; automation without host = medium; bots with realistic names = mark them; 'two sides send gifts' as the only content listed under fake engagement"
+  ],
+  "notes": "Not analyzed as a game (hub). No licence. Third-party asset licences listed under client/audio and client/sprites."
+ },
+ {
+  "repo": "livecade/marble-race-tiktok-live-game",
+  "url": "https://github.com/livecade/marble-race-tiktok-live-game",
+  "segment": "s1b-mekanikler",
+  "what": "HANDOFF s3: README-only marketing repo for a hosted commercial game (one of 65 such repos); used here as a design reference.",
+  "stack": "hosted SaaS (no source)",
+  "connection": "unknown",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-08-18",
+  "last_push": "2026-11-04",
+  "license": null,
+  "size_kb": 270,
+  "games_or_features": [
+   "marble race with profile photo inside the marble",
+   "lobby 45 s, 24 marbles default (max 80)",
+   "gift actions: boost self, banana/shell the leader, chaos",
+   "elimination rounds",
+   "13 languages incl. Turkish"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[README] sign-up at app.livecade.io and per-game product pages",
+   "[API] 65 repos under the org, updated 2026-08..2026-11"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Any comment OR a like joins; lobby starts early when full",
+   "A boost from a non-racer goes to the last-place marble in the giver's name",
+   "Elimination rounds: last 5 drop out each race until one remains",
+   "Tag above EVERY marble with place and name"
+  ],
+  "notes": "Design facts are the vendor's own claims [README]."
+ },
+ {
+  "repo": "rhfbgfgfdg999999/3d-printer-live",
+  "url": "https://github.com/rhfbgfgfdg999999/3d-printer-live",
+  "segment": "s1b-mekanikler",
+  "what": "HANDOFF s2/s3: Chinese 'avatar printer' for Douyin/Kuaishou/TikTok — every comment/like/gift prints the viewer's avatar; free code, paid customization.",
+  "stack": "Three.js page + Python launcher + browser data bridge",
+  "connection": "unknown (Douyin page bridge)",
+  "stars": 240,
+  "forks": 122,
+  "created": "2026-10-31",
+  "last_push": "2026-11-09",
+  "license": "MIT",
+  "size_kb": 62945,
+  "games_or_features": [
+   "comment = 1 small print",
+   "like = 1 small print attributed to a real viewer",
+   "gifts = big prints that jump the queue",
+   "auto-demo print after 30 s of silence"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 240 stars / 122 forks ten days after first commit (2026-10-31)",
+   "[README] author sells customization for 600-1800 RMB and links a video tutorial"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "The most-starred web mechanic in the census is a recognition toy, not a contest"
+  ],
+  "notes": "MIT [API]. Not analyzed further."
+ }
+]

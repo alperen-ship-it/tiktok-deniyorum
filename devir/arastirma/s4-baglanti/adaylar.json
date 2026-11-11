@@ -1,0 +1,1126 @@
+[
+ {
+  "repo": "zerodytrash/TikTok-Live-Connector",
+  "url": "https://github.com/zerodytrash/TikTok-Live-Connector",
+  "segment": "s4-baglanti",
+  "what": "Node.js TikTok LIVE connector; our pinned dependency (^2.4.3; latest 2.5.0 of 2026-09-16).",
+  "stack": "TypeScript, ESM-only, got + ws + tiktok-live-proto + tiktok-live-api-sdk@0.4.0-beta1",
+  "connection": "tiktok-live-connector (EulerStream sign server; anonymous or API key)",
+  "stars": 2293,
+  "forks": 496,
+  "created": "2022-02-04",
+  "last_push": "2026-11-04",
+  "license": "AGPL-3.0-only WITH custom additional permissions (LICENSE s.18-21); <=2.4.0 MIT",
+  "size_kb": 2305,
+  "games_or_features": [
+   "chat/gift/like/follow/share/viewer/battle events",
+   "room-id + room-info routes direct to TikTok",
+   "SignConfig.basePath / RouteConfig override seams",
+   "sendMessage (paid Euler route)"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 2293 stars, 496 forks, 284 issues total",
+   "[API] code search: 657 package.json files reference it",
+   "[NPM] 64 versions, latest 2.5.0 published 2026-09-16",
+   "[GIT] 451 commits, last 2026-11-04 (docs)"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Rebuild picks 2.5.0 automatically (no lockfile, caret range): proper SignatureRateLimitError on 429, session cookies no longer sent on the WebSocket, handshake-msg surfaced",
+   "Set RoomIdRouteConfig.skipFetchRoomIdFromEulerRoute=true (src/lib/web/routes/composite/fetch-room-id.ts) - Euler room-id route is PRO-scoped",
+   "Use err.retryAfter from SignatureRateLimitError (src/types/errors.ts) for backoff"
+  ],
+  "notes": "Licence is AGPL-3.0-only PLUS Section-7 additional permissions (LICENSE sections 18-21) since 2.4.1 (2026-07-16); 2.4.0 was MIT. Section 18 exempts LIVE overlays/games/bots; Section 19 excludes hosted SaaS/relay. Single active maintainer (isaackogan) who also runs the sign service."
+ },
+ {
+  "repo": "isaackogan/TikTokLive",
+  "url": "https://github.com/isaackogan/TikTokLive",
+  "segment": "s4-baglanti",
+  "what": "Python sibling library, same maintainer and same sign server; its tracker documents the 2026-09-09/10 sign outage best.",
+  "stack": "Python >=3.10, httpx, websockets, betterproto2",
+  "connection": "TikTokLive (py) (EulerStream sign server)",
+  "stars": 1645,
+  "forks": 312,
+  "created": "2022-02-24",
+  "last_push": "2026-10-20",
+  "license": "AGPL-3.0 WITH custom additional permissions (PyPI: 'Modified AGPL-3.0')",
+  "size_kb": 41585,
+  "games_or_features": [
+   "same event surface as the Node library",
+   "set_session authenticated mode"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 1645 stars, 312 forks, 283 issues total",
+   "[API] code search: 160 requirements.txt hits",
+   "[PYPI] 80 releases, 7.0.1 on 2026-09-10",
+   "[ISSUE #376,#379] many users reporting the same outage within hours"
+  ],
+  "relevance": 4,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Read its issues as the early-warning channel for our own stack: an outage shows here first"
+  ],
+  "notes": "7.0.1 fixed percent-encoding of sign-server route params after Euler began routing through wss://ws-fallback.eulerstream.com (commit be3dceb). Licence: modified AGPL (same s.18-21) since 2026-07-11."
+ },
+ {
+  "repo": "isaackogan/TikTok-Webcast-Protobuf",
+  "url": "https://github.com/isaackogan/TikTok-Webcast-Protobuf",
+  "segment": "s4-baglanti",
+  "what": "Protobuf schema + generated bindings (npm tiktok-live-proto) bundled inside our exe.",
+  "stack": "proto sources, generated TS/Python/JVM",
+  "connection": "none/mock (schema only)",
+  "stars": 24,
+  "forks": 5,
+  "created": "2026-04-24",
+  "last_push": "2026-09-28",
+  "license": "AGPL-3.0-only WITH custom additional permissions (LICENSE s.18-21); <=0.2.3 MIT",
+  "size_kb": 5582,
+  "games_or_features": [
+   "tiktok-live-proto 0.2.4 (in connector 2.4.3 and 2.5.0)",
+   "0.3.0 of 2026-09-28 for TikTok 47.1.41, not yet used by a connector release"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[NPM] 11 versions; dependency of both main libraries",
+   "[GIT] bot-driven regeneration (tiktok-jadx-bot) 2026-07-22 and 2026-09-28"
+  ],
+  "relevance": 3,
+  "depth": "tree",
+  "ideas_for_us": [
+   "If the exe is ever given to anyone: ship this LICENSE text too (byte-identical to the connector's)"
+  ],
+  "notes": "0.2.3 and earlier MIT; 0.2.4+ AGPL-3.0-only with the same s.18-21 permissions."
+ },
+ {
+  "repo": "EulerStream/TikTok-Live-Api",
+  "url": "https://github.com/EulerStream/TikTok-Live-Api",
+  "segment": "s4-baglanti",
+  "what": "The sign service's public SDK repo + OpenAPI spec (npm tiktok-live-api-sdk, PyPI EulerApiSdk).",
+  "stack": "OpenAPI-generated SDKs: TS, Python, C#, Java, Go",
+  "connection": "EulerStream SDK",
+  "stars": 46,
+  "forks": 7,
+  "created": "2025-04-30",
+  "last_push": "2026-11-05",
+  "license": "MIT",
+  "size_kb": 3587,
+  "games_or_features": [
+   "GET /webcast/rooms/{room_id}/connect (anonymous access supported)",
+   "plans table: Community free / Business $50 / Enterprise",
+   "JWT auth, alerts, moderation, catalog routes"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 46 stars, 7 forks, pushed 2026-11-05",
+   "[NPM] tiktok-live-api-sdk 0.8.0 on 2026-11-05 (9 versions since 2026-06-15)",
+   "[ISSUE #9,#10] users on Community keys reporting production problems",
+   "[FILE README.md] paid plans"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "spec/openapi.json is the cheapest static health check: confirm the route our pinned SDK calls still exists before every rebuild",
+   "GET /accounts/me/rate_limits shows the quota of a key (or anonymous) - useful as a diagnostics button in our control panel"
+  ],
+  "notes": "README (unchanged since 2026-07-10) says Community = 2,500 requests/day; the pricing web page today says 1.5K/day + 100 rooms/day. Sign server itself is closed source."
+ },
+ {
+  "repo": "EulerStream/Euler-WebSocket-SDK",
+  "url": "https://github.com/EulerStream/Euler-WebSocket-SDK",
+  "segment": "s4-baglanti",
+  "what": "Client for EulerStream's managed WebSocket (wss://ws.eulerstream.com?uniqueId=..&apiKey=..), i.e. full relay instead of sign-only.",
+  "stack": "TypeScript, zod, fflate, protobuf",
+  "connection": "EulerStream SDK (managed relay)",
+  "stars": 4,
+  "forks": 2,
+  "created": "2025-05-29",
+  "last_push": "2026-11-04",
+  "license": null,
+  "size_kb": 823,
+  "games_or_features": [
+   "browser + Node client",
+   "JWT for client-side use"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[NPM] @eulerstream/euler-websocket-sdk 1.1.0 on 2026-10-25",
+   "[API] code search: ws.eulerstream.com in 90 files / 39 repos"
+  ],
+  "relevance": 2,
+  "depth": "metadata",
+  "ideas_for_us": [
+   "Not a fallback for us: same provider, and it puts the key in the client"
+  ],
+  "notes": "Community tier: 25 concurrent WebSockets [WEB pricing page]."
+ },
+ {
+  "repo": "tiktool/tiktok-live-api",
+  "url": "https://github.com/tiktool/tiktok-live-api",
+  "segment": "s4-baglanti",
+  "what": "tik.tools: a second commercial sign/relay service launched 2026; npm tiktok-live-api (relay client) and @tiktool/live (direct mode).",
+  "stack": "TypeScript, ws",
+  "connection": "unknown (tik.tools API key required; direct mode = their credentials + WS from your IP, relayed mode = their edge)",
+  "stars": 54,
+  "forks": 11,
+  "created": "2026-03-26",
+  "last_push": "2026-10-31",
+  "license": "MIT",
+  "size_kb": 1797,
+  "games_or_features": [
+   "direct and relayed modes",
+   "REST lookups",
+   "PK battle breakdowns",
+   "agency/leaderboard products"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 54 stars, 11 forks, 0 issues total",
+   "[NPM] @tiktool/live 70 versions since 2026-02-12; tiktok-live-api 38 versions",
+   "[API] code search: 10 package.json files depend on @tiktool/live",
+   "[FILE README] priced tiers $19-$399/month"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Only as a paid emergency substitute for EulerStream; it is not a sign-server-free route"
+  ],
+  "notes": "No permanent free tier: 'Sandbox' is a 7-day evaluation (commit 2026-09-28 'remove free-forever wording'). Anonymous operator, single committer identity 'TikTool', heavy SEO keywording (lists 'tiktok-live-connector' as keyword). tiktool/docs contains an AGENTS.md addressed to AI agents (a Mintlify template) - not acted on."
+ },
+ {
+  "repo": "tiktool/tiktok-live-events",
+  "url": "https://github.com/tiktool/tiktok-live-events",
+  "segment": "s4-baglanti",
+  "what": "tik.tools event-stream client + CLI (Node and Python).",
+  "stack": "TypeScript/Python, ws",
+  "connection": "unknown (tik.tools API key; wss://api.tik.tools)",
+  "stars": 4,
+  "forks": 1,
+  "created": "2026-06-07",
+  "last_push": "2026-10-31",
+  "license": "MIT",
+  "size_kb": 220,
+  "games_or_features": [
+   "CLI",
+   "examples incl. OBS overlay"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[NPM] 14 versions since 2026-06-07, 1.4.0 on 2026-11-06",
+   "[API] 4 stars, 1 fork"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Same paid service as tiktool/tiktok-live-api."
+ },
+ {
+  "repo": "tiktooldev/tiktok-live-mcp",
+  "url": "https://github.com/tiktooldev/tiktok-live-mcp",
+  "segment": "s4-baglanti",
+  "what": "MCP server exposing tik.tools REST data to LLM clients.",
+  "stack": "JavaScript, @modelcontextprotocol/sdk",
+  "connection": "unknown (tik.tools API key)",
+  "stars": 3,
+  "forks": 0,
+  "created": "2026-07-24",
+  "last_push": "2026-10-31",
+  "license": "MIT",
+  "size_kb": 41,
+  "games_or_features": [
+   "who-is-live, room data, gift catalog, leaderboards"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[NPM] tiktok-live-mcp 7 versions since 2026-07-24",
+   "[API] 3 stars"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Not a live-event connector for overlays; irrelevant to our bridge."
+ },
+ {
+  "repo": "PirateTok/live-js",
+  "url": "https://github.com/PirateTok/live-js",
+  "segment": "s4-baglanti",
+  "what": "Node library that connects to the TikTok webcast WebSocket with NO sign server and NO signature: guest ttwid cookie + ws_direct=1.",
+  "stack": "TypeScript, ws, protobufjs, undici",
+  "connection": "own signing (none needed: unsigned direct WebSocket)",
+  "stars": 7,
+  "forks": 4,
+  "created": "2026-04-04",
+  "last_push": "2026-10-04",
+  "license": "0BSD",
+  "size_kb": 138,
+  "games_or_features": [
+   "64 decoded event types",
+   "auto-reconnect, ttwid retry, DEVICE_BLOCKED rotation",
+   "proxy support"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[ISSUE PirateTok/live-js#1, 2026-09-16] third-party user measured ~17 events/20 s on Windows 11 with 0.1.5",
+   "[API] code search: 9 downstream package.json files depend on it",
+   "[NPM] 0.3.0 published 2026-10-05",
+   "[FILE] two projects use it as primary provider (RM70N/ehsmaha, NabeelFK/tiktok-live-minecraft-bridge)"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Add a second source to bridge.js behind a switch (--kaynak dogrudan): src/connection/url.ts + src/connection/wss.ts + src/auth/ttwid.ts are ~320 lines and 0BSD, so they may be vendored",
+   "Copy the error taxonomy (offline / user-not-found / device-blocked / network)"
+  ],
+  "notes": "Young (18 commits, one author, v0.3.0), needs Node >= 22.19. One lab report (all-chat, 2026-09-18) saw WS URLs rejected once X-Bogus was stripped, so the unsigned route must be proven on a real stream before we rely on it."
+ },
+ {
+  "repo": "PirateTok/live-rs",
+  "url": "https://github.com/PirateTok/live-rs",
+  "segment": "s4-baglanti",
+  "what": "Rust port of the same unsigned direct route (crate piratetok-live-rs).",
+  "stack": "Rust",
+  "connection": "own signing (none needed: unsigned direct WebSocket)",
+  "stars": 8,
+  "forks": 3,
+  "created": "2026-04-04",
+  "last_push": "2026-10-04",
+  "license": "0BSD",
+  "size_kb": 252,
+  "games_or_features": [
+   "same route as live-js"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE Lexharden/HiveMonitor docs/adr/0010] adopted as default provider, but not tested against a live stream",
+   "[API] 8 stars, 3 forks"
+  ],
+  "relevance": 2,
+  "depth": "metadata",
+  "ideas_for_us": [],
+  "notes": "Vendored by ainul12-1/ailive."
+ },
+ {
+  "repo": "PirateTok/live-py",
+  "url": "https://github.com/PirateTok/live-py",
+  "segment": "s4-baglanti",
+  "what": "Python port of the same unsigned direct route.",
+  "stack": "Python",
+  "connection": "own signing (none needed: unsigned direct WebSocket)",
+  "stars": 7,
+  "forks": 2,
+  "created": "2026-04-04",
+  "last_push": "2026-10-04",
+  "license": "0BSD",
+  "size_kb": 127,
+  "games_or_features": [
+   "same route as live-js"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 7 stars, 2 forks",
+   "[API] vendored copy found in LHAnh2809/tiktoklive_api"
+  ],
+  "relevance": 1,
+  "depth": "metadata",
+  "ideas_for_us": [],
+  "notes": ""
+ },
+ {
+  "repo": "talkaboutdesign/tiklive",
+  "url": "https://github.com/talkaboutdesign/tiklive",
+  "segment": "s4-baglanti",
+  "what": "Desktop app (macOS/Windows) + CLI server + TS library for LIVE overlays, built in October 2026 on the same sign-server-free route.",
+  "stack": "TypeScript, Effect, Bun/Node",
+  "connection": "own signing (none needed: unsigned direct WebSocket)",
+  "stars": 7,
+  "forks": 2,
+  "created": "2026-10-12",
+  "last_push": "2026-10-30",
+  "license": "MIT",
+  "size_kb": 1772,
+  "games_or_features": [
+   "starter overlays (chat, alerts, goal bar)",
+   "dashboard",
+   "demo mode",
+   "actions: sounds/TTS/OBS scene switch",
+   "viewer points"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 127 commits and 10 tags between 2026-10-11 and 2026-10-30",
+   "[NPM] tiklive 0.6.0 on 2026-10-30",
+   "[API] 7 stars, 2 forks, 0 issues - outside users not proven"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "packages/core/src/LiveConnection.ts tries two WS hosts in order (webcast-ws.tiktok.com, webcast-ws.us.tiktok.com) and refreshes ttwid on open failure",
+   "Server refuses to listen beyond localhost without a token - a rule our bridge could copy"
+  ],
+  "notes": "MIT. README warns: behind a VPN or datacenter IP TikTok may refuse the connection. Product itself belongs to s1a/s3."
+ },
+ {
+  "repo": "nglmercer/tiktok-signer",
+  "url": "https://github.com/nglmercer/tiktok-signer",
+  "segment": "s4-baglanti",
+  "what": "Self-hosted signer: runs TikTok's own webmssdk bundle in QuickJS (no browser) and offers a local /webcast/rooms/{room_id}/connect endpoint for tiktok-live-connector.",
+  "stack": "Rust + Node + Java/Android",
+  "connection": "own signing (local, webmssdk in QuickJS)",
+  "stars": 8,
+  "forks": 4,
+  "created": "2026-08-10",
+  "last_push": "2026-11-07",
+  "license": null,
+  "size_kb": 2964,
+  "games_or_features": [
+   "ttl-sign-server drop-in for SignConfig.basePath",
+   "Node package ttl-live (private)",
+   "C ABI, Java SDK"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE LIVE-AUDIT.md, 2026-10-25] author's run: 100 real rooms, 20 concurrent sockets, all delivered events",
+   "[GIT] 179 commits 2026-08-10..2026-11-06",
+   "[API] 8 stars, 4 forks, 0 issues"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Its finding that the page builds the socket URL itself with wsDirect=1 explains why the unsigned route exists"
+  ],
+  "notes": "No licence file at the repository root (sub-packages say MIT) -> treat as ideas only. Records a TikTok signing-interface change (X-Gnarly -> X-Bogus on the socket URL) by 2026-10-25."
+ },
+ {
+  "repo": "caesarakalaeii/all-chat",
+  "url": "https://github.com/caesarakalaeii/all-chat",
+  "segment": "s4-baglanti",
+  "what": "Hosted multi-platform chat aggregator that documented, with measurements, why and how it retired EulerStream for TikTok.",
+  "stack": "TypeScript services, Kubernetes",
+  "connection": "tiktok-live-connector (pinned 2.4.0 MIT) + own signing",
+  "stars": 20,
+  "forks": 3,
+  "created": "2025-11-09",
+  "last_push": "2026-11-09",
+  "license": "AGPL-3.0",
+  "size_kb": 330575,
+  "games_or_features": [
+   "ADR-0052 retiring Euler",
+   "self-hosted signer, shadow/self/pure-node modes",
+   "research reports 2026-09-16 and 2026-09-18"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 20 stars, 3 forks, 22 open issues, pushed 2026-11-09, homepage allch.at",
+   "[FILE docs/adr/0052] production incidents dated 2026-08-14, 2026-09-14, 2026-09-15"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "docs/adr/0052: 'Lever 1' = disable the Euler leg of room-id/is-live lookups (safe, saves quota)",
+   "services/tiktok-listener/src/sign/euler-free.live.test.ts: point SignConfig.basePath at a closed port to prove which calls still need Euler",
+   "Shadow mode: run the candidate source next to the trusted one and compare before switching"
+  ],
+  "notes": "AGPL-3.0: take ideas, not code. Their lockfile resolves tiktok-live-connector 2.4.0 and they held 43 connections through Euler's fallback proxy on 2026-09-14 - evidence that a pre-2.5.0 client kept working after the September change."
+ },
+ {
+  "repo": "tanthuan031/StudioLive",
+  "url": "https://github.com/tanthuan031/StudioLive",
+  "segment": "s4-baglanti",
+  "what": "Electron app that opens the TikTok live page in a hidden window and reads WebSocket frames over the DevTools protocol, decoding them with tiktok-live-connector.",
+  "stack": "Electron, tiktok-live-connector 2.0.0 (MIT) as decoder only",
+  "connection": "own signing (the real TikTok page signs; frames captured locally)",
+  "stars": 26,
+  "forks": 29,
+  "created": "2026-11-03",
+  "last_push": "2026-11-06",
+  "license": "NOASSERTION",
+  "size_kb": 60205,
+  "games_or_features": [
+   "src/direct.js: capture + decode",
+   "blocks video/audio requests to save CPU"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 26 stars, 29 forks within 6 days of creation (2026-11-03)",
+   "[API] 0 issues - real use not proven"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "src/direct.js (198 lines) is a working version of the 'path B' sketched in our TERSINE-MUHENDISLIK.md section 8: BrowserWindow + webSocketFrameReceived + deserializeWebSocketMessage"
+  ],
+  "notes": "Licence NOASSERTION -> ideas only. Product belongs to s1a/s3."
+ },
+ {
+  "repo": "metalalchemist/VeTube",
+  "url": "https://github.com/metalalchemist/VeTube",
+  "segment": "s4-baglanti",
+  "what": "Accessibility chat reader; ships a 'local signer' = browser extension that forwards the frames the user's own browser already receives.",
+  "stack": "Python (TikTokLive) + browser extension",
+  "connection": "TikTokLive (py) + own signing (browser interception)",
+  "stars": 34,
+  "forks": 16,
+  "created": "2022-04-13",
+  "last_push": "2026-11-01",
+  "license": "GPL-3.0",
+  "size_kb": 262943,
+  "games_or_features": [
+   "FIRMADOR_LOCAL.md",
+   "interceptor_extension/"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 34 stars, 16 forks, created 2022, pushed 2026-11-01"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "FIRMADOR_LOCAL.md is a clear end-user explanation of the browser-capture idea"
+  ],
+  "notes": "GPL-3.0: ideas only. States that EulerStream 'goes down often' and shares a limited quota."
+ },
+ {
+  "repo": "steveseguin/ssn_app",
+  "url": "https://github.com/steveseguin/ssn_app",
+  "segment": "s4-baglanti",
+  "what": "Social Stream Ninja desktop app; depends on tiktok-live-api-sdk and carries a TikTok browser-transport probe.",
+  "stack": "Electron",
+  "connection": "EulerStream SDK (+ experimental browser transport)",
+  "stars": 9,
+  "forks": 6,
+  "created": "2025-07-29",
+  "last_push": "2026-11-07",
+  "license": "GPL-3.0",
+  "size_kb": 99613,
+  "games_or_features": [
+   "tests/electron/tiktok-browser-transport-probe.js"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 9 stars, 6 forks, pushed 2026-11-07; parent project steveseguin/social_stream has 1175 stars"
+  ],
+  "relevance": 2,
+  "depth": "metadata",
+  "ideas_for_us": [],
+  "notes": "GPL-3.0. Product belongs to s3."
+ },
+ {
+  "repo": "jwdeveloper/TikTokLiveJava",
+  "url": "https://github.com/jwdeveloper/TikTokLiveJava",
+  "segment": "s4-baglanti",
+  "what": "Java port; uses EulerStream (has a dedicated Euler WebSocket client).",
+  "stack": "Java",
+  "connection": "EulerStream SDK / sign server",
+  "stars": 212,
+  "forks": 62,
+  "created": "2023-08-05",
+  "last_push": "2026-10-10",
+  "license": "MIT",
+  "size_kb": 25837,
+  "games_or_features": [
+   "Java/Kotlin API",
+   "Minecraft-plugin ecosystem"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 212 stars, 62 forks, 117 tags, latest 1.13.1-Release",
+   "[GIT] last commit 2026-10-10"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "MIT. Only 2 repos found depending on it via pom.xml (Gradle users not counted)."
+ },
+ {
+  "repo": "steampoweredtaco/gotiktoklive",
+  "url": "https://github.com/steampoweredtaco/gotiktoklive",
+  "segment": "s4-baglanti",
+  "what": "Go port; signs through EulerStream by default (SigningUrl configurable).",
+  "stack": "Go",
+  "connection": "EulerStream sign server",
+  "stars": 45,
+  "forks": 11,
+  "created": "2024-09-09",
+  "last_push": "2025-09-14",
+  "license": "MIT",
+  "size_kb": 344,
+  "games_or_features": [
+   "API key option",
+   "signing-limit validation"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 45 stars, 11 forks",
+   "[GIT] last commit 2025-09-14 - more than a year without changes",
+   "[API] 11 go.mod files reference gotiktoklive"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "MIT. Default sign host in README is still tiktok.eulerstream.com."
+ },
+ {
+  "repo": "frankvHoof93/TikTokLiveSharp",
+  "url": "https://github.com/frankvHoof93/TikTokLiveSharp",
+  "segment": "s4-baglanti",
+  "what": "C#/Unity port (TikTokLiveUnity); credits the same sign server.",
+  "stack": "C#, Unity",
+  "connection": "TikTokLiveSharp (EulerStream sign server)",
+  "stars": null,
+  "forks": null,
+  "created": null,
+  "last_push": "2025-01-28",
+  "license": null,
+  "size_kb": null,
+  "games_or_features": [
+   "Unity package"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 215 commits, last 2025-01-28, tags up to v1.2.2",
+   "[API] code search: 9 Unity Packages/manifest.json files reference TikTokLiveSharp"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Not returned by the repository search API today (fork), so stars/forks are not reported; verified by git only. Stale for ~21 months."
+ },
+ {
+  "repo": "sebheron/TikTokLiveSharp",
+  "url": "https://github.com/sebheron/TikTokLiveSharp",
+  "segment": "s4-baglanti",
+  "what": "Original C# port, archived.",
+  "stack": "C#",
+  "connection": "TikTokLiveSharp",
+  "stars": 62,
+  "forks": 76,
+  "created": "2022-05-21",
+  "last_push": "2023-04-07",
+  "license": null,
+  "size_kb": 81,
+  "games_or_features": [],
+  "deploy_grade": "D",
+  "deploy_evidence": [
+   "[API] archived, last push 2023-04-07"
+  ],
+  "relevance": 1,
+  "depth": "metadata",
+  "ideas_for_us": [],
+  "notes": ""
+ },
+ {
+  "repo": "jwdeveloper/TikTokLiveRust",
+  "url": "https://github.com/jwdeveloper/TikTokLiveRust",
+  "segment": "s4-baglanti",
+  "what": "Rust port, archived.",
+  "stack": "Rust",
+  "connection": "unknown",
+  "stars": 45,
+  "forks": 16,
+  "created": "2024-01-03",
+  "last_push": "2024-08-31",
+  "license": "MIT",
+  "size_kb": 678,
+  "games_or_features": [],
+  "deploy_grade": "D",
+  "deploy_evidence": [
+   "[API] archived, last push 2024-08-31"
+  ],
+  "relevance": 1,
+  "depth": "metadata",
+  "ideas_for_us": [],
+  "notes": "MIT."
+ },
+ {
+  "repo": "simnJS/tiktok-live-connector-rs",
+  "url": "https://github.com/simnJS/tiktok-live-connector-rs",
+  "segment": "s4-baglanti",
+  "what": "Fresh Rust port of the Node connector, still on the EulerStream sign server.",
+  "stack": "Rust",
+  "connection": "EulerStream sign server",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-30",
+  "last_push": "2026-09-30",
+  "license": "AGPL-3.0",
+  "size_kb": 259,
+  "games_or_features": [],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 2 commits, both 2026-09-30",
+   "[API] 0 stars"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "AGPL-3.0-only like the original."
+ },
+ {
+  "repo": "carcabot/tiktok-signature",
+  "url": "https://github.com/carcabot/tiktok-signature",
+  "segment": "s4-baglanti",
+  "what": "General TikTok web request signer (X-Bogus via headless browser); all-chat vendored it for its own signer.",
+  "stack": "Node, headless browser",
+  "connection": "own signing (general web signatures, not a live connector)",
+  "stars": 1052,
+  "forks": 342,
+  "created": "2019-11-20",
+  "last_push": "2026-10-16",
+  "license": null,
+  "size_kb": 11012,
+  "games_or_features": [
+   "signature server"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 1052 stars, 342 forks, pushed 2026-10-16"
+  ],
+  "relevance": 2,
+  "depth": "metadata",
+  "ideas_for_us": [],
+  "notes": "GitHub reports no licence; all-chat's ADR calls it MIT - unresolved. all-chat measured (2026-09-15) that a correct signature alone no longer suffices for /webcast/im/fetch from non-browser clients."
+ },
+ {
+  "repo": "zerodytrash/TikTok-Chat-Reader",
+  "url": "https://github.com/zerodytrash/TikTok-Chat-Reader",
+  "segment": "s4-baglanti",
+  "what": "Reference demo for the Node connector.",
+  "stack": "Node, socket.io",
+  "connection": "tiktok-live-connector",
+  "stars": 405,
+  "forks": 201,
+  "created": "2022-02-05",
+  "last_push": "2026-03-09",
+  "license": null,
+  "size_kb": 543,
+  "games_or_features": [
+   "chat reader",
+   "overlay"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 405 stars, 201 forks, 42 open issues",
+   "[API] last push 2026-03-09"
+  ],
+  "relevance": 2,
+  "depth": "metadata",
+  "ideas_for_us": [],
+  "notes": "No licence file -> all rights reserved."
+ },
+ {
+  "repo": "RM70N/ehsmaha",
+  "url": "https://github.com/RM70N/ehsmaha",
+  "segment": "s4-baglanti",
+  "what": "Private-looking app whose tiktok-relay uses piratetok-live-js as PRIMARY provider and tiktok-live-connector ^2.5.0 as the second.",
+  "stack": "Node, firebase-admin, ws",
+  "connection": "own signing (PirateTok) + tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-08-19",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 267354,
+  "games_or_features": [
+   "provider interface connect(username,{onEvent})",
+   "error classification offline/permanent/blocked/network"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] pushed 2026-11-09",
+   "[FILE tiktok-relay/package.json] both libraries as dependencies"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "tiktok-relay/src/providers/piratetokProvider.js (70 lines): the provider-adapter shape we need for a --kaynak switch, including the same gift-combo policy we already use"
+  ],
+  "notes": "No licence -> ideas only."
+ },
+ {
+  "repo": "NabeelFK/tiktok-live-minecraft-bridge",
+  "url": "https://github.com/NabeelFK/tiktok-live-minecraft-bridge",
+  "segment": "s4-baglanti",
+  "what": "Minecraft gift bridge with a documented provider switch TIKTOK_PROVIDER=piratetok|euler.",
+  "stack": "Node/TypeScript",
+  "connection": "own signing (PirateTok) or tiktok-live-connector (EULER_API_KEY)",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-09-08",
+  "last_push": "2026-09-21",
+  "license": "MIT",
+  "size_kb": 511,
+  "games_or_features": [
+   "--provider override",
+   "--spy mode"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 1 star, created 2026-09-08, pushed 2026-09-21",
+   "[FILE docs/SETUP.md section 7]"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "docs/SETUP.md section 7 is a ready model for explaining 'free and keyless' vs 'Euler' to a non-engineer"
+  ],
+  "notes": "MIT. Game side belongs to s2-motorlar."
+ },
+ {
+  "repo": "alvaro-salort/Tiktato",
+  "url": "https://github.com/alvaro-salort/Tiktato",
+  "segment": "s4-baglanti",
+  "what": "Sound alerts/TTS/donation-jar overlay 'without account or subscription', on piratetok-live-js (carries a patch for 0.3.0).",
+  "stack": "Node",
+  "connection": "own signing (PirateTok)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-03",
+  "last_push": "2026-11-09",
+  "license": "GPL-3.0",
+  "size_kb": 3230,
+  "games_or_features": [
+   "sound rules",
+   "TTS",
+   "2D donation jar"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] created 2026-11-03, pushed 2026-11-09",
+   "[API] patches/piratetok-live-js+0.3.0.patch present"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "GPL-3.0. Product belongs to s3."
+ },
+ {
+  "repo": "Lexharden/HiveMonitor",
+  "url": "https://github.com/Lexharden/HiveMonitor",
+  "segment": "s4-baglanti",
+  "what": "Stream monitor that chose piratetok-live-rs over tiktok-live-connector because of the Euler dependency.",
+  "stack": "Bun/TS + Rust bridge",
+  "connection": "own signing (PirateTok) with connector fallback",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-17",
+  "last_push": "2026-10-17",
+  "license": null,
+  "size_kb": 659,
+  "games_or_features": [
+   "ADR 0010"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[FILE docs/adr/0010] 'could not be tested with an active live'",
+   "[API] 0 stars, single push 2026-10-17"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence."
+ },
+ {
+  "repo": "ethemkurtt/SeliGames",
+  "url": "https://github.com/ethemkurtt/SeliGames",
+  "segment": "s4-baglanti",
+  "what": "Turkish Electron games app that tried the native connector, then went back to EulerStream's managed WebSocket.",
+  "stack": "Electron",
+  "connection": "EulerStream SDK (managed relay, key in client)",
+  "stars": 0,
+  "forks": 1,
+  "created": "2026-02-23",
+  "last_push": "2026-07-02",
+  "license": null,
+  "size_kb": 29636,
+  "games_or_features": [
+   "TikTok games"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[API] 0 stars, 1 fork, last push 2026-07-02",
+   "[FILE seligames-app/BACK_TO_EULERSTREAM.md]"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Counter-example: an EulerStream API key is committed in clear text in the repo docs/renderer - do not do this"
+  ],
+  "notes": "No licence. Games belong to s1a-merkezler."
+ },
+ {
+  "repo": "bminhnemhoi/AISC2026_LIVEFIT",
+  "url": "https://github.com/bminhnemhoi/AISC2026_LIVEFIT",
+  "segment": "s4-baglanti",
+  "what": "Not a library: contains a dated benchmark of the 2026-09-09 sign incident (10/10 handshakes refused).",
+  "stack": "Python",
+  "connection": "TikTokLive (py)",
+  "stars": 1,
+  "forks": 1,
+  "created": "2026-09-03",
+  "last_push": "2026-10-19",
+  "license": "AGPL-3.0",
+  "size_kb": 181832,
+  "games_or_features": [],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[FILE docs/benchmarks/tiktok-collector-2026-09.md]"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Evidence source only. AGPL-3.0."
+ },
+ {
+  "repo": "(no repo) TikFinity Desktop",
+  "url": null,
+  "segment": "s4-baglanti",
+  "what": "Closed-source desktop bridge that many overlay/game repos consume through its local WebSocket; our overlays already speak its format.",
+  "stack": "closed source",
+  "connection": "TikFinity bridge",
+  "stars": null,
+  "forks": null,
+  "created": null,
+  "last_push": null,
+  "license": "proprietary",
+  "size_kb": null,
+  "games_or_features": [
+   "local WebSocket ws://localhost:21213"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] code search: 'ws://localhost:21213' in 89 files / 42 repos and '127.0.0.1:21213' in 114 files / 38 repos",
+   "[FILE connector LICENSE s.21] 'TikFinity / STV GmBH' named as an excepted party"
+  ],
+  "relevance": 4,
+  "depth": "metadata",
+  "ideas_for_us": [
+   "Zero-code stopgap if EulerStream is down: overlays already accept ?src=tikfinity"
+  ],
+  "notes": "No public repo, so no star/fork numbers. How TikFinity itself connects is not visible; one user (connector issue #323) saw it fail together with the library."
+ },
+ {
+  "repo": "workaipvlinh-byte/lop-hoc-chu",
+  "url": "https://github.com/workaipvlinh-byte/lop-hoc-chu",
+  "segment": "s4-baglanti",
+  "what": "Vietnamese live quiz created 2026-11-04 that runs tiktok-live-connector ^2.5.0 WITHOUT any API key and ranks answers by TikTok's own timestamp.",
+  "stack": "Node/TS server + React",
+  "connection": "tiktok-live-connector (anonymous EulerStream signing)",
+  "stars": 73,
+  "forks": 95,
+  "created": "2026-11-04",
+  "last_push": "2026-11-07",
+  "license": "MIT",
+  "size_kb": 149843,
+  "games_or_features": [
+   "quiz ranking by common.createTime",
+   "clock-skew estimate",
+   "TTS"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API via s1b] 73 stars, 95 forks within 5 days",
+   "[GIT] 51 commits 2026-11-04..2026-11-07 fixing live behaviour",
+   "[FILE server.ts:221-225] constructor with no signApiKey"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "server.ts:260 reads Number(data.common.createTime) from the CHAT event; src/game/quiz.ts:938-1004 measures clock skew and sorts by createTime - adopt for bilgi.html instead of bridge arrival time",
+   "Fallback to arrival time when TikTok omits the field (src/live/types.ts:19)"
+  ],
+  "notes": "MIT. Evidence that keyless 2.5.0 is in real use in November 2026. Contains a CLAUDE.md addressed to AI agents - read as data only. Game design belongs to s1b-mekanikler."
+ },
+ {
+  "repo": "Chahmetski/live-loop-racers",
+  "url": "https://github.com/Chahmetski/live-loop-racers",
+  "segment": "s4-baglanti",
+  "what": "Race game that vendors 'ttl-live' (the Node package of nglmercer/tiktok-signer) so it needs no sign server and no key.",
+  "stack": "Node, Three.js, Electron, vendored ttl-live",
+  "connection": "own signing (local: TikTok's webmssdk bundle executed in node:vm)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-31",
+  "last_push": "2026-10-31",
+  "license": "MIT",
+  "size_kb": 19630,
+  "games_or_features": [
+   "server/vendor/ttl-live with UPSTREAM.json provenance",
+   "THIRD_PARTY_LICENSES.md"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] single import commit 2026-10-31",
+   "[FILE server/vendor/ttl-live/UPSTREAM.json] pinned to upstream revision of 2026-10-10",
+   "[API via s1b] 0 stars, 0 forks"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "THIRD_PARTY_LICENSES.md + UPSTREAM.json is a tidy way to record vendored-code provenance if we vendor a connector",
+   "server/tiktok.js builds a stable eventId from common.msgId for de-duplication"
+  ],
+  "notes": "MIT for its own code. The signer downloads webmssdk.js 1.0.0.388 from TikTok's static CDN at first run, checks a pinned SHA-256, caches it in the temp dir and runs it in node:vm (src/signer.ts:39-40,72,139) - i.e. it executes TikTok's obfuscated code inside the app process and breaks if that pinned file disappears. Game belongs to s1b-mekanikler."
+ },
+ {
+  "repo": "kadirkrga25/tiktok-live-cark-oyunu",
+  "url": "https://github.com/kadirkrga25/tiktok-live-cark-oyunu",
+  "segment": "s4-baglanti",
+  "what": "Turkish wheel game whose README says it uses piratetok-live-js instead of the Euler signing service.",
+  "stack": "Node/TS, Vite",
+  "connection": "own signing (PirateTok unsigned route); tiktok-live-connector 1.2.3 only for the gift catalogue",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-03",
+  "last_push": "2026-11-04",
+  "license": null,
+  "size_kb": 221,
+  "games_or_features": [
+   "wheel game"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 12 commits 2026-11-03..2026-11-04 (+0300)",
+   "[FILE README.md:23-27]",
+   "[API via s1b] 0 stars"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Turkish wording we can reuse to explain 'no key, no paid plan' to the user (README.md:25)"
+  ],
+  "notes": "No licence. Circumstantial sign that the unsigned route is being used from Turkey this month; not proof. Game belongs to s1b-mekanikler."
+ },
+ {
+  "repo": "omerabc2006-cpu/taraftar-arena-server",
+  "url": "https://github.com/omerabc2006-cpu/taraftar-arena-server",
+  "segment": "s4-baglanti",
+  "what": "Turkish fan-arena game server on piratetok-live-js ('latest').",
+  "stack": "Node",
+  "connection": "own signing (PirateTok unsigned route)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-06",
+  "last_push": "2026-11-07",
+  "license": null,
+  "size_kb": 17,
+  "games_or_features": [
+   "GiftStreakTracker usage"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 7 commits 2026-11-06..2026-11-07",
+   "[API via s1b] 0 stars"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [],
+  "notes": "No licence. Depends on 'latest', i.e. unpinned. Game belongs to s1b-mekanikler."
+ },
+ {
+  "repo": "doncabrone-lab/tiktok-race-game",
+  "url": "https://github.com/doncabrone-lab/tiktok-race-game",
+  "segment": "s4-baglanti",
+  "what": "Race game hosted on Render that connects through @tiktool/live 2.12.1 in relayed mode.",
+  "stack": "Node/TS",
+  "connection": "unknown (tik.tools relay, TIKTOOL_API_KEY env)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-06",
+  "last_push": "2026-10-01",
+  "license": null,
+  "size_kb": 21111,
+  "games_or_features": [
+   "race game"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 73 commits 2026-09-06..2026-10-01",
+   "[FILE server.ts:580-620]",
+   "[API via s1b] 0 stars"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [],
+  "notes": "No licence. Built when tik.tools still advertised a free tier; that tier became a 7-day evaluation on 2026-09-28. Game belongs to s1b-mekanikler."
+ },
+ {
+  "repo": "TochdownBoy/tiktok-tower-defense",
+  "url": "https://github.com/TochdownBoy/tiktok-tower-defense",
+  "segment": "s4-baglanti",
+  "what": "Tower-defense game on @tiktool/live; its .env says a tik.tools key is required 'because the old Euler Stream signing endpoint is paywalled'.",
+  "stack": "Node/TS",
+  "connection": "unknown (tik.tools, TIKTOOL_API_KEY env)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-08-04",
+  "last_push": "2026-08-08",
+  "license": null,
+  "size_kb": 39261,
+  "games_or_features": [
+   "tower defense"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 6 commits 2026-08-04..2026-08-08",
+   "[FILE backend/.env.example:6-8]"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [],
+  "notes": "No licence. The 'paywalled' belief conflicts with EulerStream's public spec (anonymous access on the connect route); it most likely comes from the PRO-scoped room-id fallback or premium gift route. Game belongs to s1b-mekanikler."
+ },
+ {
+  "repo": "ElProfessor-spain/tiktok-horse-race",
+  "url": "https://github.com/ElProfessor-spain/tiktok-horse-race",
+  "segment": "s4-baglanti",
+  "what": "Horse-race game on npm tiktok-live-api (tik.tools) chosen over EulerStream for its then-free tier.",
+  "stack": "Node, socket.io",
+  "connection": "unknown (tik.tools, TIKTOOL_API_KEY env)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-07-08",
+  "last_push": "2026-07-09",
+  "license": null,
+  "size_kb": 169,
+  "games_or_features": [
+   "horse race"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 36 commits 2026-07-08..2026-07-09",
+   "[FILE server.js:29-36]"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [],
+  "notes": "No licence. Same free-tier assumption, now outdated. Game belongs to s1b-mekanikler."
+ },
+ {
+  "repo": "aminmaskur88/tebak-kata",
+  "url": "https://github.com/aminmaskur88/tebak-kata",
+  "segment": "s4-baglanti",
+  "what": "Word-guess game whose browser connects straight to wss://api.tik.tools with a user-pasted key.",
+  "stack": "React (browser only)",
+  "connection": "unknown (tik.tools relay, key typed into the browser)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-26",
+  "last_push": "2026-10-26",
+  "license": null,
+  "size_kb": 98,
+  "games_or_features": [
+   "word guessing"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 16 commits on 2026-10-26",
+   "[FILE src/services/tiktokLive.js:52-62]"
+  ],
+  "relevance": 1,
+  "depth": "code-read",
+  "ideas_for_us": [],
+  "notes": "No licence. Key in the client is the pattern tik.tools' own docs warn against. Game belongs to s1b-mekanikler."
+ }
+]

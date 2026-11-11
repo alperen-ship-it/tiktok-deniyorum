@@ -98,6 +98,19 @@ sonuna oturumun verdiği atıf satırlarını ekle.
 
 Önceki oturum bunları yapamadı. Planın iki varsayımı buna bağlı.
 
+Önce depoyu al ve dala geç:
+
+```
+git clone https://github.com/alperen-ship-it/tiktok-deniyorum.git
+cd tiktok-deniyorum
+git checkout claude/tiktok-live-studio-reverse-eng-6x7k2a
+```
+
+Depo bilgisayarda zaten varsa: `git fetch origin`, sonra aynı `git checkout` ve `git pull`.
+Köprüyü kaynaktan çalıştırmak için Node 20 ya da üstü gerekir: `cd server && npm ci`,
+sonra depo kökünde `node server/bridge.js --mock --tarayici`. Node kurmak istemezsen
+"Ek" bölümündeki exe'yi indir.
+
 1. Köprüyü başlat, TikTok LIVE Studio'da **Kaynak ekle → Link** ile
    `http://localtest.me:8787/overlays/kontrol.html` adresini aç. Aynısını OBS
    tarayıcı kaynağında dene. Sayfa şunları kendisi sınar: ortam (tarayıcı sürümü),
@@ -172,6 +185,8 @@ node dosya-test.js repo                     # file:// ile açılan sayfa köprü
 node port80-test.js repo                    # LIVE Studio yolu: portsuz localtest.me adresi
 node build-fake.js && node reconnect.js repo   # yeniden bağlanma: sahte bağlantı, sanal saat
 node ses-karsilastir.js                     # ses.js geriye uyum
+PORT=9141 node duman.js                     # köprü (mock) + panel + kontrol + yan sayfalar: hata, dış istek
+node ulti-probe.js repo                     # hediye bandındaki adın kutusunu zaman içinde örnekler
 node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 ```
 
@@ -306,6 +321,25 @@ Denetçinin Düdüklü ve ortak bantta bulduğu, bu geçişten eski kusurlar (i�
 | `kit/` | Danışmanın test betikleri |
 | `fikir/SIRALAMA.md` | Yeni oyun kararı: ÇAY ZİNCİRİ, sıralama tablosu, gerekçe |
 | `spike/` | Danışmanın sprite denemesi: `atlas.png` (bir karakter, 8 yön × 16 kare) ve deneme sayfaları |
+| `arastirma/` | 9 Kasım'daki beş depo araştırması (İngilizce): çok oyunlu merkezler, tek mekanikli oyunlar, oyun motorları, ürünleşme, bağlantı katmanı. Her birinde `rapor.md` ve `adaylar.json`. Ortak kurallar `ORTAK.md`'de |
+| `varlik-onizleme/` | Karakter paketlerinin kaba ön izlemeleri: `qm.png` ve `qa.png` (Quaternius erkek ve kadın), `kk_a.png` (KayKit maceracılar) |
+| `halay-kontrol-listesi.txt` | Danışmanın halay kabul listesi. İşçi H için başlangıç |
+
+Depoda `devir/` dışında duran devir parçaları: `tools/sprite-pisir/arac/` (GLB inceleme
+betikleri `inspect.mjs`, `gltfinfo.mjs`, `names.mjs` ve kaba çizici `splat.py`) ve
+`tools/sprite-pisir/varlik/` (seçilen karakter paketi).
+
+Depoya alınmayanlar (önceki oturumun geçici klasöründeydi, o klasör artık yok):
+
+- İndirilen üçüncü taraf içerik: rakip depo kopyaları, KayKit paketleri, tasarım
+  depoları, three.js paketi. Adresleri `arastirma/` raporlarında, `varlik-raporu.md`'de
+  ve `PLAN-INSAN.md`'de yazılı.
+- Yayıncının gönderdiği örnek videolar ve X gönderileri. Özetleri
+  `fikir/f1-rakip-kataloglari.md`'de. Asılları yayıncıda.
+- İşçilerin ve denetçilerin çalışma dosyaları, ekran görüntüleri ve test kayıtları.
+  Sonuçları commit iletilerinde ve bu dosyada.
+- Raporlardaki `/tmp/claude-0/…/scratchpad/…` ile başlayan yollar o geçici klasörü
+  gösterir, bugün karşılığı yoktur.
 
 ## Ek: devir anındaki durum (11 Kasım 2026)
 

@@ -1,0 +1,86 @@
+HALAY — KABUL KONTROL LISTESI (danisman)
+Kaynak: gorev tanimi + ev kurallari + orkestratorun ek istegi (a-d).
+[K] = halay-kit.js olcer   [G] = telefon olcekli goruntuye GOZLE bakilir   [O] = KOD OKUNUR
+
+A. OYUN TANIMI
+ 1 [K] Herhangi bir sohbet mesaji izleyiciyi siraya sokar.
+ 2 [K] Begeni de izleyiciyi siraya sokar.
+ 3 [K][G] Ortak "cosku" gostergesi: mesaj/begeniyle artar, zamanla soner, tempoyu (BPM) degistirir.
+ 4 [K] Halay basi = en cok katilan; hediye sirayla, kademeye gore sureli (kuyruklu) halay basligi satin alir.
+ 5 [K] Hediye katilim puanina yazilmaz (gecenin yildizi satin alinamaz).  [O]
+ 6 [K] "Dansa kaldir": @isim ile ve dansci numarasiyla.
+ 7 [K] Kabul penceresi 15 sn; cevap gelmezse davet duser (davet edene kisa solo).
+ 8 [K] Kisi basi bekleme (davet eden) ve hedef bekleme (davet edilen); reddedilene GORUNUR sebep.
+ 9 [K] Orta kuyrugu en cok 5 (sahnedeki + bekleyen); fazlasina gorunur "dolu".
+10 [K] Kendini / sirada olmayani / gecersiz numarayi davet etmek sessizce kuyruga girmez.
+11 [K] Sarki sonunda "gecenin yildizi" Finis.kart ile; zafer sesini Finis.kart calar (cift ses yok).
+12 [K] Sarki sonunda parent'a {tt:'tur-bitti'}; merkez yalnizca o anda degistirir.
+13 [K] oyun.html OYUNLAR haritasinda "halay" var; VARSAYILAN dizilim (bilye,bilgi,pk,at) DEGISMEDI.
+14 [O] ses.js: halay muzik deseni eklendi; diger dort oyunun deseni/suresi bozulmadi (regress.js + kulak).
+
+B. EK ISTEKLER (iki ornek klipten)
+ a [G][K] LEJANT: hangi hareket ne yapar (mesaj / begeni / @isim-numara / hediye). Kalici, >=26px, telefonda okunur.
+ b [G][K] Sarkinin EN COK KATILANI: avatar + sayi; SON GIRENLER: avatarlarla.
+ c [K][G] Her mesaj ve her begeni icin O IZLEYICININ KENDI danscisinda gorunur etki
+          (60 dansci varken ve dansci gorunen pencerenin disindayken ne oluyor?).
+ d [G][K] Cosku: ekranda one cikan ORTAK HEDEF + net bir doruk ani (dolunca ne oluyor, ne kadar suruyor,
+          sonra sifirlaniyor mu; doruk lite modda da gorunuyor mu).
+ ? Yonelim (yatay / 9:16 dikey): KARAR KULLANICININ — engelleme sebebi degil; sadece raporla.
+
+B2. EK ISTEKLER — 2. dalga ("Dua ve Zikir Halkasi" ornegi; oncelik sirasiyla)
+ 1 [G][K] SOHBET BALONU: yazanin KENDI danscisinin ustunde.
+          - balon AD PLAKALARINI GOMMUYOR (ayni anda 10+ balon, 60 dansci, komsu danscilar)
+          - balon metni >=26px, telefonda okunur; uzun mesaj kirpiliyor/sinirli (kac karakter, kac satir)
+          - SANITIZASYON: sohbet METNI (ad degil!) textContent ile; TT.dispatch yalnizca adi temizliyor,
+            ev.comment HAM gelir -> "<img onerror>", "&lt;", RTL/zero-width, cok uzun tek kelime, emoji seli
+          - ayni anda kac balon; eskiler nasil kalkiyor (DOM/bellek buyumesi: bellek testi tekrar)
+          - dansci gorunen pencerenin disindaysa balon nereye cikiyor
+ 2 [K][G] TEMPO SOZCUKLERI "hey / hop / oley / hoppa": coskuyu duz mesajdan DAHA cok itiyor;
+          ipucu satiri ORNEKLE birlikte gorunuyor (>=26px). Turkce buyuk/kucuk harf ("HEY", "Hoppa!!"),
+          kelime icinde gecme ("hoparlor", "heyecan") yanlis tetiklemiyor; spam tavani var mi
+          (tek kisi "hop hop hop..." ile coskuyu tek basina doruga cikaramamali).
+ 3 [G][K] IKI AYRI TAHTA: begenenler "COŞTURANLAR", hediye verenler "DESTEKÇİLER".
+          Adlar buyuk, sayilar kucuk/soluk; uzun ad kesilmiyor; bos durum metni; botlar tahtada yok;
+          hediye tahtasi elmas TUTARINI one cikarip "en cok odeyen kazanir" yarisi gibi okunmuyor mu.
+ 4 [K][G] DAVULCU / SUNUCU BALONU: ilk mesajda ve takipte ADIYLA selam; KUYRUKLU, HIC DUSMUYOR.
+          - sel testi: 30 ilk-mesaj + 10 takip bir saniyede -> hepsi sirayla gosteriliyor mu, kuyruk ne kadar
+            uzuyor, bekleme suresi makul mu ("hic dusmez" + sinirsiz kuyruk = bellek ve 5 dk gecikme riski:
+            ust sinir / hizlanma kurali ne?)
+          - ayni kisi ikinci kez selamlanmiyor; bot selamlanmiyor; ad textContent ile
+          - sarki sonu karti (Finis.kart) sirasinda kuyruk ne yapiyor
+ ? Yonelim: uc ornek de 9:16 dikey. KARAR KULLANICININ — engelleme sebebi degil; her incelemede hatirlat.
+
+C. EV KURALLARI
+ 1 [K] 1920 tuvalde 26px altinda METIN YOK (bos oda, 12 kisi, 60 kisi, davet, duet, hediye basi, yildiz karti).
+ 2 [G] Izleyici adlari ekrandaki en onemli nesne; sayaclar kucuk ve soluk.
+ 3 [K] 3 / 12 / 20 / 28 karakterlik adlar: sirada, halay basi plakasinda, davet kartinda, yildiz kartinda
+       KESILMEDEN (kucultme ya da satir kaydirma kabul; "…" kabul degil — en azindan bir yerde tam ad).
+ 4 [K] lite: filter / box-shadow / text-shadow / backdrop-filter / mask-image canlandirilmiyor ve
+       gorsel olarak onlara BAGIMLI degil (lite goruntusunde okunakliliga bak).
+ 5 [K] DOM hareketi yalnizca transform + opacity; metinde sonsuz scale animasyonu yok.
+ 6 [O][K] Hareket ZAMANA bagli (dt / muzik saati), kare sayisina degil; 30 fps ve 4x CPU kismada ayni tempo.
+ 7 [O][K] Izleyici metni textContent ile (ya da kacislanarak); kotu niyetli ad HTML olarak yorumlanmiyor.
+ 8 [K] Bahis / sans sozcugu yok (bahis, oran, odeme, sans, kumar, cekilis, ikramiye ...).
+ 9 [K] Hicbir hediye sessizce dusmuyor: sirada olmayanin hediyesi, dolu sirada hediye, seri (streak) hediye,
+       hediye seli (kuyruk siniri var mi, dusene ne gosteriliyor).
+10 [K] #kok tasmiyor; NaN / undefined / null metni yok; console / page hatasi yok.
+
+D. YAYINDA DAYANIKLILIK
+ 1 [K] Iki tam sarki: DOM dugumu, dinleyici, JS heap buyumuyor; kuyruklar/Map'ler sinirli (dans, sonDavet,
+       hedef beklemeleri, altyazi, cikanlar).  [O] sinirsiz buyuyen yapi var mi.
+ 2 [K] 60 dansciyla kare suresi: 30 fps; 4x CPU kismada diger oyunlara (at.html) yakin.
+ 3 [O] Tuval boyutu / devicePixelRatio; her karede yeniden olcum (layout thrash) yok; avatar yukleme
+       hatasi (403/CORS/yavas CDN) cizimi bozmuyor, tuvali "tainted" yapip okumayi kirmiyor.
+ 4 [O] Avatar URL'leri yalnizca <img>/tuval icin kullaniliyor (fetch yok); ?avatar=0 kapatiyor.
+ 5 [K] Sira dolu (max 60) iken yeni gelen: gorunur "dolu" bilgisi; sessiz dansci cikarma kurali adil mi;
+       ortadaki / halay basi / kuyruktaki kisi cikarilmiyor.
+ 6 [O] localStorage: yeni anahtar var mi, sinirli mi; Profil.ekle bot icin cagrilmiyor.
+ 7 [K] Bos odada demo botlari; gercek izleyici gelince cekiliyorlar; bot sohbet botuna (TT.soyle) yazdirmiyor.
+ 8 [O] @isim eslestirme: Turkce harf (İ/ı/ş/ç/ğ/ö/ü), bosluklu ad, ayni adda iki kisi (belirsizlik -> numara
+       iste), kisa adin baska kelimenin icinde gecmesi ("ali" <-> "galiba") YANLIS davet uretmiyor.
+ 9 [O] Duz sayi iceren siradan mesaj ("5 dk sonra gelirim", "10 numara") istenmeyen davet baslatiyor mu?
+
+KOMUTLAR
+ node halay-kit.js repo                      (hepsi, ~8 dk)
+ node halay-kit.js repo --hizli davet merkez (secili testler, kisa sureler)
+ node regress.js repo halay

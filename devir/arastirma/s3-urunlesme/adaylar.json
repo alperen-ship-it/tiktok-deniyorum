@@ -1,0 +1,1533 @@
+[
+ {
+  "repo": "baotran113a-dev/hp-game-shop",
+  "url": "https://github.com/baotran113a-dev/hp-game-shop",
+  "segment": "s3-urunlesme",
+  "what": "Storefront + licence-issuing back office of a Vietnamese shop (brand 'BH Studio', run next to a TikTok LIVE creator agency) that RENTS closed-source Windows TikTok LIVE games by the month.",
+  "stack": "Static GitHub Pages site (vanilla JS reading games.json/site.json) + local Express tool + Cloudflare Worker payment API; games themselves are Electron apps kept outside the repo",
+  "connection": "unknown",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-04",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 8552,
+  "games_or_features": [
+   "7 rented games + 1 video app",
+   "price list per game",
+   "machine-bound signed licence keys",
+   "signed revocation list",
+   "VietQR bank-transfer checkout with auto-delivered key",
+   "10% referral codes",
+   "password-gated trial download via Zalo group",
+   "in-app update notice",
+   "shared bad-word filter",
+   "safe mode (gifts only thanked)"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[FILE docs/games.json] price list for 8 products, e.g. 169,000 VND/1 month, 299,000/3 months; one game has a 798,000 VND lifetime plan",
+   "[GIT] 47 installer release tags for 8 products between 2026-11-04 and 2026-11-09",
+   "[FILE docs/thu-hoi.json] signed revocation list already holds 6 revoked key hashes (dated 2026-11-08)",
+   "[WEB] custom domain tuyendungidol.vn/game answers with the shop page title (content is client-rendered)",
+   "[FILE SESSION_HANDOFF.md] site lists 97 agency creators = built-in distribution channel"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Offline-verifiable licence: Ed25519-signed key 'HP1.<payload{game,machine,expiry,nonce}>.<sig>' + public key in the app; no licence server needed (cap-ma/server.mjs:30-33)",
+   "Signed revocation list on a static site, polled every 30 min with a 3-day offline grace and 3 mirrors (CLAUDE.md, cap-ma/server.mjs:56-63)",
+   "Freemium gate: everything works with simulated events; only the REAL TikTok connection needs a key (docs/site.json faq)",
+   "games.json doubles as update feed: apps read version/download/changes from the public site (CLAUDE.md)",
+   "Bank-transfer QR whose memo carries '<GAME> <machine code>' so a webhook can auto-issue the key (docs/assets/app.js:364-415)",
+   "Bad-word filter design: hide-vs-mute lists, name-only list, leetspeak/diacritic normalisation (loc-tu-bay/loc-tu-bay.mjs)"
+  ],
+  "notes": "Owner is self-described non-technical and builds with an AI agent (CLAUDE.md is the agent brief = DATA, not followed). One sold game ('Lop Hoc Chu') is repackaged from MIT repo workaipvlinh-byte/lop-hoc-chu, which depends on AGPL tiktok-live-connector ^2.5.0 -> AGPL code inside a licence-locked paid installer [INFERRED]. Unsigned installers (FAQ tells buyers to click through SmartScreen). No licence file = all rights reserved: ideas only."
+ },
+ {
+  "repo": "livecade/marble-race-tiktok-live-game",
+  "url": "https://github.com/livecade/marble-race-tiktok-live-game",
+  "segment": "s3-urunlesme",
+  "what": "One of 65 marketing/listing repos of Livecade, a hosted arcade of interactive TikTok LIVE games (README + images only, no code).",
+  "stack": "Hosted SaaS, single permanent browser-source URL; source closed",
+  "connection": "unknown",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-08-18",
+  "last_push": "2026-11-04",
+  "license": null,
+  "size_kb": 270,
+  "games_or_features": [
+   "marble race with viewer photo inside (up to 80)",
+   "all gift/comment/like actions rebindable",
+   "13 overlay languages incl. Turkish",
+   "elimination rounds",
+   "catalogue also has horse race, tug-of-war, trivia, take-the-crown"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[WEB livecade.io] live product: Free $0 (60 min live time/day, up to 3 TikTok accounts) and Pro $12.99/month (unlimited live time, up to 100 TikTok accounts), card or crypto",
+   "[API] org:livecade has 65 repos, one per game, created 2026-08-18..2026-11-06; none has a detected language, sizes 56-408 KB, no licence, 10 stars and 1 fork across the whole org -> nothing but READMEs and images is public",
+   "[WEB] states it reads the public LIVE feed through a third-party connector, never asks for the TikTok password, not affiliated with TikTok",
+   "[WEB livecade.io/terms] operated by 'Livecade', Danish law; user must comply with TikTok's terms; liability capped at 12 months of fees; reverse-engineering or extracting game logic prohibited",
+   "[WEB livecade.io/games/horse-race] setup = create account, pick the game in a dashboard, paste one overlay URL; a 'For agencies' partner link and a Docs link exist"
+  ],
+  "relevance": 5,
+  "depth": "readme",
+  "ideas_for_us": [
+   "A repo-per-game README with a FAQ and UTM-tagged links is used as free SEO/distribution (README.md)",
+   "Free tier limited by LIVE MINUTES PER DAY rather than by features - cheap to explain and enforce server-side [WEB]",
+   "'Every action is rebindable' gift->action table shown before signup (README.md 'How viewers play')",
+   "Explicit FAQ line 'Do viewers need to send gifts to play? No.' (README.md)",
+   "Horse race settings changeable live without restart, including 'idle drift' for quiet rooms and a minimum gift amount [WEB game page]"
+  ],
+  "notes": "Direct commercial competitor to our exact game set (marble race, horse race, trivia, tug of war, crown). 13 overlay languages in the marble-race README (English, Spanish, Portuguese, French, German, Italian, Indonesian, Arabic, Turkish, Russian, Hindi, Romanian, Filipino). 'Up to 100 TikTok accounts' on Pro and a 'For agencies' link target agencies. No company name or address in the terms. Game-design comparison belongs to s1b."
+ },
+ {
+  "repo": "appvidlab/interactive-tiktok-live-game-become-a-king",
+  "url": "https://github.com/appvidlab/interactive-tiktok-live-game-become-a-king",
+  "segment": "s3-urunlesme",
+  "what": "README-only product listing for a 'Become a King' gift game; installation is a Telegram contact link.",
+  "stack": "unknown (no code published)",
+  "connection": "unknown",
+  "stars": 19,
+  "forks": 3,
+  "created": "2023-06-06",
+  "last_push": "2023-06-06",
+  "license": null,
+  "size_kb": 2,
+  "games_or_features": [
+   "king-of-the-hill by gift value",
+   "Web Speech API announcements",
+   "multi-language"
+  ],
+  "deploy_grade": "D",
+  "deploy_evidence": [
+   "[FILE README.md] 'Installation: Click Me' -> t.me link; single README, 3 commits on 2023-06-06",
+   "[API] 19 stars, 3 forks, no push since 2023-06-06"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Escalating threshold mechanic: each new king must out-gift the previous one (README.md)"
+  ],
+  "notes": "Shows the oldest sales pattern: public teaser + private chat to buy. Nothing verifiable about sales."
+ },
+ {
+  "repo": "zahrun5/tts-live-v2",
+  "url": "https://github.com/zahrun5/tts-live-v2",
+  "segment": "s3-urunlesme",
+  "what": "Indonesian multi-tenant SaaS for interactive TikTok LIVE games: each registered user gets a room, a dashboard and an OBS overlay URL /overlay/<username>.",
+  "stack": "Node + Express 5 + Socket.IO + MongoDB (mongoose) + React/Vite dashboard; pm2; Cloudflare Tunnel",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-29",
+  "last_push": "2026-10-20",
+  "license": null,
+  "size_kb": 3241,
+  "games_or_features": [
+   "11 word/quiz games",
+   "email+password and Google OAuth login",
+   "Midtrans billing code",
+   "3 plans with limits",
+   "per-user state on disk",
+   "rate limiting",
+   "terms + refund pages",
+   "YouTube Live connector"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE server/config/plans.js] Free trial 30 days / Basic Rp 25,000 / Pro Rp 50,000 per 30 days with gift-mapping limits (4 / 20 / unlimited)",
+   "[FILE server/.env.example] Midtrans keys marked 'SANDBOX - still waiting for approval' -> real payments unproven",
+   "[WEB live.albiontools.fun] host answers with the SPA shell only; could not see content",
+   "[GIT] 85 commits 2026-09-29..2026-10-20, 3 authors"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Persist the 'live target' so a server restart reconnects by itself: 5s,10s,20s,30s then every 30s for ~15 min (server/services/tiktokManager.js:167-202)",
+   "Gift streaks handled once at repeatEnd + de-duplication by msgId across reconnects (tiktokManager.js:53-73)",
+   "Plan limits expressed as data (maxGiftMappings, aiQuestion, customBranding) in one auditable file (server/config/plans.js)",
+   "Escape every viewer name/avatar before innerHTML (public/shared/safe.js, services/sanitize.js) - XSS via nicknames is a real overlay risk",
+   "Registration switch ALLOW_REGISTER=false and per-IP limits (login 5/min, register 3/h) (README.md)"
+  ],
+  "notes": "One optional EULER_API_KEY shared by ALL tenants (tiktokManager.js:29) = one sign-server quota for the whole service. No LICENSE file while bundling AGPL tiktok-live-connector ^2.5.0 in a paid network service. Terms disclaim third-party outages (TikTok, Midtrans, Google)."
+ },
+ {
+  "repo": "vamnguyen/tiktok-live-games",
+  "url": "https://github.com/vamnguyen/tiktok-live-games",
+  "segment": "s3-urunlesme",
+  "what": "Open-source hosted page: type a TikTok username, pick a game, get an overlay link; one Node process serves many streamers.",
+  "stack": "Node + Express + Socket.IO + Canvas",
+  "connection": "tiktok-live-connector",
+  "stars": 75,
+  "forks": 37,
+  "created": "2026-01-04",
+  "last_push": "2026-03-28",
+  "license": "MIT (package.json only; no LICENSE file)",
+  "size_kb": 7603,
+  "games_or_features": [
+   "horse racing with gift lanes",
+   "link generator dashboard",
+   "debug page showing raw events",
+   "health/stats endpoints"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[WEB tiktok-live-games.onrender.com] page is live: link generator, Horse Racing available, two games 'Coming Soon', no login or pricing",
+   "[API] 75 stars, 37 forks",
+   "[GIT] 16 commits, last 2026-03-28; no render.yaml/Dockerfile in the tree"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Multi-tenant by Socket.IO room = TikTok username, one upstream connection per username, reference-counted (src/services/TikTokService.js:63-72)",
+   "Reconnect only while somebody is still watching the room; 2s->32s backoff with +-30% jitter, max 5 (README.md:116, TikTokService.js:184-248)",
+   "Auto-disconnect a room after 5 min with zero clients (TikTokService.js:313-331)",
+   "/debug.html event monitor 'to discover exact gift names' for mapping (README.md:60)"
+  ],
+  "notes": "No accounts, no auth, no payments, no per-streamer persistence; anyone can make the server open a connection to any username, all from one IP on the free sign tier (sessionId null, no key). Uses connector ^1.1.9 (MIT era). No LICENSE file although package.json says MIT."
+ },
+ {
+  "repo": "jjHernandez17/interaktik-platform",
+  "url": "https://github.com/jjHernandez17/interaktik-platform",
+  "segment": "s3-urunlesme",
+  "what": "Spanish-language hosted platform of interactive TikTok LIVE games with accounts, paid plans and an AI co-host.",
+  "stack": "Express + PostgreSQL + Redis + Socket.IO backend (Railway) and static frontend (Vercel)",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-05-12",
+  "last_push": "2026-10-24",
+  "license": null,
+  "size_kb": 91396,
+  "games_or_features": [
+   "login/register with e-mail verification",
+   "MercadoPago + Wompi payments",
+   "admin-priced plans",
+   "AI co-host (LLM + ElevenLabs voices)",
+   "Discord bot",
+   "race and snake games"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE .env.example] MercadoPago and Wompi keys, webhook secrets, minimum amounts in COP",
+   "[GIT] 187 commits 2026-05-11..2026-10-23",
+   "[API] homepage interaktik-platform.vercel.app (not fetched)"
+  ],
+  "relevance": 4,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Env comment states the scaling fact plainly: without an EulerStream key the service shares the community free limit, 'easily exhausted with many users' (.env.example)",
+   "Two local payment gateways behind one plan table so price validation is gateway-aware (.env.example)"
+  ],
+  "notes": "Bundles tiktok-live-connector 2.1.1-beta1 (MIT era). No licence file."
+ },
+ {
+  "repo": "RICX-FN/PlatChat",
+  "url": "https://github.com/RICX-FN/PlatChat",
+  "segment": "s3-urunlesme",
+  "what": "Hosted unified chat (Twitch/YouTube/Kick/TikTok) for OBS with Stripe subscriptions and no user database.",
+  "stack": "TypeScript + Express + ws",
+  "connection": "tiktok-live-connector",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-10-07",
+  "last_push": "2026-10-28",
+  "license": "MIT",
+  "size_kb": 376,
+  "games_or_features": [
+   "monthly and annual Stripe prices",
+   "7-day free trial",
+   "signed licence token stored in Stripe metadata"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] commits titled 'Fix Prod' and 'Pagamento anual aplicado' (2026-10-28)",
+   "[FILE src/server.ts:119-156] verified Stripe webhook handling"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Database-less licensing: a signed token + subscription state kept in Stripe customer metadata (README.md:60-73, src/server.ts:67-113)"
+  ],
+  "notes": "MIT, but ships AGPL tiktok-live-connector ^2.5.0."
+ },
+ {
+  "repo": "OliviaGG/HangStream",
+  "url": "https://github.com/OliviaGG/HangStream",
+  "segment": "s3-urunlesme",
+  "what": "Hosted word games (hangman, spelling) played from Twitch/TikTok chat, with viewer accounts and streamer OAuth.",
+  "stack": "Node + ws + SQLite + nginx + Docker",
+  "connection": "tiktok-live-connector + official API (TikTok OAuth for ownership)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-06-01",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 2008,
+  "games_or_features": [
+   "Google sign-in for viewers",
+   "cross-stream score tracking",
+   "streamer must OAuth their TikTok/Twitch before a room opens",
+   "Stripe optional",
+   "Discord bot"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE README.md:136-188] platform-authentication flow and error codes",
+   "[FILE Dockerfile, nginx/hangstream.conf] production deployment files",
+   "[GIT] 122 commits 2026-05-31..2026-11-08"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Require the streamer to prove channel ownership through TikTok's official OAuth before anyone can open a room for that username (README.md:136-177)",
+   "Viewer profiles that persist across streams (README.md:11-13) - same idea as our profil.js, but account-based"
+  ],
+  "notes": "The only project seen that combines the unofficial connector with TikTok's official developer login. No licence file."
+ },
+ {
+  "repo": "Tigrou6996/gentokinity",
+  "url": "https://github.com/Tigrou6996/gentokinity",
+  "segment": "s3-urunlesme",
+  "what": "'Gentok': French commercial TikFinity-style desktop app (events->actions, overlays, wheel, Minecraft RCON, Spotify) with a paid Premium tier.",
+  "stack": "Electron + Express + MongoDB + Socket.IO; own update server",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-12",
+  "last_push": "2026-11-06",
+  "license": "ISC (package.json only)",
+  "size_kb": 733708,
+  "games_or_features": [
+   "Stripe one-off payments for 1/3/6/12 months",
+   "licence token verified against vendor server",
+   "generic electron-updater feed on vendor domain",
+   "overlay maker",
+   "keyboard/RCON/webhook actions"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE src/server.js:270-275] price map 8.99 / 24.99 / 44.99 / 79.99 EUR for 1/3/6/12 months, card + Revolut Pay",
+   "[FILE package.json] version 1.0.6, publish url on vendor domain",
+   "[WEB tiktok.gentok.fr] host answers with a branded 404 at the root; product page not found"
+  ],
+  "relevance": 3,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Prepaid month bundles instead of recurring billing avoids failed-renewal handling (src/server.js:264-300)"
+  ],
+  "notes": "Closed commercial product bundling AGPL tiktok-live-connector ^2.4.4; package.json says ISC, no LICENSE file. Only 2 commits (code dump)."
+ },
+ {
+  "repo": "dawitmek/Hyperion",
+  "url": "https://github.com/dawitmek/Hyperion",
+  "segment": "s3-urunlesme",
+  "what": "Chat-plays-the-game: viewers' commands and gifts press keys on the streamer's PC through a paired companion app; hosted or self-hosted.",
+  "stack": "Fastify server + React web + Tauri 2 companion; Docker image",
+  "connection": "tiktok-live-connector",
+  "stars": 5,
+  "forks": 1,
+  "created": "2022-08-22",
+  "last_push": "2026-11-08",
+  "license": "GPL-3.0",
+  "size_kb": 30700,
+  "games_or_features": [
+   "crowd-mode voting",
+   "gift->key/macro",
+   "viewer levels",
+   "game profiles",
+   "TTS (Piper / own keys)",
+   "self-hosting guide"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 213 commits since 2022-08-22, 15 tags (v0.8.0), 4 authors",
+   "[FILE Dockerfile, .github/workflows/publish-image.yml] published container image",
+   "[API] 5 stars, 1 fork - outside use unproven"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Split 'server reads chat' from a small paired desktop companion that only presses allowed keys (README.md)"
+  ],
+  "notes": "GPL-3.0-or-later project using AGPL connector ^2.5.0 (compatibility is s4's call)."
+ },
+ {
+  "repo": "ZextyFL/Klaups",
+  "url": "https://github.com/ZextyFL/Klaups",
+  "segment": "s3-urunlesme",
+  "what": "Next.js alert/donation platform for TikTok LIVE with Stripe Connect payouts and a worker that holds the TikTok connections.",
+  "stack": "Next.js + Supabase + Stripe Connect + Node worker",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-21",
+  "last_push": "2026-09-27",
+  "license": null,
+  "size_kb": 496,
+  "games_or_features": [
+   "donation checkout",
+   "alerts with TTS queue",
+   "worker/web split"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 128 commits in 6 days (2026-09-21..27), default branch is an agent branch"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Keep long-lived TikTok sockets in a separate worker process from the web app (apps/worker/package.json)"
+  ],
+  "notes": "No licence; AGPL connector ^2.5.0."
+ },
+ {
+  "repo": "MrJinPro/novaboost-live",
+  "url": "https://github.com/MrJinPro/novaboost-live",
+  "segment": "s3-urunlesme",
+  "what": "Russian-language creator platform around TikTok LIVE with Supabase, Redis, Telegram bot and 'PayPal BYOK'.",
+  "stack": "TanStack Start + Supabase + Redis + Node backend",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-04-17",
+  "last_push": "2026-06-12",
+  "license": null,
+  "size_kb": 11863,
+  "games_or_features": [
+   "PayPal checkout",
+   "Telegram bot with anti-spam",
+   "platform disclaimer component"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 200 commits, last 2026-06-12 'added PayPal BYOK integration'"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "No licence file. Not read beyond tree and digest."
+ },
+ {
+  "repo": "tokelements/tokelements",
+  "url": "https://github.com/tokelements/tokelements",
+  "segment": "s3-urunlesme",
+  "what": "Profile repo of TokElements, a hosted overlay/widget SaaS for TikTok LIVE (source closed; two small MIT helper repos).",
+  "stack": "Hosted SaaS, private browser-source link",
+  "connection": "unknown",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-14",
+  "last_push": "2026-09-29",
+  "license": null,
+  "size_kb": 1,
+  "games_or_features": [
+   "alerts, goals, chat, leaderboards, points",
+   "AI widget builder",
+   "TikFinity migration page"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[WEB tokelements.com] Free $0 (points DB for 1,000 viewers) / Pro $18 month or $151.20 year; billing through Creem as merchant of record; 7-day refund on first charge"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Use a merchant-of-record (tax handled) instead of running Stripe yourself [WEB]",
+   "A dedicated 'coming from TikFinity' landing page (README.md)"
+  ],
+  "notes": "Connects by public username, 'never asks for your TikTok password' [WEB]."
+ },
+ {
+  "repo": "dOtExE97/botexe-studio",
+  "url": "https://github.com/dOtExE97/botexe-studio",
+  "segment": "s3-urunlesme",
+  "what": "'Free TikFinity replacement' for Windows: local overlay studio with alerts, widgets, games, TTS, points store, OBS/Stream Deck control.",
+  "stack": "Electron Forge (Squirrel) + React + Vite + TypeScript monorepo",
+  "connection": "tiktok-live-connector",
+  "stars": 3,
+  "forks": 2,
+  "created": "2026-06-12",
+  "last_push": "2026-10-16",
+  "license": "custom source-available (not open source)",
+  "size_kb": 29543,
+  "games_or_features": [
+   "44 widgets",
+   "trigger engine",
+   "wheel/bingo/guess-number/gift-battle/poll",
+   "TikFinity .tfc import",
+   "first-run tour",
+   "in-app bug/feature form",
+   "stats by week/month/year",
+   "EulerStream key rotator"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[GIT] 120 tags (v0.59.1) and 506 commits between 2026-06-10 and 2026-09-12",
+   "[API] 5 issues, 2 opened by people other than the owner",
+   "[FILE docs/plans/2026-06-13-live-feedback-5h-stream.md] used in a real 5-hour stream by the author",
+   "[FILE README.md] auto-update from GitHub Releases, unsigned installer"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Sign-quota know-how: free EulerStream plan = 10 WebSockets / 1000 requests per day; close code 1011 is ambiguous so retry the same key twice before rotating, 4401/4403 rotate at once, 1006/4404/4005 never rotate (apps/desktop/src/main/services/key-rotator.ts:1-24)",
+   "Silent-connection watchdog deliberately set to 5 minutes because every reconnect costs quota; live-check tick every 30 s for the same reason (apps/desktop/src/main/adapters/tiktok-adapter.ts:136-180)",
+   "Report 'connected' with an isReconnect flag so short drops do not reset leaderboards (tiktok-adapter.ts:9-42)",
+   "Each USER registers their own free EulerStream key in a guided step ('Gratis-Key holen') - quota scales with users, not with the vendor (README.md)",
+   "Import of the incumbent's config file (.tfc) as an onboarding shortcut (README.md)",
+   "CI job that renders every widget headless in six box sizes to catch overflow before a stream does (README.md 'Widget-Ueberlauf-Pruefung')",
+   "Plain-language SmartScreen / Smart App Control instructions for an unsigned exe (README.md)"
+  ],
+  "notes": "Custom source-available licence: view + run official builds only; 'commercial/agency/white-label licences on request'. THIRD-PARTY-LICENSES.md lists tiktok-live-connector as MIT and claims 'no copyleft obligations' while pinning ^2.4.3, which npm marks AGPL-3.0-only. Monetisation today = 'visit my TikTok LIVE and gift me'. Built with an AI pair programmer (stated in README)."
+ },
+ {
+  "repo": "iKhunsa/tiktok-tts",
+  "url": "https://github.com/iKhunsa/tiktok-tts",
+  "segment": "s3-urunlesme",
+  "what": "TikLiveTTS: open-source Windows app that reads TikTok/Twitch/YouTube/Kick chat aloud, with overlays, accounts and paid plans.",
+  "stack": "Electron + Express + ws; electron-updater; Sentry + self-hosted Aptabase",
+  "connection": "own signing",
+  "stars": 7,
+  "forks": 2,
+  "created": "2026-04-24",
+  "last_push": "2026-11-09",
+  "license": "MIT",
+  "size_kb": 242567,
+  "games_or_features": [
+   "TTS in 10 languages",
+   "blocked words saved per account",
+   "Free / No-Promos / Pro plans",
+   "billing screen with invoices",
+   "mobile control panel",
+   "auto-update",
+   "multi-locale UI"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[WEB tiklivetts.es] Free plan; 'Sin Promos' US$3/month or US$25/year; Pro US$8/month or US$85/year; donations via PayPal, Ko-fi, Lightning, Bitcoin",
+   "[GIT] 1013 commits, 53 tags, 6 authors, 2026-04-29..2026-11-09",
+   "[API] 16 issues; the 8 most recent are all by the owner - no outside reports visible"
+  ],
+  "relevance": 4,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Freemium lever that costs nothing to build: the free tier speaks an occasional sponsor line (first after 15 min, then at most every 25 min, only when viewers are present) and a cheap tier removes it (CHANGELOG.md)",
+   "TTS hygiene: do not read long digit tails of nicknames, read unnamed accounts as 'user' (CHANGELOG.md)",
+   "Privacy-friendly product analytics self-hosted (Aptabase) next to crash reporting (.env.example, package.json)"
+  ],
+  "notes": "MIT source with a commercial account layer. Uses its own client '@tiklivetts/tiktok-live-client' (not on the public npm registry) instead of tiktok-live-connector. Tree-only read (242 MB repo)."
+ },
+ {
+  "repo": "talkaboutdesign/tiklive",
+  "url": "https://github.com/talkaboutdesign/tiklive",
+  "segment": "s3-urunlesme",
+  "what": "MIT TikTok LIVE connector + local event server + starter overlays, shipped as desktop app, `npx tiklive` CLI and npm library.",
+  "stack": "TypeScript (Effect) + Bun/Node server + Electron desktop",
+  "connection": "own signing",
+  "stars": 7,
+  "forks": 2,
+  "created": "2026-10-12",
+  "last_push": "2026-10-30",
+  "license": "MIT",
+  "size_kb": 1772,
+  "games_or_features": [
+   "chat/alerts/goal overlays",
+   "actions (sound, GIF, TTS, OBS scene)",
+   "viewer points",
+   "demo mode",
+   "stable + nightly update channels"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[NPM] package 'tiklive' MIT, 9 versions 2026-10-12..2026-10-30",
+   "[GIT] 127 commits, 10 tags, 5 authors",
+   "[API] 7 stars, 2 forks, 0 issues - outside use unproven"
+  ],
+  "relevance": 5,
+  "depth": "readme",
+  "ideas_for_us": [
+   "`username=demo` produces fake events through the normal pipeline - a zero-setup test mode (README.md)",
+   "Server refuses to listen beyond localhost unless a token is set (README.md Notes)",
+   "Two update channels where 'stable' only ever promotes a build that already ran as nightly (docs/operations/release.md:6-58)"
+  ],
+  "notes": "README claims 'No third-party signing service, no TikTok login, no headless browser' (plain HTTPS + anonymous ttwid cookie) and warns that TikTok may refuse VPN/datacenter IPs. Not verified by me - hand to s4. Windows build unsigned."
+ },
+ {
+  "repo": "tokio-app/tokio",
+  "url": "https://github.com/tokio-app/tokio",
+  "segment": "s3-urunlesme",
+  "what": "Open-source desktop app (Windows/macOS/Linux) that reacts to TikTok LIVE events: TTS, music requests, alerts, countdown timer, overlays.",
+  "stack": "Electron + React + TypeScript; electron-updater; Playwright e2e",
+  "connection": "EulerStream SDK",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-08-03",
+  "last_push": "2026-11-09",
+  "license": "MIT",
+  "size_kb": 7072,
+  "games_or_features": [
+   "TTS with flood protection",
+   "gift selector",
+   "coin statistics by date range",
+   "EN/ES UI",
+   "'what's new' after update",
+   "docs site"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 1104 commits, 17 beta tags, single author, 2026-07-19..2026-11-09",
+   "[API] 0 stars, 0 issues",
+   "[API] homepage tokio.ialfaro.com (not fetched)"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Per-feature 'Protection' block (cooldown per viewer, max queue length) so chat cannot flood TTS/alerts (src/common/i18n/locales/en.json:139-142)"
+  ],
+  "notes": "MIT; own MIT connector '@tokioapp/connector' 0.2.1 (only dependency: ws) used with the user's own free EulerStream key [NPM]. Hand to s4."
+ },
+ {
+  "repo": "Mikasita25/Lulu-Finity",
+  "url": "https://github.com/Mikasita25/Lulu-Finity",
+  "segment": "s3-urunlesme",
+  "what": "Spanish-language TikFinity-style Electron app (TTS, sounds, roulette, music) that ships with a vendor-run relay holding the sign-server keys.",
+  "stack": "Electron + electron-updater; Node relay on Railway",
+  "connection": "tiktok-live-connector + EulerStream SDK (vendor relay)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-08-05",
+  "last_push": "2026-11-06",
+  "license": "AGPL-3.0-or-later (package.json only)",
+  "size_kb": 18249,
+  "games_or_features": [
+   "one-click NSIS installer",
+   "auto-update from GitHub Releases",
+   "relay with API-key pool and cooldowns",
+   "neural voices with local fallback"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 77 tags (v1.3.3), 306 commits, 2026-08-05..2026-11-05",
+   "[FILE RAILWAY_RELAY.md] production relay domain baked into the official build",
+   "[API] 0 stars, 0 issues"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Vendor relay pattern: desktop app never sees provider keys; relay rotates a key pool - rate/concurrency errors -> short cooldown, quota/billing -> long cooldown, invalid key -> disabled, 'LIVE offline' -> no rotation (RAILWAY_RELAY.md)",
+   "Honest note that a token baked into an installer can be extracted, so it only gates the relay (RAILWAY_RELAY.md)",
+   "NOTICE.md pattern: name the unofficial connector and its licence, say what data leaves the PC, say how updates are fetched (NOTICE.md)"
+  ],
+  "notes": "Declares AGPL-3.0-or-later in package.json (matches the AGPL connector 2.4.3) but has no LICENSE file."
+ },
+ {
+  "repo": "SoraGFZ/live-control-app",
+  "url": "https://github.com/SoraGFZ/live-control-app",
+  "segment": "s3-urunlesme",
+  "what": "Beta 'Live Control Studio' Electron app; the repo also contains an extracted copy of a commercial app named TikControl.",
+  "stack": "Electron + React + Express + Socket.IO; Dockerfile/render.yaml/railway.toml",
+  "connection": "tiktok-live-connector",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-04-09",
+  "last_push": "2026-06-06",
+  "license": null,
+  "size_kb": 134784,
+  "games_or_features": [
+   "OBS control",
+   "overlays",
+   "beta onboarding checklist"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 43 commits, last 'Initial commit - Render deploy' 2026-06-06",
+   "[API] 1 star"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "[FILE .tikcontrol-extract/package.json] shows what a commercial competitor ships: Electron + bytenode bytecode protection + electron-updater + Firebase + Stripe + tiktok-live-connector 2.1.0 - and that such protection gets unpacked anyway."
+ },
+ {
+  "repo": "kobato-chan1912/tiktok-idol-live",
+  "url": "https://github.com/kobato-chan1912/tiktok-idol-live",
+  "segment": "s3-urunlesme",
+  "what": "Vietnamese 'ToolIdol' Electron overlay tool with an online, machine-bound licence check.",
+  "stack": "Electron + Express + Socket.IO",
+  "connection": "tiktok-live-connector",
+  "stars": 1,
+  "forks": 1,
+  "created": "2025-05-21",
+  "last_push": "2025-09-07",
+  "license": "NOASSERTION",
+  "size_kb": 34415,
+  "games_or_features": [
+   "licence key + machine id verified against vendor API",
+   "free tier fallback"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 41 commits 2025-05-21..2025-09-07",
+   "[FILE license.js:35-58] POST {license, machine_id, app_name} -> valid/license_type/expired_date"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Fail-open design: if the licence server is unreachable the app drops to the free tier instead of locking (license.js:41-58)"
+  ],
+  "notes": "Connector ^2.0.3 (MIT era). The only node-machine-id hit next to the connector in code search."
+ },
+ {
+  "repo": "hahieume-ui/tikfinity-license-server",
+  "url": "https://github.com/hahieume-ui/tikfinity-license-server",
+  "segment": "s3-urunlesme",
+  "what": "Licence server + admin page for a paid 'Tikfinity Football' game: key bound to e-mail and device, with expiry.",
+  "stack": "Node + Express, JSON-file DB, Railway (Procfile, nixpacks)",
+  "connection": "TikFinity bridge",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-05-23",
+  "last_push": "2026-05-26",
+  "license": null,
+  "size_kb": 50,
+  "games_or_features": [
+   "members + licences",
+   "maxDevices",
+   "expiry countdown",
+   "import/export DB"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE README_DEPLOY_FIX.txt] deployment notes for Railway with live member data to preserve",
+   "[GIT] 8 commits 2026-05-23..26"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Cautionary example only: do not build this"
+  ],
+  "notes": "Admin protection is a no-op (`requireAdmin` calls next(), login returns a fixed token) and sample admin credentials are committed - anyone who finds the URL can mint or export licences. Shows why the offline-signed-key design is safer for a solo seller."
+ },
+ {
+  "repo": "AthallahDzaki/SA-CHAOS-ELECTRON",
+  "url": "https://github.com/AthallahDzaki/SA-CHAOS-ELECTRON",
+  "segment": "s3-urunlesme",
+  "what": "Desktop companion (v1.0.73) that lets TikTok LIVE gifts/votes trigger chaos effects in GTA San Andreas; sold with tokens.",
+  "stack": "Electron + Express + ws; Velopack updater; PHP/MySQL licence API",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-09",
+  "last_push": "2026-11-09",
+  "license": "MIT (package.json only)",
+  "size_kb": 10150,
+  "games_or_features": [
+   "token licence with expiry + hardware id, two editions",
+   "self-hosted update feed + signed P2P release index",
+   "vote config with gift points",
+   "tutorial page",
+   "debug menu"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE CHANGELOG.md] dated release notes up to 1.0.61 (2026-10-07), package version 1.0.73",
+   "[FILE scripts/schema.sql] token tables plus a revenue_history table per streamer",
+   "[GIT] single commit pushed 2026-11-09; 0 stars"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "'Gift follows the viewer's earlier chat vote' rule for vote boosts (CHANGELOG.md 1.0.61)"
+  ],
+  "notes": "Obfuscates the main process with javascript-obfuscator before packaging; connector ^1.1.9 (MIT era). Game side belongs to s2."
+ },
+ {
+  "repo": "ethemkurtt/SeliGames",
+  "url": "https://github.com/ethemkurtt/SeliGames",
+  "segment": "s3-urunlesme",
+  "what": "Turkish monorepo: Electron app + backend + web + live service that maps TikTok LIVE events to game mods (Minecraft RCON), with subscription plans.",
+  "stack": "Electron + Express + MongoDB + React",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 1,
+  "created": "2026-02-23",
+  "last_push": "2026-07-02",
+  "license": null,
+  "size_kb": 29636,
+  "games_or_features": [
+   "free/basic/pro/ultra plans",
+   "payment history with pending status",
+   "admin user management",
+   "download page"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 74 commits 2026-02-23..2026-07-02; many setup/test notes in the root",
+   "[API] 0 stars, 1 fork"
+  ],
+  "relevance": 3,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Turkish-language peer; plan change creates a 'pending' payment the admin approves by hand (seligames-backend/src/routes/subscription.js:62-104)"
+  ],
+  "notes": "No licence file; connector 2.1.1-beta1."
+ },
+ {
+  "repo": "pixieontv/pixelychat-releases",
+  "url": "https://github.com/pixieontv/pixelychat-releases",
+  "segment": "s3-urunlesme",
+  "what": "Releases-only repo of PixelyChat, a closed-source free multistream chat app (Twitch/YouTube/Kick/TikTok) with TTS and translation.",
+  "stack": "closed; Windows/macOS/Linux installers",
+  "connection": "unknown",
+  "stars": 10,
+  "forks": 0,
+  "created": "2026-08-06",
+  "last_push": "2026-11-06",
+  "license": null,
+  "size_kb": 6095,
+  "games_or_features": [
+   "15 languages",
+   "Microsoft Store distribution",
+   "manual + news site",
+   "Discord community",
+   "video tour"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[GIT] 15 release tags 2026-08-06..2026-11-06",
+   "[FILE README.md] Microsoft Store listing, Discord invite, 'Free forever'",
+   "[API] 10 stars"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Publish through the Microsoft Store to avoid the unsigned-exe SmartScreen warning (README.md Download table)",
+   "Closed app + public 'releases' repo gives a download page, changelog and issue tracker for free"
+  ],
+  "notes": "No source, no licence."
+ },
+ {
+  "repo": "PrintGoldenMan/goldenrelay-releases",
+  "url": "https://github.com/PrintGoldenMan/goldenrelay-releases",
+  "segment": "s3-urunlesme",
+  "what": "Releases-only repo of GoldenRelay: TikTok LIVE events -> Minecraft RCON, key presses, sounds, OBS.",
+  "stack": "closed; Windows installer + Linux AppImage/deb",
+  "connection": "unknown",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-07-13",
+  "last_push": "2026-08-08",
+  "license": "NOASSERTION",
+  "size_kb": 7,
+  "games_or_features": [
+   "auto-update",
+   "Discord"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 1 tag, 3 commits (2026-07-13..08-08)",
+   "[FILE README.md] unsigned-installer explanation"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Game-integration side belongs to s2."
+ },
+ {
+  "repo": "kitakeyos-dev/TikDesk",
+  "url": "https://github.com/kitakeyos-dev/TikDesk",
+  "segment": "s3-urunlesme",
+  "what": "Releases-only repo of a proprietary Vietnamese Windows widget set for TikTok LIVE (gift-driven countdown timer, progress bars).",
+  "stack": "closed",
+  "connection": "unknown",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-06",
+  "last_push": "2026-11-08",
+  "license": "proprietary",
+  "size_kb": 1,
+  "games_or_features": [
+   "subathon-style timer (gifts/likes/coins/follows add or remove time)"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 23 release tags",
+   "[FILE README.md] 'proprietary, all rights reserved; repo only for installers'"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": ""
+ },
+ {
+  "repo": "vvrgs/prizvo",
+  "url": "https://github.com/vvrgs/prizvo",
+  "segment": "s3-urunlesme",
+  "what": "Releases-only repo of Prizvo (Spanish): alerts, TTS, coins, roulette, 'donor battle', mini-games for TikTok LIVE.",
+  "stack": "closed",
+  "connection": "unknown",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-07-12",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 13,
+  "games_or_features": [
+   "roulette",
+   "donor battle",
+   "mini-games"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 188 release tags, README of 2 lines"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "High release cadence but nothing else verifiable."
+ },
+ {
+  "repo": "xbohiti/nexusMultiStreamer",
+  "url": "https://github.com/xbohiti/nexusMultiStreamer",
+  "segment": "s3-urunlesme",
+  "what": "Paid Windows multistreaming relay (one OBS stream to Twitch/YouTube/Kick/TikTok); licence key by e-mail, 3 PCs.",
+  "stack": "closed",
+  "connection": "none/mock",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-20",
+  "last_push": "2026-11-07",
+  "license": "NOASSERTION",
+  "size_kb": 22,
+  "games_or_features": [
+   "one-time purchase",
+   "activation on first launch",
+   "free download"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE README.md] purchase -> key by e-mail -> activate on up to three computers",
+   "[GIT] 7 tags"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [
+   "'Downloading is free, the app asks for the key on first launch' removes a gated-download step (README.md)"
+  ],
+  "notes": "Not a LIVE-interaction tool; kept only as a licensing example."
+ },
+ {
+  "repo": "zane-tv/tiktok-live-temple-rpc",
+  "url": "https://github.com/zane-tv/tiktok-live-temple-rpc",
+  "segment": "s3-urunlesme",
+  "what": "Vietnamese 'online temple' 9:16 interactive overlay with a JSON-RPC admin API and local TTS; the most-forked repo of the wave.",
+  "stack": "Bun + Express + ws + Python TTS worker",
+  "connection": "tiktok-live-connector",
+  "stars": 230,
+  "forks": 351,
+  "created": "2026-10-31",
+  "last_push": "2026-11-05",
+  "license": null,
+  "size_kb": 19746,
+  "games_or_features": [
+   "likes/shares/gifts trigger rituals",
+   "merit leaderboard",
+   "fortune draws",
+   "JSON-RPC 2.0 callable from TikFinity/Streamer.bot/curl",
+   "?obs=1 clean view",
+   "30 FPS cap"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 230 stars, 351 forks, created 2026-10-31",
+   "[API] fork search finds 340 forks; among the 100 most recently pushed, 8 were pushed after the parent's last push and sizes range 16.9-41.1 MB vs 19.7 MB upstream; one fork has 20 stars / 19 forks",
+   "[GIT] 762 commits in 6 days, 4 authors"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Expose every on-screen action as a local RPC so other tools (TikFinity, Streamer.bot, a phone) can drive the overlay (README.md)",
+   "`?obs=1` strips controls from the same page for the broadcast source (README.md)"
+  ],
+  "notes": "No licence file (API reports none) -> ideas only. Connector ^2.1.0. Game design belongs to s1a/s1b."
+ },
+ {
+  "repo": "Tradingliving/chanh-dien-online",
+  "url": "https://github.com/Tradingliving/chanh-dien-online",
+  "segment": "s3-urunlesme",
+  "what": "Free MIT 'online main hall' overlay kit that started the Vietnamese temple-overlay wave; README asks for bank-transfer donations.",
+  "stack": "Node + ws + msedge-tts + static HTML",
+  "connection": "tiktok-live-connector",
+  "stars": 2,
+  "forks": 257,
+  "created": "2026-10-31",
+  "last_push": "2026-10-31",
+  "license": "MIT (per README/LICENSE; API shows none)",
+  "size_kb": 0,
+  "games_or_features": [
+   "gift banner + TTS dedication",
+   "merit board",
+   "control page",
+   "LIVE Studio window capture or OBS browser source"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 257 forks at 2 stars; fork search finds 249 forks, ~20 of the 100 most recent show pushes after the creation day, 2 carry their own homepage",
+   "[FILE README.md] donation QR via VietQR"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Security section worth copying: never trust incoming names/comments/gift names - truncate, whitelist settings keys, XML-escape TTS text (README.md)",
+   "Tell users to check TikTok's terms before using it on their channel (README.md)"
+  ],
+  "notes": "API reports size 0 KB although the tree has 30 files. Pins tiktok-live-connector 2.5.0 (AGPL) while calling itself MIT."
+ },
+ {
+  "repo": "workaipvlinh-byte/lop-hoc-chu",
+  "url": "https://github.com/workaipvlinh-byte/lop-hoc-chu",
+  "segment": "s3-urunlesme",
+  "what": "'Word classroom' quiz game for TikTok LIVE with a Vietnamese teacher voice; MIT; already repackaged and sold by a shop.",
+  "stack": "TypeScript + Vite + Express + msedge-tts",
+  "connection": "tiktok-live-connector",
+  "stars": 73,
+  "forks": 95,
+  "created": "2026-11-04",
+  "last_push": "2026-11-07",
+  "license": "MIT",
+  "size_kb": 149843,
+  "games_or_features": [
+   "20 questions per lesson",
+   "speed-ranked answers",
+   "gift/like integration",
+   "BAT-LIVE.bat launcher"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 73 stars, 95 forks, created within the last week",
+   "[FILE baotran113a-dev/hp-game-shop CLAUDE.md] a shop packages this code with an activation lock and rents it for 50,000 VND/month",
+   "[API] 1 issue, opened by someone else"
+  ],
+  "relevance": 4,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Double-click .bat launcher that installs on first run and opens the control page (di-chua-online README)",
+   "Update path for non-git users: re-download the ZIP and copy settings.json + uploads/ (di-chua-online README)"
+  ],
+  "notes": "Sibling repo workaipvlinh-byte/di-chua-online (58 stars, 81 forks) carries an explicit disclaimer that it is entertainment, not a temple, and gifts are not offerings, plus a separate asset-licence table. Trivia design belongs to s1b."
+ },
+ {
+  "repo": "cherry9001/tiktok-live-bar",
+  "url": "https://github.com/cherry9001/tiktok-live-bar",
+  "segment": "s3-urunlesme",
+  "what": "Unity 3D dance-floor where viewers appear with their real avatars; Node bridge fed by TikFinity Desktop; free MIT with a Windows release zip.",
+  "stack": "Unity 6 + Node bridge",
+  "connection": "TikFinity bridge",
+  "stars": 126,
+  "forks": 141,
+  "created": "2026-08-12",
+  "last_push": "2026-08-12",
+  "license": "MIT (per README/LICENSE; API shows NOASSERTION)",
+  "size_kb": 162306,
+  "games_or_features": [
+   "gift -> camera/firework/VIP spotlight",
+   "control page",
+   "Test Lab"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 126 stars, 141 forks",
+   "[GIT] 5 tags; README links a v1.0.5 Windows zip",
+   "[FILE README.md] author's site and Zalo contact; demo video on Facebook"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Use TikFinity Desktop's local WebSocket (ws://127.0.0.1:21213) as the event source so the game needs no sign server of its own (README.md)"
+  ],
+  "notes": "Free game used as audience-builder for a creator brand. Engine side belongs to s2."
+ },
+ {
+  "repo": "duycuf/tiktok-live-kit",
+  "url": "https://github.com/duycuf/tiktok-live-kit",
+  "segment": "s3-urunlesme",
+  "what": "MIT framework for building themed TikTok LIVE overlays/games: one core, swappable themes, five-tab control panel; built to be extended with AI coding agents.",
+  "stack": "Node + ws + vanilla JS SDK + Three.js",
+  "connection": "TikFinity bridge + tiktok-live-connector (fallback)",
+  "stars": 21,
+  "forks": 32,
+  "created": "2026-10-31",
+  "last_push": "2026-11-02",
+  "license": "MIT",
+  "size_kb": 976,
+  "games_or_features": [
+   "gift rules editor with learned gift library",
+   "per-row preview",
+   "Test tab with crowd bursts up to 400",
+   "stats + CSV export",
+   "Vietnamese TTS with pre-rendered lines",
+   "three go-live setups",
+   "safe-zone view"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 21 stars, 32 forks; all 32 forks are unmodified copies (same size and push date)",
+   "[GIT] 17 commits in 3 days, tags v1.0.0-v1.0.1",
+   "[WEB duycuf.vn] author's site sells AI teaching/building services; the kit is not mentioned there"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "GO-LIVE guide with a symptom->fix table (black window capture, silent overlay, OBS virtual camera has no sound...) (docs/GO-LIVE.md)",
+   "`/overlay?safe` shows the phone-crop safe zone: the live frame is taller than 9:16, ~100 px lost each side (docs/GO-LIVE.md)",
+   "Test tab: fake viewers, 10/30/60/400-person bursts 'to check the machine copes', per-effect buttons, all through the real pipeline (README.md)",
+   "Gift library that learns gifts seen on live; click one to add a rule; preview button on every rule row (README.md)",
+   "Operational knobs: maxJoinsPerSecond (join-flood cap), watchdogSeconds (reconnect after silence), 'last event N s ago' indicator (README.md)",
+   "Stats tab with CSV download 'to thank supporters' and a New-session button (README.md)"
+  ],
+  "notes": "No monetisation in the repo. Prefers TikFinity Desktop and keeps the AGPL connector ^2.5.0 only as fallback while the kit itself is MIT."
+ },
+ {
+  "repo": "Mateus0790/tiktokfarm",
+  "url": "https://github.com/Mateus0790/tiktokfarm",
+  "segment": "s3-urunlesme",
+  "what": "Brazilian 'TikTok Farm': six auto-rotating games that run unattended; viewers vote for the next game; TikTok and YouTube chat merged.",
+  "stack": "Node + Express + ws + Canvas",
+  "connection": "tiktok-live-connector",
+  "stars": 2,
+  "forks": 0,
+  "created": "2026-10-21",
+  "last_push": "2026-10-23",
+  "license": "MIT (package.json only)",
+  "size_kb": 152,
+  "games_or_features": [
+   "kingdom war, territory, tower defence, race, quiz, guess-the-word",
+   "interval vote 1/2/3 with gift-weighted votes",
+   "simulator and --sim start",
+   "YouTube Super Chat -> diamond conversion",
+   "procedural audio"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 8 commits, last 2026-10-23",
+   "[API] 2 stars, 0 forks"
+  ],
+  "relevance": 5,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Unattended-OBS checklist: auto-reconnect on (10 s), untick 'shutdown source when not visible', 'control audio via OBS' (README.md section 4)",
+   "Audience picks the next game during the interval; gifts add votes; last game excluded from the next ballot (README.md)",
+   "Simulated players never enter the real ranking (README.md section 3)"
+  ],
+  "notes": "Closest twin of our 'open it and leave it' rotation. Architecture comparison belongs to s1a. MIT in package.json, AGPL connector 2.5.0."
+ },
+ {
+  "repo": "mashupsolution/tu-tien-online",
+  "url": "https://github.com/mashupsolution/tu-tien-online",
+  "segment": "s3-urunlesme",
+  "what": "Vietnamese cultivation-themed 9:16 game that runs locally; ships Windows/macOS binaries built by GitHub Actions.",
+  "stack": "TypeScript + Bun (compiled binary) + SQLite",
+  "connection": "tiktok-live-connector",
+  "stars": 10,
+  "forks": 20,
+  "created": "2026-11-03",
+  "last_push": "2026-11-03",
+  "license": null,
+  "size_kb": 50502,
+  "games_or_features": [
+   "simulation mode",
+   "admin room",
+   "sign-service key field (write-only)",
+   "milestones by concurrent viewers"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 10 stars, 20 forks",
+   "[FILE README.md] author states real LIVE reception is 'not yet verified'"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "`bun build --compile` cross-targets (windows-x64, darwin-arm64/x64) as a single-binary alternative to Node SEA (README.md)",
+   "Sign-service key stored locally, write-only in the UI (README.md)"
+  ],
+  "notes": "Game design belongs to s1a."
+ },
+ {
+  "repo": "ntanh23112005/tiktok-live-template",
+  "url": "https://github.com/ntanh23112005/tiktok-live-template",
+  "segment": "s3-urunlesme",
+  "what": "Free 'TikTok LIVE template' pack of three mini-game tools shared for the community, with Facebook/Zalo support and a coffee-donation QR.",
+  "stack": "Node (tree only)",
+  "connection": "unknown",
+  "stars": 5,
+  "forks": 2,
+  "created": "2026-11-09",
+  "last_push": "2026-11-09",
+  "license": null,
+  "size_kb": 183756,
+  "games_or_features": [
+   "admin + overlay pages",
+   "LIVE Studio window-capture instructions"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[API] 5 stars, 2 forks, pushed 2026-11-09",
+   "[FILE README.md] asks users not to resell and to star the repo"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Contact channels are social, not GitHub issues."
+ },
+ {
+  "repo": "steveseguin/social_stream",
+  "url": "https://github.com/steveseguin/social_stream",
+  "segment": "s3-urunlesme",
+  "what": "Social Stream Ninja: free GPL multistream chat/overlay tool delivered as browser extension and standalone app; TikTok is one of many sources.",
+  "stack": "JavaScript browser extension + Electron standalone",
+  "connection": "unknown",
+  "stars": 1175,
+  "forks": 216,
+  "created": "2021-09-29",
+  "last_push": "2026-11-09",
+  "license": "GPL-3.0",
+  "size_kb": 833412,
+  "games_or_features": [
+   "chat capture from many platforms",
+   "overlays and alerts",
+   "WebSocket API",
+   "donations"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[GIT] 6877 commits, 125 tags, 50 authors since 2021",
+   "[API] 1175 stars, 216 forks",
+   "[FILE README.md] Chrome Web Store + Firefox listings, Discord community"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Browser-extension delivery sidesteps unsigned-exe warnings and auto-updates through the store (README.md)"
+  ],
+  "notes": "GPL-3.0. Tree-only read (833 MB)."
+ },
+ {
+  "repo": "3dproger/AxelChat",
+  "url": "https://github.com/3dproger/AxelChat",
+  "segment": "s3-urunlesme",
+  "what": "Long-running cross-platform multi-chat app with OBS widgets; app closed, widgets open; donation-funded.",
+  "stack": "closed app (Qt) + open web widgets",
+  "connection": "unknown",
+  "stars": 328,
+  "forks": 25,
+  "created": "2021-07-28",
+  "last_push": "2026-11-08",
+  "license": null,
+  "size_kb": 25870,
+  "games_or_features": [
+   "TikTok among sources",
+   "WebSocket + file integration API",
+   "donation platform integrations"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[GIT] 55 tags since 2021",
+   "[API] 328 stars, 25 forks",
+   "[FILE README.md] sponsor page"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Chat aggregator, not a game product."
+ },
+ {
+  "repo": "vortisrd/chatrd",
+  "url": "https://github.com/vortisrd/chatrd",
+  "segment": "s3-urunlesme",
+  "what": "GPL chat & events overlay for many platforms that takes TikTok events from the TikFinity Desktop app and everything else from Streamer.bot.",
+  "stack": "JavaScript overlay",
+  "connection": "TikFinity bridge",
+  "stars": 50,
+  "forks": 13,
+  "created": "2025-04-11",
+  "last_push": "2026-11-06",
+  "license": "GPL-3.0",
+  "size_kb": 2566,
+  "games_or_features": [
+   "unified chat",
+   "event alerts",
+   "send messages to TikTok through TikFinity login"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 50 stars, 13 forks",
+   "[GIT] 543 commits 2025-04-10..2026-11-06"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Lean on Streamer.bot + TikFinity as local event buses instead of owning any platform connection (README.md)"
+  ],
+  "notes": ""
+ },
+ {
+  "repo": "cemo702/FreeTiktokTTS",
+  "url": "https://github.com/cemo702/FreeTiktokTTS",
+  "segment": "s3-urunlesme",
+  "what": "Turkish free desktop app that reads TikTok LIVE comments aloud with a fully local Piper voice; published under AGPL because of the connector.",
+  "stack": "Electron + electron-updater + Piper (Python runtime)",
+  "connection": "tiktok-live-connector",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-18",
+  "last_push": "2026-10-28",
+  "license": "AGPL-3.0",
+  "size_kb": 645,
+  "games_or_features": [
+   "Turkish-aware profanity/spam filter with mask/***/beep/skip modes",
+   "user cooldown, blacklist/whitelist, regex rules",
+   "auto-update from GitHub Releases",
+   "TR + EN README",
+   "in-app changelog",
+   "donation buttons"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 7 tags (v1.3.2) and 11 commits between 2026-10-19 and 2026-10-28",
+   "[API] 0 stars, 0 forks - outside use unproven"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Turkish-aware text normalisation for filters: Turkish letter folding, leetspeak map, URL/mention/hashtag/bracket/emoji stripping (src/main/filters.js:1-30)",
+   "Reconnect ladder 2/5/10/20/30 s (src/main/tiktok-source.js:10) and a hard-won note: do NOT await the connector's disconnect() - on a half-open socket it may never resolve and the retry loop stays silent when the stream starts (tiktok-source.js:340-342)",
+   "Licence done consistently: LICENSE = AGPL-3.0, package.json AGPL-3.0-only, README lists the connector as AGPL and adds a not-affiliated/trademark line (README.md)",
+   "Turkish SmartScreen wording ready to reuse ('Daha fazla bilgi' -> 'Yine de çalıştır') (README.md)"
+  ],
+  "notes": "The one Turkish peer that ships a signed-off licence position. AGPL code: reusable only in an AGPL-compatible distribution. Unsigned installer, per-user install without admin rights."
+ },
+ {
+  "repo": "isaackogan/TikTokLivePrinter",
+  "url": "https://github.com/isaackogan/TikTokLivePrinter",
+  "segment": "s3-urunlesme",
+  "what": "Prints TikTok LIVE gifts/follows/comments on a thermal receipt printer; ships as a one-file app per OS and as an npm library; requires an Euler Stream API key.",
+  "stack": "TypeScript + Bun (single-file build) + React web UI served on 127.0.0.1",
+  "connection": "EulerStream SDK",
+  "stars": 33,
+  "forks": 12,
+  "created": "2022-04-27",
+  "last_push": "2026-11-04",
+  "license": "custom (MIT with excluded-party restriction)",
+  "size_kb": 3868,
+  "games_or_features": [
+   "one executable for macOS/Windows/Linux that opens a browser page",
+   "drag-and-drop receipt designer",
+   "filters: minimum diamonds, specific gifts, every N likes",
+   "Test print",
+   "config export/import as JSON",
+   "docs site"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 33 stars, 12 forks, created 2022-04-27, pushed 2026-11-04",
+   "[GIT] rebuilt and tagged v0.1.0 on 2026-11-04; 67 commits, 3 authors",
+   "[FILE README.md] the description still says '(Purchasable)' but the README shows a free download that needs a paid-or-free Euler Stream key"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Same delivery shape as ours - one file, local server, browser UI - built for three OSes (README.md 'no-code desktop app')",
+   "Settings export/import as one JSON file (README.md)"
+  ],
+  "notes": "Licence is 'MIT with an Excluded Party Restriction' that names a competing service (tik.tools) as excluded [FILE LICENSE]. Evidence that connection providers compete through licence terms - hand to s4. Monetisation sits in the API key, not in the app."
+ },
+ {
+  "repo": "faisalrasheed442/playzy-public",
+  "url": "https://github.com/faisalrasheed442/playzy-public",
+  "segment": "s3-urunlesme",
+  "what": "Releases, guide and landing page of Playzy, a closed-source free Windows app mapping TikTok LIVE gifts to actions in GTA V, Minecraft and any PC game.",
+  "stack": "closed; Windows installer; guide in Markdown",
+  "connection": "TikTokLive (py)",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-10-12",
+  "last_push": "2026-10-26",
+  "license": null,
+  "size_kb": 3753,
+  "games_or_features": [
+   "rule editor with cooldowns",
+   "test mode with fake viewers",
+   "overlay in portrait or landscape",
+   "gift spinner",
+   "self-update that shows what's new and asks",
+   "webhook and mod SDK"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 18 release tags up to v1.5.3; repo created 2026-10-12",
+   "[API] 1 star, 0 forks",
+   "[FILE .github/FUNDING.yml] donation funding file"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Queue policy 'gifts are never lost, free events are': a gift arriving during a cooldown waits its turn; likes and chat are dropped instead (README.md, guide/playzy-guide.md:542-550)",
+   "Waiting-for-live polling slows to 'every few minutes' after a long wait, and after sign-server refusal it waits 3 minutes (guide/playzy-guide.md:130, 630)",
+   "Settings kept in %LOCALAPPDATA% apart from the install folder so updates never touch them (guide/playzy-guide.md:86)"
+  ],
+  "notes": "Positions itself as 'no event limits, no watermark, no account'. Game integrations belong to s2. No licence."
+ },
+ {
+  "repo": "Papouth/TikTok-Live-Diamond-Heist",
+  "url": "https://github.com/Papouth/TikTok-Live-Diamond-Heist",
+  "segment": "s3-urunlesme",
+  "what": "Download-and-update repo for a paid interactive game: buy a licence through Discord, download from Releases, watch a YouTube setup video.",
+  "stack": "closed (README + version.json)",
+  "connection": "unknown",
+  "stars": 2,
+  "forks": 0,
+  "created": "2025-11-17",
+  "last_push": "2025-11-29",
+  "license": null,
+  "size_kb": 8,
+  "games_or_features": [
+   "paid licence",
+   "version.json update feed",
+   "video tutorial"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[FILE README.md] 'You need to buy a licence to play the game', contact on Discord",
+   "[GIT] 2 tags, 8 commits, last 2025-11-29",
+   "[API] 2 stars"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Smallest possible update feed: a version.json with latestVersion and downloadURL in a public repo (version.json)"
+  ],
+  "notes": "No price stated; sales unverifiable."
+ },
+ {
+  "repo": "Lehaneploxo/donation-race",
+  "url": "https://github.com/Lehaneploxo/donation-race",
+  "segment": "s3-urunlesme",
+  "what": "Hosted set of gift-driven race/fight games; examined here only for its written TikTok-policy audit and its hosting/access files.",
+  "stack": "Node + Express + ws + PostgreSQL on Railway",
+  "connection": "tiktok-live-connector",
+  "stars": 6,
+  "forks": 4,
+  "created": "2026-03-10",
+  "last_push": "2026-11-07",
+  "license": null,
+  "size_kb": 101535,
+  "games_or_features": [
+   "allowlist of streamer usernames that may open a room",
+   "Railway restart policy",
+   "policy audit document"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE railway.json] deploy config with restart on failure, 10 retries",
+   "[FILE РАЗРЕШЁННЫЕ_АККАУНТЫ.md] three real usernames plus 'demo' are allowed to open rooms",
+   "[API] 6 stars, 4 forks, pushed 2026-11-07"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Invite-only hosting without accounts or payments: a hard-coded ALLOWED_STREAMERS list, changed by redeploy (РАЗРЕШЁННЫЕ_АККАУНТЫ.md)",
+   "A one-page self-audit against TikTok's rules with a risk table per mechanic, each row tagged official / third-party / own conclusion (ПРАВИЛА_TIKTOK.md sections 3-7)",
+   "Mitigations it lists: mark bots visibly, never tie a gift to a random prize, keep motion on the waiting screen, explain rules instead of asking for gifts, keep the streamer present by voice (ПРАВИЛА_TIKTOK.md section 7)"
+  ],
+  "notes": "The audit is the author's summary dated 2026-10-12, not TikTok's text. I confirmed on TikTok's own page only: creators are responsible for third-party tools, 18+ for LIVE and gifts, guidelines released 2026-08-25 and effective 2026-09-24 [WEB]. Its statements on gambling-like activity, unattended streams and monetisation loss could not be confirmed (pages did not render). Read from s1b's clone; game mechanics belong to s1b. Connector ^2.1.1-beta1; no licence."
+ },
+ {
+  "repo": "ponchogf88/faceless-streaming-24-7",
+  "url": "https://github.com/ponchogf88/faceless-streaming-24-7",
+  "segment": "s3-urunlesme",
+  "what": "Planning repo for 24/7 'faceless' streams: local PCs render masters, a cheap cloud VPS loops them to YouTube and TikTok over RTMP.",
+  "stack": "Docs + Docker + FFmpeg (systemd)",
+  "connection": "none/mock",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-08",
+  "last_push": "2026-09-11",
+  "license": null,
+  "size_kb": 36884,
+  "games_or_features": [
+   "FFmpeg loop 1080p30 CBR 4500k, keyframe 2 s",
+   "horizontal + vertical outputs",
+   "monetisation projections"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 10 commits, last 2026-09-11; mostly strategy documents"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "For pre-rendered loops a VPS + FFmpeg is enough; no OBS needed (README.md diagram)"
+  ],
+  "notes": "Not interactive: nothing reads chat. Included only as the sole 24/7-VPS description found."
+ },
+ {
+  "repo": "adanalife/obs",
+  "url": "https://github.com/adanalife/obs",
+  "segment": "s3-urunlesme",
+  "what": "Headless OBS Studio container (sway + wayvnc + noVNC, supervisor, health endpoint) used for a 24/7 slow-TV stream on another platform.",
+  "stack": "Docker + OBS + sway + Python helper",
+  "connection": "none/mock",
+  "stars": 2,
+  "forks": 0,
+  "created": "2026-06-22",
+  "last_push": "2026-11-09",
+  "license": "NOASSERTION",
+  "size_kb": 931,
+  "games_or_features": [
+   "browser_source with CEF",
+   "VAAPI encode",
+   "watchdog via OBS websocket"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 371 commits, last 2026-11-03"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Shows what unattended OBS with a browser source really needs: a compositor, GPU encode, a supervisor and a health check (README.md)"
+  ],
+  "notes": "Not TikTok-specific."
+ },
+ {
+  "repo": "zcharef/streamshape",
+  "url": "https://github.com/zcharef/streamshape",
+  "segment": "s3-urunlesme",
+  "what": "2023 source dump of a 'TikTok live streaming SaaS' (broker + REST API + widget server).",
+  "stack": "Node + Socket.IO + Prisma + Auth0-style OIDC",
+  "connection": "tiktok-live-connector",
+  "stars": 9,
+  "forks": 0,
+  "created": "2023-05-05",
+  "last_push": "2023-05-05",
+  "license": "UNLICENSED",
+  "size_kb": 6788,
+  "games_or_features": [
+   "broker/API/server split",
+   "widget subscriptions"
+  ],
+  "deploy_grade": "D",
+  "deploy_evidence": [
+   "[GIT] 5 commits on 2023-05-05/06, none since"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "Connector 0.9.22; packages marked UNLICENSED."
+ }
+]

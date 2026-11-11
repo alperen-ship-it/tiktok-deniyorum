@@ -1,0 +1,1257 @@
+[
+ {
+  "repo": "cherry9001/tiktok-live-bar",
+  "url": "https://github.com/cherry9001/tiktok-live-bar",
+  "segment": "s2-motorlar",
+  "what": "3D 'live bar / cloud disco': viewers appear as dancing 3D characters with their TikTok avatar; gifts buy camera zoom, size, VIP wings, 'TOP DJ' and fireworks.",
+  "stack": "Unity 6 (C#) client + Node 20 bridge (express + ws) + web control panel",
+  "connection": "TikFinity bridge (default, ws://127.0.0.1:21213) | tiktok-live-connector (alternative, optional EULER_API_KEY)",
+  "stars": 126,
+  "forks": 141,
+  "created": "2026-08-12",
+  "last_push": "2026-08-12",
+  "license": "MIT",
+  "size_kb": 162306,
+  "games_or_features": [
+   "dance floor with up to 400 avatars",
+   "gift->effect rules editable in web UI ('Master Rules')",
+   "top-3 gifter podium",
+   "evolution tiers by cumulative gifts (10/50/200/1000)",
+   "beat clock 128 bpm",
+   "test lab with fake viewers",
+   "chroma-key mode (F2)"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 126 stars / 141 forks, more forks than stars",
+   "[API] fork query finds 148 forks; 7 of the 100 most recent pushed after the parent; at least 8 separate re-uploads/re-brands (speedTD 'Cloud Disco', mynh19122003/dj-live-stage, tieumyai07, phamvu65, ChienVuMinh, HardCore-spz, the816-ai, Yuh266)",
+   "[GIT] 5 tags v1.0.1-v1.0.5, Windows release zip named in README",
+   "[FILE README-BAT-DAU.txt] seller site + contact; 'no machine lock, buyers may add their own licence system'"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Dual-provider bridge: one normalised event shape fed either by TikFinity's local WebSocket or by tiktok-live-connector (TikTokBridge/server.js, src/tiktok/normalize-event.js, normalize-tikfinity-event.js) - a fallback path for our EulerStream dependency",
+   "Gift rules as data, editable without code (TikTokBridge/config/master.json, gifts.json): alias list + giftId + action + durationMs + label",
+   "'Pay to be seen': ordinary viewers are dim and translucent, a gifter lights up and the camera zooms to them (Documentation/HUONG_DAN_SU_DUNG.txt); Rose = 4 s zoom; spotlight queue min 4 s / max 15 s / max 8 queued (config/game.json)",
+   "Cumulative-gift evolution tiers with titles (gifts.json evolutionTiers) and a collective 'party energy' goal (game.json partyEnergyGoal)"
+  ],
+  "notes": "Code is MIT [FILE LICENSE] (API reports NOASSERTION). Art is NOT clean: GIFs come from Weibo/Giphy with a note to verify terms [FILE TikTokBridge/assets/*/sources.json]. Format = Chinese 'cloud disco' (yun beng di) exported to Vietnam."
+ },
+ {
+  "repo": "landsbetween/tiktok-marble-race",
+  "url": "https://github.com/landsbetween/tiktok-marble-race",
+  "segment": "s2-motorlar",
+  "what": "Godot 4 marble race: comment or like in a 25 s lobby = you get a glass marble with your avatar inside; random vertical track every round.",
+  "stack": "Godot 4 (GDScript, 761-line main.gd) native window + Node bridge (express + ws)",
+  "connection": "tiktok-live-connector ^2.5.0 (Node sidecar -> ws://127.0.0.1:3004)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-24",
+  "last_push": "2026-09-24",
+  "license": null,
+  "size_kb": 766,
+  "games_or_features": [
+   "up to 50 marbles, bots fill to 6",
+   "follow or lobby gift = gold marble",
+   "gift during race = boost scaled by gift size",
+   "likes = nudge every 1.5 s",
+   "4 named gifts drop a bomb next to the leader",
+   "stuck marbles auto-kicked",
+   "podium 7 s then new lobby",
+   "--demo / --debug test keys"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 1 commit 2026-09-24, 1 author, 0 stars [API]",
+   "[FILE README.md] complete run instructions (start.bat, LIVE Studio window capture); no evidence of use by others"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Same mechanic as our bilye: add 'gift during race = boost' and 'named gifts = bomb next to the leader' (README table; game/scripts/main.gd)",
+   "Race ends 3 s after the THIRD finisher or after 100 s; stuck marbles get an automatic kick (main.gd RACE_TIMEOUT, README)",
+   "Labelling: per-marble Label3D name tag (font 44 + outline 12) and the avatar as a billboard inside the marble (main.gd:413-432); follower/gifter = gold marble",
+   "Captured as a native WINDOW in LIVE Studio instead of the embedded browser, so the GPU is used"
+  ],
+  "notes": "No licence file -> ideas only. Same author has tiktok-pyramid-live and tiktok-tower-stack."
+ },
+ {
+  "repo": "landsbetween/tiktok-pyramid-live",
+  "url": "https://github.com/landsbetween/tiktok-pyramid-live",
+  "segment": "s2-motorlar",
+  "what": "Godot 4 co-op builder: the whole chat builds one pyramid/fortress/lighthouse; each liker gets a named worker.",
+  "stack": "Godot 4 (GDScript) native 1080x1920 window + Node bridge",
+  "connection": "tiktok-live-connector (Node sidecar over WebSocket)",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-09-23",
+  "last_push": "2026-09-27",
+  "license": null,
+  "size_kb": 6166,
+  "games_or_features": [
+   "5 likes = your own worker places 1 block",
+   "comment = 1 block per 10 s",
+   "comment 1/2/3 = vote next building, vote weight = viewer level",
+   "1 coin = 10 gold blocks",
+   "follow = +5 blocks and a worker for the whole stream",
+   "levels: +1 per 500 likes and per 10 coins, auras by level",
+   "TOP LIKERS and TOP DONORS boards",
+   "4 named gifts = earthquake"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 13 commits 2026-09-23..27, 2 authors; 1 star [API]",
+   "[README] complete; no evidence of use by others"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Per-viewer stream level from likes AND coins (+1 per 500 likes / per 10 coins) shown in the name tag with an aura colour ladder - a free path to status",
+   "Separate TOP LIKERS and TOP DONORS boards so non-paying viewers also have a leaderboard",
+   "Donor contribution stays visible in the result (gold blocks) rather than vanishing after an alert",
+   "When nobody acts, one free block every 3 s keeps the scene moving"
+  ],
+  "notes": "No licence file -> ideas only."
+ },
+ {
+  "repo": "ambitious2223/marbles-interactive-",
+  "url": "https://github.com/ambitious2223/marbles-interactive-",
+  "segment": "s2-motorlar",
+  "what": "'Marble Royale': 3D marble race driven by a local hub; built on the MIT Godot game MechanicalFlower/Marble.",
+  "stack": "Godot 4.7 .NET + external hub ('Tikora') relay",
+  "connection": "none in the game (hub relay ws://127.0.0.1:27016; hub's own connector unknown)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-14",
+  "last_push": "2026-10-14",
+  "license": "MIT",
+  "size_kb": 26086,
+  "games_or_features": [
+   "comment = persistent marble per viewer",
+   "gift routed to power-up: boost, banana, shell, bomb, chaos",
+   "gift tier = marble colour + glow",
+   "profile photo wrapped on marble",
+   "cinematic camera follows leader",
+   "lobby -> countdown -> race -> podium -> restart",
+   "20 curated levels",
+   "!me profile"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 193 commits but 122 are upstream (florianvazelle); 12 by the fork author, all on 2026-10-14",
+   "[API] 0 stars; hub product not located"
+  ],
+  "relevance": 4,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Hub/game contract: the game declares its effect vocabulary in a manifest and the hub routes gifts to effects, with debug injection (docs/TIKORA_INTEGRATION.md) - clean way to add games to our rotation",
+   "Power-ups aimed at self OR at the leader (boost / banana / shell / bomb) for the marble race",
+   "REUSE-style per-asset licence file (.reuse/dep5) is a model for tracking asset licences"
+  ],
+  "notes": "Code MIT. Assets mixed [FILE .reuse/dep5]: track blocks MIT, marble textures CC0 (ambientCG), countdown sounds CC-BY-3.0 (OpenGameArt), boost.ogg CC0 (OpenGameArt '50 CC0 retro synth SFX'), font box_pixies CC0, but assets/sounds/sfx are CC-BY-NC-ND (not reusable) and icons are Icons8 linkware."
+ },
+ {
+  "repo": "karmontal/TiktokLiveInteractiveGames",
+  "url": "https://github.com/karmontal/TiktokLiveInteractiveGames",
+  "segment": "s2-motorlar",
+  "what": "Arabic-language multi-game set for TikTok LIVE: tug of war, quiz (general + football), tower climb, 3D arena battle.",
+  "stack": "Godot 4.3 (GDScript) + Python bridge 'LiveBridge' (WebSocket hub, 34 tests)",
+  "connection": "TikTokLive (py) sidecar -> ws://127.0.0.1:8765",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-10-16",
+  "last_push": "2026-10-23",
+  "license": null,
+  "size_kb": 3563,
+  "games_or_features": [
+   "tug of war",
+   "quiz with JSON question packs",
+   "tower climb",
+   "3D arena",
+   "mock source + /debug/event injection",
+   "banned-words moderation in the bridge",
+   "procedural royalty-free music generator (tools/make_music.py)",
+   "one-command launcher that restarts crashed parts"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 38 commits 2026-10-16..24, 2 authors; 1 star [API]",
+   "[README] one-command run incl. mock mode; no evidence of use by others"
+  ],
+  "relevance": 5,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Closest engine analogue to our hub (tug of war + quiz + launcher): read tiktok-live-game-ideas.md - 8 formats ranked by build cost and pull, with per-event mapping tables",
+   "Bridge-side moderation list for names/comments before they reach the screen (bridge/livebridge/moderation.py, banned_words.txt)",
+   "Event injection endpoint to rehearse big-gift animations without going live (bridge/README.md /debug/event)",
+   "Ideas doc mappings: share = shortcut magnet, follow = skip one obstacle, big gift = global event with the sender's name prominent"
+  ],
+  "notes": "No licence file -> ideas only. Fonts under OFL are bundled (assets/fonts/OFL.txt)."
+ },
+ {
+  "repo": "adrian13508/Tiktok_Live_Game",
+  "url": "https://github.com/adrian13508/Tiktok_Live_Game",
+  "segment": "s2-motorlar",
+  "what": "Early (2022) Pygame race: chat commands move named runners along a track.",
+  "stack": "Python + Pygame, vendored venv in repo",
+  "connection": "TikTokLive (py)",
+  "stars": 64,
+  "forks": 15,
+  "created": "2022-05-04",
+  "last_push": "2022-05-04",
+  "license": null,
+  "size_kb": 84682,
+  "games_or_features": [
+   "chat command moves a player",
+   "fixed player classes"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 4 commits, all 2022-05-04",
+   "[API] 64 stars / 15 forks, 3 issues total",
+   "[README] 6-line readme, hard-coded username"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [
+   "Historical marker only: TikTok-side chat games exist on GitHub since May 2022"
+  ],
+  "notes": "No licence; backgrounds are craftpix.net assets under that site's licence [FILE media/city backgroud/TXT/license.txt] - not reusable."
+ },
+ {
+  "repo": "tuncayl/spinwhell",
+  "url": "https://github.com/tuncayl/spinwhell",
+  "segment": "s2-motorlar",
+  "what": "Unity wheel-of-fortune raffle: viewers type 'me' to enter, the wheel picks a winner.",
+  "stack": "Unity (C#) + iTween + Epic Toon FX asset pack",
+  "connection": "TikTokLiveSharp (in-engine)",
+  "stars": 18,
+  "forks": 4,
+  "created": "2022-10-27",
+  "last_push": "2022-12-06",
+  "license": "MIT",
+  "size_kb": 107960,
+  "games_or_features": [
+   "comment 'me' = join the wheel",
+   "spin + winner"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 4 commits 2022-10..12",
+   "[API] 18 stars / 4 forks, MIT",
+   "[README] 3 lines + demo video"
+  ],
+  "relevance": 2,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Keyword-join raffle is the cheapest possible format (Assets/Scripts/tiktok/Tiktok.cs:96-177)"
+  ],
+  "notes": "MIT for own scripts; the repo also bundles a third-party Unity effects pack (Assets/Epic Toon FX) whose redistribution terms were not checked - do not take assets from it."
+ },
+ {
+  "repo": "absravdev/tiktok-live-arena",
+  "url": "https://github.com/absravdev/tiktok-live-arena",
+  "segment": "s2-motorlar",
+  "what": "Unity vertical race where the top three gifters become the racers and the rest of chat votes power-ups with 1/2/3.",
+  "stack": "Unity (C#)",
+  "connection": "TikTokLiveSharp / TikTokLiveUnity (in-engine)",
+  "stars": 2,
+  "forks": 0,
+  "created": "2026-05-22",
+  "last_push": "2026-05-22",
+  "license": "MIT",
+  "size_kb": 6148,
+  "games_or_features": [
+   "30 s waiting room until 3 donors",
+   "top-3 donors promoted to playable characters",
+   "10-second vote windows with de-duplication",
+   "persistent win counts",
+   "debug key simulates a gift"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[README] author: 'I never streamed with it publicly more than as a test'",
+   "[GIT] 2 commits 2026-05-22; 2 stars [API]"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Timed vote windows where each viewer counts once (README 'chat voting with deduplication') - for our trivia and PK",
+   "README section 'Technical debt and decisions I'd revisit' is an honest post-mortem of a gift-driven state machine"
+  ],
+  "notes": "MIT."
+ },
+ {
+  "repo": "Nargor/car-action",
+  "url": "https://github.com/Nargor/car-action",
+  "segment": "s2-motorlar",
+  "what": "3D car race (Thai README): viewers type 'a' to get a car on the grid, gifts give nitro, pranks spin rivals out.",
+  "stack": "Unity 6 URP (C#) + in-engine HTML/CSS/JS UI",
+  "connection": "TikTokLive (py) sidecar",
+  "stars": 2,
+  "forks": 0,
+  "created": "2026-09-13",
+  "last_push": "2026-11-01",
+  "license": null,
+  "size_kb": 281280,
+  "games_or_features": [
+   "up to 50 cars with name + profile picture billboards",
+   "gift = nitro",
+   "prank = spinout / emergency brake",
+   "join locked at race start",
+   "5 cameras, click a leaderboard row to follow that car",
+   "built-in simulator buttons",
+   "12 km procedural track"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 38 commits 2026-09-13..11-01, 1 author",
+   "[API] 2 stars; no evidence of use by others"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Lock joining when the race starts; late chatters queue for the next round",
+   "Sabotage action aimed at a rival (spinout) next to the self-boost",
+   "Operator can click a name on the leaderboard to put the camera on that viewer"
+  ],
+  "notes": "No licence file."
+ },
+ {
+  "repo": "obrunogonzaga-games/tiktok-live-climb",
+  "url": "https://github.com/obrunogonzaga-games/tiktok-live-climb",
+  "segment": "s2-motorlar",
+  "what": "Automated 9:16 show: a bot climbs a tower by itself and chat pays to hinder it; TTS thanks donors.",
+  "stack": "Unity 6 URP + local orchestrator + HTML overlay + ElevenLabs TTS",
+  "connection": "TikFinity bridge -> own LiveEvent v1 JSON schema",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-09-06",
+  "last_push": "2026-09-07",
+  "license": null,
+  "size_kb": 209047,
+  "games_or_features": [
+   "7-rung gift ladder in coins (1 / 5 / 20 / 100 / 1000 / 7000 / 29999)",
+   "fallback by coin value for unlisted gifts",
+   "TTS throttled to 1 line per 2.5 s",
+   "top-gifter scoreboard",
+   "auto reset"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[README] 'Status: MVP local ... gifts still provisional'",
+   "[GIT] 10 commits 2026-09-05..07; 0 stars [API]"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Safe-zone table for a 1080x1920 LIVE canvas: top 0-150, right 960-1080, bottom 1580-1920, comment stack x0-420 y1280-1580; usable box x24-940, y160-1260 (docs/overlay-capture.md) - author marks them as conservative, to confirm on a phone",
+   "Unlisted gifts fall back to the nearest rung by coin value instead of doing nothing (README 'Ladder v1', config/ladder.v1.toml)",
+   "Speech budget: at most one spoken thank-you per 2.5 s, the rest become toasts; likes never speak",
+   "Game never talks to TikTok: only a versioned event schema, so the connector can be swapped (schemas/live-event.v1.schema.json)"
+  ],
+  "notes": "No licence file -> ideas only."
+ },
+ {
+  "repo": "HarunUcan/Tiktok-Live-Fan-Slap-Game",
+  "url": "https://github.com/HarunUcan/Tiktok-Live-Fan-Slap-Game",
+  "segment": "s2-motorlar",
+  "what": "Unity prototype: two rival football fan groups (GS vs FB) slap each other; each gift triggers a slap from its side.",
+  "stack": "Unity 2022.3 (C#)",
+  "connection": "TikTokLiveUnity (in-engine; README says gift input is still mocked)",
+  "stars": 2,
+  "forks": 0,
+  "created": "2025-06-02",
+  "last_push": "2025-06-02",
+  "license": "MIT",
+  "size_kb": 135083,
+  "games_or_features": [
+   "two fixed rival teams",
+   "health bars",
+   "slap animation per gift"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[README] 'This is a demo/prototype build ... mock gift input'",
+   "[API] 2 stars, 4 commits on 2025-06-03 [GIT]"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Local football rivalry as the two sides of a PK - a ready theme for our Turkish audience"
+  ],
+  "notes": "MIT."
+ },
+ {
+  "repo": "ModifiedMonkee0/KopruKaosu_TikTok",
+  "url": "https://github.com/ModifiedMonkee0/KopruKaosu_TikTok",
+  "segment": "s2-motorlar",
+  "what": "Unity game 'Kopru Kaosu' (Bridge Chaos) for TikTok live by a Turkish-named author.",
+  "stack": "Unity (C#)",
+  "connection": "TikFinity bridge (webhooks / UnityWebRequest)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2025-09-06",
+  "last_push": "2025-11-23",
+  "license": null,
+  "size_kb": 319162,
+  "games_or_features": [
+   "not read"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 72 commits 2025-09-06..11-23, 1 author; 0 stars [API]",
+   "[README] 85 bytes; gameplay not verified"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "No licence. Repo description claims 'an original TikTok sdk' but the code references TikFinity 32 times [FILE signature scan]."
+ },
+ {
+  "repo": "savacezarmarian14/TikTokGames",
+  "url": "https://github.com/savacezarmarian14/TikTokGames",
+  "segment": "s2-motorlar",
+  "what": "Python collection of real-time arena games where gifts spawn characters and trigger effects.",
+  "stack": "Python + WebSocket",
+  "connection": "TikTokLive (py)",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-04-26",
+  "last_push": "2026-06-11",
+  "license": null,
+  "size_kb": 51114,
+  "games_or_features": [
+   "gift-spawned characters",
+   "arena effects"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 3 commits 2026-04..06; 1 star [API]"
+  ],
+  "relevance": 2,
+  "depth": "tree",
+  "ideas_for_us": [],
+  "notes": "No licence."
+ },
+ {
+  "repo": "Lorrn-ro/TikTok-LIVE-Tug-of-War",
+  "url": "https://github.com/Lorrn-ro/TikTok-LIVE-Tug-of-War",
+  "segment": "s2-motorlar",
+  "what": "Tug of war rendered in Roblox Studio: a Python game server holds the state, a Roblox script polls it over HTTP.",
+  "stack": "Roblox (Lua) + Python Flask server",
+  "connection": "TikTokLive (py)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-10-15",
+  "last_push": "2026-10-15",
+  "license": null,
+  "size_kb": 41,
+  "games_or_features": [
+   "characters grow with gifts",
+   "crown follows the top gifter",
+   "biggest gifter becomes a giant 'cosmic entity'",
+   "overtime state with lighting/fog/music escalation near round end"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 2 commits 2026-10-15; 0 stars [API]"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Tug-of-war escalation: a visible 'overtime' mood change near the end and a crown that follows the current top gifter - both fit our PK"
+  ],
+  "notes": "No licence."
+ },
+ {
+  "repo": "Naftool/conquest-tiktok-game",
+  "url": "https://github.com/Naftool/conquest-tiktok-game",
+  "segment": "s2-motorlar",
+  "what": "'Territory': persistent hex-map conquest; viewers join factions from chat, gifts add attack power, the map does not reset between streams.",
+  "stack": "Python (pure event-sourced core) + WebSocket overlay",
+  "connection": "unknown (TikTok socket at the edge; library not identified)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-07-23",
+  "last_push": "2026-07-23",
+  "license": "MIT",
+  "size_kb": 32,
+  "games_or_features": [
+   "!join faction",
+   "gift = attack power",
+   "hex capture",
+   "state persists across streams"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 3 commits 2026-07-23; 0 stars [API]",
+   "[README] presented as a code-shape showcase"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "A map that survives between streams gives regulars a reason to return - cheaper than accounts"
+  ],
+  "notes": "MIT."
+ },
+ {
+  "repo": "bucai2417/Dy-Ai-Live",
+  "url": "https://github.com/bucai2417/Dy-Ai-Live",
+  "segment": "s2-motorlar",
+  "what": "Douyin desktop 'workbench': natively rendered AI host scene with fishing co-op, gift performances and two chat mini-games.",
+  "stack": "Python + PySide6 native renderer (no browser); Windows EXE built by GitHub Actions",
+  "connection": "DouyinBarrageGrab-style external helper bridge | browser CDP capture | direct (needs a signing component not shipped)",
+  "stars": 0,
+  "forks": 4,
+  "created": "2026-11-07",
+  "last_push": "2026-11-08",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "size_kb": 20517,
+  "games_or_features": [
+   "fishing with 44 species",
+   "gift performances showing the sender's avatar",
+   "idiom chain + AI draw-and-guess",
+   "idle small-actions and proactive invitations when chat is cold",
+   "daily stats persist across restarts"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] created 2026-11-07, 0 stars / 4 forks",
+   "[README] v1.0.0 with user manual, demo video and automated Windows build"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Cold-room behaviour list: idle actions, proactive invitations, auto change of activity after a dry spell",
+   "Same-day totals (likes, gift board, counts) survive a restart; clearing chat does not clear the day's stats"
+  ],
+  "notes": "Licence: PolyForm Noncommercial 1.0.0 per README (source-visible, no commercial use)."
+ },
+ {
+  "repo": "dhrdzy/DanMuGame",
+  "url": "https://github.com/dhrdzy/DanMuGame",
+  "segment": "s2-motorlar",
+  "what": "Commercial launcher 'Hurricane danmaku game platform': a catalogue of ~14 closed-source games for Bilibili, Douyin, TikTok, Kuaishou and others, rented monthly or on an 8% revenue share.",
+  "stack": "closed Windows client (.NET 6 runtime + Playwright per install note); repo holds README + screenshots only",
+  "connection": "own built-in multi-platform danmaku tool (closed)",
+  "stars": 78,
+  "forks": 7,
+  "created": "2023-02-08",
+  "last_push": "2024-03-01",
+  "license": null,
+  "size_kb": 51968,
+  "games_or_features": [
+   "camp battles (6-7 troop types per side, configurable stats)",
+   "monster-defence co-op",
+   "marathon / rally / highway races",
+   "cloud disco",
+   "persistent pet manor",
+   "in-game QR payment",
+   "referral rebate 8%"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[README] price list: 498-1000 CNY per game per month, 1300 CNY all games, or 8% of room revenue; source code offered for 45,000 CNY",
+   "[GIT] 149 commits 2023-02-09..2024-03-01, 5 tags",
+   "[API] 78 stars / 7 forks"
+  ],
+  "relevance": 3,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Its catalogue is the best single list of formats that streamers pay for: camp battle, co-op defence, race with throwable items, disco, persistent pet game",
+   "Every camp game exposes the same streamer-side knobs: unit HP/attack/defence/speed, base HP, round length"
+  ],
+  "notes": "No code, no licence -> ideas only. 'Pet manor' advertises 230+ Pokemon models (third-party IP). Last push 2024-03-01."
+ },
+ {
+  "repo": "unlizhao/interactive-game-platform",
+  "url": "https://github.com/unlizhao/interactive-game-platform",
+  "segment": "s2-motorlar",
+  "what": "2022 distribution repo for Douyin/Bilibili interactive games with a MOD system (Three Kingdoms conquest, Three-Body skin).",
+  "stack": "closed binaries + MOD folders (no source)",
+  "connection": "unknown",
+  "stars": 23,
+  "forks": 8,
+  "created": "2022-07-06",
+  "last_push": "2022-07-05",
+  "license": null,
+  "size_kb": 295971,
+  "games_or_features": [
+   "custom faction count, icons and map shape (honeycomb / blocks / puzzle)",
+   "custom commands, gift effects and trigger probabilities",
+   "end modes: barbarian invasion or frenzy",
+   "ranking + 'monarch' display"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 17 commits 2022-06-22..07-05",
+   "[API] 23 stars / 8 forks",
+   "[README] QQ group as support channel"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Streamer-configurable end-of-round modes (invasion / frenzy) to force a finish"
+  ],
+  "notes": "LICENSE file present but SPDX not recognised by the API; binaries only."
+ },
+ {
+  "repo": "skyofzhang/DM_kpbl",
+  "url": "https://github.com/skyofzhang/DM_kpbl",
+  "segment": "s2-motorlar",
+  "what": "'Capybara Duel': two-camp push battle for Douyin (viewers type 1 or 2, gifts summon units that push an orange towards the enemy side).",
+  "stack": "Unity 2022.3 (3D, built-in pipeline) client + Node.js authoritative server (WebSocket, 200 ms tick)",
+  "connection": "official API (Douyin open-platform push: HTTPS callback with signature, live_data/task/start)",
+  "stars": 4,
+  "forks": 2,
+  "created": "2026-02-07",
+  "last_push": "2026-03-06",
+  "license": null,
+  "size_kb": 449726,
+  "games_or_features": [
+   "join keywords 1/111/left and 2/222/right",
+   "6-tier gift table -> unit, push force, duration",
+   "x5 combo upgrades",
+   "like and '666' comment give short pushes scaled by the viewer's level",
+   "match 30-60 min, max 100 units",
+   "barrage simulator"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[FILE docs/douyin_integration_guide.md] 'end-to-end verified 2026-02-13'",
+   "[GIT] 2 commits, 2 tags; 4 stars / 2 forks [API]"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Full tug-of-war balance sheet (docs/gift_config.md): 10 coins -> force 343 for 30 s; 52 -> 808 for 90 s; 99 -> 1415 for 120 s; 199 -> 2679 for 150 s; 520 -> 6988 for 160 s; force x duration per coin rises from about 1,000 to about 2,150, so bigger gifts are deliberately better value",
+   "Cheapest gift is a permanent upgrade rather than a one-off: a 10-level ladder that also multiplies that viewer's like and comment power",
+   "Several join keywords per side ('1', '111', 'left', side name) to forgive typing (Server/config/default.json)"
+  ],
+  "notes": "README: 'private project - authorised members only'; no licence -> numbers are inspiration only. A re-skin of an earlier game ('Sheep Duel')."
+ },
+ {
+  "repo": "skyofzhang/DM_CK",
+  "url": "https://github.com/skyofzhang/DM_CK",
+  "segment": "s2-motorlar",
+  "what": "Douyin cultivation idle-RPG with seasons, shop, pets, PvP and world bosses; contains the studio's 10-module design document set.",
+  "stack": "Unity (C#) client + own server (same studio layout as DM_kpbl; server not read)",
+  "connection": "official API (Douyin open-platform push / LiveOpenSdk)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-03-13",
+  "last_push": "2026-05-08",
+  "license": null,
+  "size_kb": 608127,
+  "games_or_features": [
+   "7 gift tiers each with a stated psychological role",
+   "15 VIP levels by cumulative spend",
+   "daily timetable (world boss 12:00 and 20:35, PvP 20:00)",
+   "5 chat commands incl. 'check my character'",
+   "max 20 players per room, 5-minute idle kick",
+   "chest pity counters kept across sessions"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 198 commits 2026-03-13..05-08, 1 author; latest commits mention 'Douyin real mode' links",
+   "[API] 0 stars"
+  ],
+  "relevance": 3,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Design order 'attract in 3 seconds -> one message to join -> core loop -> growth -> gifts -> social -> retention' as a checklist for each of our games (claude-other-data/docs1111/modules/INDEX.md)",
+   "Query commands that answer on screen ('check my character') and a 3-second first-join explainer (M02_interaction_entry.md)",
+   "Clock-time events ('world boss at 20:35') and persistent pity counters as retention tools (M07_retention_loop.md)",
+   "Match gifts by platform gift id, never by coin value - recorded as a past bug (M05_gift_economy.md)"
+  ],
+  "notes": "No licence. Docs reference assets extracted from a competitor's game - do not reuse anything but ideas."
+ },
+ {
+  "repo": "gavenna/livegame",
+  "url": "https://github.com/gavenna/livegame",
+  "segment": "s2-motorlar",
+  "what": "Medieval two-camp siege 'kernel' for Douyin: free chat keywords spawn basic troops, a gift ladder spawns stronger units and full-screen skills.",
+  "stack": "Node server (ws, sql.js) + Canvas 2D front end, later Godot 4 client; packaged to a single exe (esbuild + bytenode + Neutralino + Inno Setup)",
+  "connection": "third-party danmaku relay tool over WebSocket (adapter in server/relayClient.js); Bilibili via a Python relay",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-07-15",
+  "last_push": "2026-09-02",
+  "license": null,
+  "size_kb": 23685,
+  "games_or_features": [
+   "prep 30 s / battle 15-20 min / result 20 s loop",
+   "4 free troop keywords in a rock-paper-scissors counter loop",
+   "gift ladder from 1 to 3000 coins",
+   "blind-box gift",
+   "kill-streak calls, comeback moments, random battlefield events",
+   "commander aura for top damage dealer",
+   "template + LLM + TTS announcer"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 56 commits 2026-07-12..09-02, 1 author",
+   "[FILE PROGRESS.md] Douyin danmaku integration logged 2026-07-18; sibling repo description says the Douyin loop runs end to end",
+   "[API] 1 star"
+  ],
+  "relevance": 5,
+  "depth": "code-read",
+  "ideas_for_us": [
+   "Design doc states the payment driver outright: big gifters want to be SEEN, so their avatar rides on the unit and a banner names them (docs/项目规划/游戏设计.md section 3.2) - same rule we hold about names",
+   "Free tier with four chat keywords in a counter loop, so non-payers have real choices (same file, section 3.1)",
+   "Translate raw commands into friendly on-screen lines and keep non-command chat off the screen (PROGRESS.md 2026-07-18)",
+   "Tuning note: multiply HP so fights last long enough for animations to read (design doc note dated 2026-07-15)"
+  ],
+  "notes": "No README, no licence -> ideas only. Started as 'pure Web Canvas', i.e. the same stack as ours. Repo carries agent instruction files (.claude/, CLAUDE.md) - treated as data."
+ },
+ {
+  "repo": "cuihairu/chorus",
+  "url": "https://github.com/cuihairu/chorus",
+  "segment": "s2-motorlar",
+  "what": "Server-authoritative 'danmaku game framework': platform callbacks in, structured gameplay input, battle simulation, matchmaking, leaderboards, settlement.",
+  "stack": "C# / .NET server, WebSocket faces, PostgreSQL (in progress), VitePress docs",
+  "connection": "official API (signed platform callbacks for Douyin and Kuaishou) + blivedm-style Bilibili ingress",
+  "stars": 0,
+  "forks": 0,
+  "created": "2025-12-30",
+  "last_push": "2026-11-09",
+  "license": "Apache-2.0",
+  "size_kb": 7350,
+  "games_or_features": [
+   "deny-by-default ingress with signature checks",
+   "battle / matchmaking / leaderboard guides",
+   "protocol and config reference"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[GIT] 712 commits 2025-12-31..2026-11-10, CI badges, 1 tag",
+   "[API] 0 stars / 0 forks; README says the redesign milestone is not finished"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Reference for what a multi-room, multi-streamer back end needs - far beyond a one-streamer exe"
+  ],
+  "notes": "Apache-2.0."
+ },
+ {
+  "repo": "yuanlongdong/lieguo-fenzheng",
+  "url": "https://github.com/yuanlongdong/lieguo-fenzheng",
+  "segment": "s2-motorlar",
+  "what": "Warring-States seven-faction conquest demo for Douyin with alliances and betrayal; simulated control panel, no live connection.",
+  "stack": "plain HTML + Canvas 2D + JS, no dependencies",
+  "connection": "none/mock",
+  "stars": 1,
+  "forks": 0,
+  "created": "2026-08-30",
+  "last_push": "2026-08-30",
+  "license": null,
+  "size_kb": 61,
+  "games_or_features": [
+   "7 factions with one passive each",
+   "21 cities, 12 generals",
+   "10-gift table from 1 to 30,000 coins",
+   "alliance / betrayal / sow-discord mechanics",
+   "stated balance targets"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[README] 'current version uses a simulated control panel'",
+   "[GIT] 10 commits on 2026-08-30; 1 star [API]"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Complete gift -> effect table and balance targets in README: round 45-60 min, free actions about 44% of total contribution in a 500-viewer room, one city falls per about 4.8 min",
+   "Underdog mechanic: weaker factions may ally against the leader, unlocked only after 20 minutes"
+  ],
+  "notes": "README says MIT but there is no LICENSE file -> treat as unlicensed until confirmed. Web tech; listed here for the Douyin gift table."
+ },
+ {
+  "repo": "xiehaibo11/douyin-live-redalert",
+  "url": "https://github.com/xiehaibo11/douyin-live-redalert",
+  "segment": "s2-motorlar",
+  "what": "Red Alert 2 web remake turned into a 9:16 left-vs-right auto battle for Douyin; still on simulated events.",
+  "stack": "TypeScript + React + Three.js (fork of ts-redalert2), Bun",
+  "connection": "none/mock (Douyin grabber planned)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-11-09",
+  "last_push": "2026-11-09",
+  "license": "GPL-3.0",
+  "size_kb": 5639,
+  "games_or_features": [
+   "per-round personal contribution board with a 10,000-point cap on free actions",
+   "10 s result then auto restart",
+   "camera follows troop mass",
+   "174 tests"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[README] 'not yet connected to real Douyin data; Windows and long-run tests not done'",
+   "[GIT] 217 commits incl. upstream; 0 stars [API]"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Cap the score obtainable from free actions and rank gifts separately, gifts break ties"
+  ],
+  "notes": "GPL-3.0; game art has unclear rights per its own README."
+ },
+ {
+  "repo": "xiajunxiong/dyYeyouGame",
+  "url": "https://github.com/xiajunxiong/dyYeyouGame",
+  "segment": "s2-motorlar",
+  "what": "'Haunted dorm' co-op defence for Douyin: players hold doors against ghosts; gifts and comments heal.",
+  "stack": "Unity (C#); server not published",
+  "connection": "unknown (server side missing)",
+  "stars": 0,
+  "forks": 0,
+  "created": "2026-06-03",
+  "last_push": "2026-06-03",
+  "license": null,
+  "size_kb": 1065204,
+  "games_or_features": [
+   "lobby countdown 30 s",
+   "night length grows 1 s per participant",
+   "like/comment heal with 90% trigger chance",
+   "ranking file",
+   "config tool"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[README] 'demo version ... companion server not uploaded'",
+   "[GIT] 2 commits 2026-06-03; 0 stars [API]"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Round length that scales with the number of participants"
+  ],
+  "notes": "No licence. 1 GB repo; only the tree and README were read."
+ },
+ {
+  "repo": "KeJunMao/open-block-war",
+  "url": "https://github.com/KeJunMao/open-block-war",
+  "segment": "s2-motorlar",
+  "what": "'Tan Tan Le': the once-popular colour-territory war for Bilibili/Douyu (balls bounce and paint blocks for your faction), with 9 skins.",
+  "stack": "TypeScript + React + Phaser, Node back end, Docker",
+  "connection": "Bilibili official API or unofficial WebSocket; Douyu unofficial",
+  "stars": 112,
+  "forks": 29,
+  "created": "2023-05-18",
+  "last_push": "2023-10-27",
+  "license": "MIT",
+  "size_kb": 1722,
+  "games_or_features": [
+   "4-colour / 5-colour / Three Kingdoms / Warcraft / Red Alert / Minecraft skins",
+   "per-room authorisation list (src/paid/index.ts)",
+   "gift config file",
+   "cheat keys for testing"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[README] 'attracted a large number of users in the early days of danmaku interaction; the hype has passed, so it is open-sourced'",
+   "[FILE README] paid-room table in src/paid/index.ts and a QQ group",
+   "[API] 112 stars / 29 forks; [GIT] 106 commits 2022-05-25..2023-10-27, 4 authors"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "One rule set, many skins (same game sold as Three Kingdoms, Red Alert, Minecraft) - cheap variety for a rotation",
+   "Open-source, MIT, browser-based territory game we could study line by line (src/Game, src/Live/Gift.ts)"
+  ],
+  "notes": "MIT. Web tech -> also handed to s1b. Explicitly unmaintained."
+ },
+ {
+  "repo": "rhfbgfgfdg999999/3d-printer-live",
+  "url": "https://github.com/rhfbgfgfdg999999/3d-printer-live",
+  "segment": "s2-motorlar",
+  "what": "'Avatar printer': every comment/like/gift queues the viewer's avatar to be 3D-printed layer by layer on screen (Douyin first, English page for TikTok).",
+  "stack": "Three.js web page + Node 'data bridge' + Python/WebView2 launcher",
+  "connection": "own scraping: Chrome DevTools Protocol reads the live-room page's WebSocket frames (no signing server); no TikTok connector found in the code",
+  "stars": 240,
+  "forks": 122,
+  "created": "2026-10-31",
+  "last_push": "2026-11-09",
+  "license": "MIT",
+  "size_kb": 62945,
+  "games_or_features": [
+   "comment = small print, heart gift = 1 large, beer = 2, lollipop = 3; gifts jump the queue",
+   "idle fill: one demo avatar after 30 s of silence",
+   "avatar cache across restarts",
+   "separate clean scene window for capture",
+   "5 quality presets"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 240 stars / 122 forks nine days after creation (2026-10-31); forks show no divergence yet",
+   "[FILE README.md] free program used as lead generation for paid custom builds; video tutorial linked",
+   "[GIT] 39 commits, daily pushes"
+  ],
+  "relevance": 4,
+  "depth": "readme",
+  "ideas_for_us": [
+   "Idle fill with strict priority for real viewers: after 30 s of silence add at most one demo item, stop the instant a real event arrives (README)",
+   "Run the scene in its own real browser/WebView2 window and capture the WINDOW - avoids the GPU-less embedded browser our README works around with ?lite=1",
+   "Likes that arrive without a sender are attributed round-robin to known viewers so nothing is printed anonymously"
+  ],
+  "notes": "MIT. Web tech (s1b holds the clone); listed here for the Douyin connection path and as a coordinator lead. Star growth could not be checked for authenticity."
+ },
+ {
+  "repo": "VoidmatrixHeathcliff/DanmuGame",
+  "url": "https://github.com/VoidmatrixHeathcliff/DanmuGame",
+  "segment": "s2-motorlar",
+  "what": "C + Lua framework for quickly writing Bilibili danmaku-controlled games, with a separate listener exe and a visual debug tool.",
+  "stack": "C / SDL2 / Lua 5.4 + Node listener (bilibili-live-ws)",
+  "connection": "unofficial Bilibili WebSocket (bilibili-live-ws)",
+  "stars": 107,
+  "forks": 18,
+  "created": "2022-01-02",
+  "last_push": "2026-11-06",
+  "license": "MIT",
+  "size_kb": 44919,
+  "games_or_features": [
+   "Lua scripting API",
+   "listener packaged as exe",
+   "visual debugger"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 107 stars / 18 forks",
+   "[GIT] 11 commits, first 2022-01-02, 1 tag; last push 2026-11-06 only edits the README"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "MIT. One of the earliest (January 2022) repos of the genre."
+ },
+ {
+  "repo": "PaticoBar/WhacAMole_Live",
+  "url": "https://github.com/PaticoBar/WhacAMole_Live",
+  "segment": "s2-motorlar",
+  "what": "Unity whack-a-mole played from Bilibili chat: type 'join', then grid coordinates to swing the hammer.",
+  "stack": "Unity (C#)",
+  "connection": "unofficial Bilibili API",
+  "stars": 40,
+  "forks": 8,
+  "created": "2022-02-08",
+  "last_push": "2022-02-08",
+  "license": null,
+  "size_kb": 60802,
+  "games_or_features": [
+   "join queue by keyword",
+   "coordinate commands",
+   "'end' and 'restart' commands"
+  ],
+  "deploy_grade": "C",
+  "deploy_evidence": [
+   "[GIT] 25 commits all on 2022-02-08",
+   "[API] 40 stars / 8 forks",
+   "[README] 'test project'"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence."
+ },
+ {
+  "repo": "ArsiIksait/Bilibili_LiveGame",
+  "url": "https://github.com/ArsiIksait/Bilibili_LiveGame",
+  "segment": "s2-motorlar",
+  "what": "Two Bilibili chat games (Buckshot Roulette, sound-locating) that the author says can run as unattended streams.",
+  "stack": "Unity (C#) + NativeWebSocket",
+  "connection": "official API (Bilibili live open platform key)",
+  "stars": 15,
+  "forks": 1,
+  "created": "2024-08-28",
+  "last_push": "2024-09-07",
+  "license": "MIT",
+  "size_kb": 121872,
+  "games_or_features": [
+   "Buckshot Roulette by chat",
+   "unattended operation claim"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[README] requires the streamer's own open-platform developer key",
+   "[GIT] 10 commits 2024-08..09, 2 tags; 15 stars [API]"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "MIT."
+ },
+ {
+  "repo": "lishang520/DouYin_control",
+  "url": "https://github.com/lishang520/DouYin_control",
+  "segment": "s2-motorlar",
+  "what": "Douyin chat controls the streamer's PC or game: filtered comments go through Redis and are replayed as key presses.",
+  "stack": "Python + Redis + pyautogui",
+  "connection": "DouyinBarrageGrab (local ws://127.0.0.1:8888)",
+  "stars": 279,
+  "forks": 48,
+  "created": "2022-12-07",
+  "last_push": "2023-05-24",
+  "license": null,
+  "size_kb": 1665,
+  "games_or_features": [
+   "comment whitelist -> key press",
+   "queue"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 279 stars / 48 forks, 2 issues",
+   "[GIT] 9 commits 2022-12..2023-05"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence. Most-starred Douyin item in this segment, but it is a chat-plays tool, not a game."
+ },
+ {
+  "repo": "smeysu/GTA5-TikTok-Integration",
+  "url": "https://github.com/smeysu/GTA5-TikTok-Integration",
+  "segment": "s2-motorlar",
+  "what": "GTA V plugin exposing local webhook URLs (kill, spawn vehicle, ...) that a TikTok event tool calls.",
+  "stack": "C# ScriptHookV plugin with HTTP listener on 127.0.0.1:6721",
+  "connection": "TikFinity bridge (webhooks; recommended in README)",
+  "stars": 91,
+  "forks": 63,
+  "created": "2023-04-19",
+  "last_push": "2024-12-20",
+  "license": "MIT",
+  "size_kb": 4360,
+  "games_or_features": [
+   "webhook per game action"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 91 stars / 63 forks, 26 issues",
+   "[GIT] 22 commits, 13 tags (releases over 2023-04..2024-07)",
+   "[API] derivative repos exist (salimsea/gta5-interaction-tiktok and others)"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "MIT. Category leader for 'chat controls the streamer's game'."
+ },
+ {
+  "repo": "benioriginal/TikTokLive-Gift",
+  "url": "https://github.com/benioriginal/TikTokLive-Gift",
+  "segment": "s2-motorlar",
+  "what": "Tiny Python script: a received gift presses a key or runs a function - the generic 'gift -> action' starter.",
+  "stack": "Python + pynput (3 files, 9 KB)",
+  "connection": "TikTokLive (py)",
+  "stars": 71,
+  "forks": 128,
+  "created": "2022-08-11",
+  "last_push": "2025-01-03",
+  "license": null,
+  "size_kb": 9,
+  "games_or_features": [
+   "gift -> key press mapping"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 71 stars / 128 forks and 80 issues - heavy reuse and real user questions",
+   "[GIT] 6 commits 2022-08..2025-01"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence."
+ },
+ {
+  "repo": "GospelBG/ChatPointsTTV",
+  "url": "https://github.com/GospelBG/ChatPointsTTV",
+  "segment": "s2-motorlar",
+  "what": "Spigot plugin: Twitch and TikTok LIVE events spawn mobs, give items or run commands in Minecraft.",
+  "stack": "Java (Spigot/Paper)",
+  "connection": "EulerStream SDK (TikTok side) + twitch4j",
+  "stars": 36,
+  "forks": 5,
+  "created": "2023-09-04",
+  "last_push": "2026-10-10",
+  "license": "GPL-3.0",
+  "size_kb": 1259,
+  "games_or_features": [
+   "rewards per follow / gift / channel points",
+   "any server command"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[GIT] 538 commits 2023-09..2026-08, 19 tags",
+   "[README] distributed on Modrinth, CurseForge, SpigotMC and Hangar",
+   "[API] 36 stars"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "GPL-3.0."
+ },
+ {
+  "repo": "qixils/minecraft-crowdcontrol",
+  "url": "https://github.com/qixils/minecraft-crowdcontrol",
+  "segment": "s2-motorlar",
+  "what": "Minecraft mod/plugin for the commercial Crowd Control service, which lets viewers on any platform trigger in-game effects.",
+  "stack": "Java (Fabric / Paper)",
+  "connection": "official API of a third-party service (Crowd Control)",
+  "stars": 28,
+  "forks": 12,
+  "created": "2021-01-02",
+  "last_push": "2026-10-28",
+  "license": "MPL-2.0",
+  "size_kb": 5969,
+  "games_or_features": [
+   "hundreds of effects"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[GIT] 1,652 commits 2020-12..2026-09, 31 tags, 6 authors",
+   "[API] 28 stars / 12 forks"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "MPL-2.0. Platform-agnostic, not TikTok-specific."
+ },
+ {
+  "repo": "BedrockLive/TNTCoin",
+  "url": "https://github.com/BedrockLive/TNTCoin",
+  "segment": "s2-motorlar",
+  "what": "Minecraft Bedrock add-on for the 'TNT challenge': the streamer fills a structure with blocks while gifts spawn TNT.",
+  "stack": "TypeScript (Bedrock scripting API) + separate bridge app 'BedrockLive'",
+  "connection": "own bridge app (connector not identified)",
+  "stars": 20,
+  "forks": 17,
+  "created": "2024-07-13",
+  "last_push": "2025-08-02",
+  "license": "MIT",
+  "size_kb": 3537,
+  "games_or_features": [
+   "gift goal",
+   "TNT rain / rocket / jail",
+   "countdown and timer",
+   "custom overlay"
+  ],
+  "deploy_grade": "A",
+  "deploy_evidence": [
+   "[API] 20 stars / 17 forks",
+   "[GIT] 215 commits 2024-07..2025-08, 5 authors, 4 tags"
+  ],
+  "relevance": 2,
+  "depth": "readme",
+  "ideas_for_us": [
+   "'Streamer builds, chat destroys' with a visible fill goal is a format we do not have"
+  ],
+  "notes": "MIT."
+ },
+ {
+  "repo": "jakob-kruse/tikfinity_mod",
+  "url": "https://github.com/jakob-kruse/tikfinity_mod",
+  "segment": "s2-motorlar",
+  "what": "Minecraft 1.20 Fabric mod that connects to TikFinity.",
+  "stack": "Java (Fabric)",
+  "connection": "TikFinity bridge",
+  "stars": 7,
+  "forks": 5,
+  "created": "2023-08-01",
+  "last_push": "2024-06-17",
+  "license": "MIT",
+  "size_kb": 25,
+  "games_or_features": [
+   "TikFinity -> Minecraft actions"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 7 stars / 5 forks",
+   "[GIT] 15 commits in 2023-08, 2 tags"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "MIT."
+ },
+ {
+  "repo": "TimeCodings/TikTokLIVEMC",
+  "url": "https://github.com/TimeCodings/TikTokLIVEMC",
+  "segment": "s2-motorlar",
+  "what": "Minecraft plugin executing actions on TikTok gifts via a TikFinity socket; has its own Discord.",
+  "stack": "Java (Spigot)",
+  "connection": "TikFinity bridge",
+  "stars": 25,
+  "forks": 5,
+  "created": "2023-02-05",
+  "last_push": "2023-12-10",
+  "license": null,
+  "size_kb": 43,
+  "games_or_features": [
+   "gift -> command / message / teleport"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 25 stars / 5 forks",
+   "[GIT] 12 commits 2023-02..05, 3 tags",
+   "[README] beta, Discord support server"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence."
+ },
+ {
+  "repo": "maddox05/Comment-Game-Controller",
+  "url": "https://github.com/maddox05/Comment-Game-Controller",
+  "segment": "s2-motorlar",
+  "what": "Python script that plays emulator games (e.g. Pokemon) from YouTube and TikTok comments.",
+  "stack": "Python + keyboard library",
+  "connection": "TikTokLive (py) + pytchat",
+  "stars": 30,
+  "forks": 2,
+  "created": "2023-06-08",
+  "last_push": "2023-12-04",
+  "license": "Apache-2.0",
+  "size_kb": 49,
+  "games_or_features": [
+   "comment -> key press"
+  ],
+  "deploy_grade": "B",
+  "deploy_evidence": [
+   "[API] 30 stars / 2 forks",
+   "[GIT] 39 commits 2023-06..12, 6 authors, 4 tags"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "Apache-2.0."
+ },
+ {
+  "repo": "egunde/tiktok-pvz",
+  "url": "https://github.com/egunde/tiktok-pvz",
+  "segment": "s2-motorlar",
+  "what": "Windows app that spawns zombies in Plants vs Zombies when gifts arrive.",
+  "stack": "C# (.NET) + memory-editing tool library",
+  "connection": "TikTokLiveSharp (in-engine)",
+  "stars": 6,
+  "forks": 1,
+  "created": "2023-11-15",
+  "last_push": "2024-08-20",
+  "license": null,
+  "size_kb": 7480,
+  "games_or_features": [
+   "gift -> zombie spawn"
+  ],
+  "deploy_grade": "D",
+  "deploy_evidence": [
+   "[README] warning: 'currently does not connect to the TikTok livestream' because of a TikTokLiveSharp bug",
+   "[API] 6 stars"
+  ],
+  "relevance": 1,
+  "depth": "readme",
+  "ideas_for_us": [],
+  "notes": "No licence. Evidence that the C# connector breaks in the field."
+ }
+]
