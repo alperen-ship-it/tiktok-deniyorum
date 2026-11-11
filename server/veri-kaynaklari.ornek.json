@@ -10,7 +10,7 @@
   },
 
   {
-    "_aciklama": "VALORANT RANK — HenrikDev API. Once https://docs.henrikdev.xyz uzerinden UCRETSIZ anahtar al, asagidaki ANAHTARIN yazan yeri degistir. Bolge: eu / na / ap / kr. Isim ve etiketi kendi hesabinla degistir (Oyuncu#TAG -> .../Oyuncu/TAG).",
+    "_aciklama": "VALORANT RANK: HenrikDev API. Once https://docs.henrikdev.xyz uzerinden UCRETSIZ anahtar al, asagidaki ANAHTARIN yazan yeri degistir. Bolge: eu / na / ap / kr. Isim ve etiketi kendi hesabinla degistir (Oyuncu#TAG -> .../Oyuncu/TAG).",
 
     "ad": "valorant",
     "kapali": true,
@@ -27,7 +27,7 @@
   },
 
   {
-    "_aciklama": "SPOTIFY / SIMDI CALAN — kendi kucuk servisini calistiriyorsan ya da bir now-playing API'n varsa. Ornek yapi.",
+    "_aciklama": "SPOTIFY / SIMDI CALAN: kendi kucuk servisini calistiriyorsan ya da bir now-playing API'n varsa. Ornek yapi.",
 
     "ad": "muzik",
     "kapali": true,
@@ -41,7 +41,7 @@
   },
 
   {
-    "_aciklama": "HAVA DURUMU — anahtar gerektirmeyen basit bir ornek. Enlem/boylami kendi sehrine gore degistir (asagidaki Istanbul).",
+    "_aciklama": "HAVA DURUMU: anahtar gerektirmeyen basit bir ornek. Enlem/boylami kendi sehrine gore degistir (asagidaki Istanbul).",
 
     "ad": "hava",
     "kapali": true,

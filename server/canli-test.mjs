@@ -61,7 +61,7 @@ async function erisim(ad, url) {
     const sure = Date.now() - t0;
 
     if (ENGEL_KODLARI.includes(r.status)) {
-      console.log(`  ${ad.padEnd(22)} ENGELLENMIS?  (HTTP ${r.status}, ${sure}ms — araya giren bir sey var)`);
+      console.log(`  ${ad.padEnd(22)} ENGELLENMIS?  (HTTP ${r.status}, ${sure}ms, araya giren bir sey var)`);
       return false;
     }
     console.log(`  ${ad.padEnd(22)} ULASILDI      (HTTP ${r.status}, ${sure}ms)`);
@@ -100,7 +100,7 @@ const TESHIS = {
     'bir odanin websocket\'ine baglanirken devreye giriyor; o kisi canli olmadigi',
     'icin o asamaya hic gelinmedi.',
     '',
-    'Kesin sonuc icin CANLI bir hesapla test et — en pratigi kendi yayinini acmak.',
+    'Kesin sonuc icin CANLI bir hesapla test et. En pratigi kendi yayinini acmak.',
   ],
   InvalidUniqueIdError: [
     'Kullanici adi gecersiz. Basindaki @ olmadan, birebir yaz.',
@@ -122,7 +122,7 @@ const TESHIS = {
     'Ag saglamsa ve kullanici adi dogruysa, TikTok tarafinda bir degisiklik olmus olabilir.',
   ],
   ConnectTimeoutError: [
-    'Baglanti zaman asimina ugradi — ag yavas ya da engelli.',
+    'Baglanti zaman asimina ugradi, ag yavas ya da engelli.',
   ],
 };
 
@@ -178,7 +178,7 @@ for (const kullanici of hedefler) {
     if (toplam > 0) {
       console.log('   >>> GERCEK VERI AKIYOR. Kopru ve overlay\'ler calisir. <<<');
     } else {
-      console.log('   Baglanti KURULDU ama olay gelmedi — yayin cok sessiz olabilir.');
+      console.log('   Baglanti KURULDU ama olay gelmedi. Yayin cok sessiz olabilir.');
       console.log('   Baglantinin kendisi calisiyor; daha hareketli bir yayinda tekrar dene.');
     }
     try { c.disconnect(); } catch { /* zaten kapali */ }
@@ -206,7 +206,7 @@ if (bagliOldu) {
 } else {
   console.log('SONUC: Baglanti kurulamadi.');
   console.log('');
-  console.log('  Yukaridaki teshis satirlarini oku — hata sinifi sorunun ne oldugunu soyluyor.');
+  console.log('  Yukaridaki teshis satirlarini oku, hata sinifi sorunun ne oldugunu soyluyor.');
   console.log('  En sik sebep: test edilen kisi CANLI DEGIL.');
   console.log('  Kendi yayinini acip kendi kullanici adinla tekrar dene.');
 }

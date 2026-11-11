@@ -81,7 +81,7 @@ Yarışmasız, ortak bir dans sahnesi. Gerçek 3D bir meydan: ortada platform, e
 - Kafaların üstündeki balonlar yalnızca tezahürat (HEY! / HOP! / HOPPA! / OLEY!) ve parti emojisi gösterir.
   İzleyicinin yazdığı metin asla çıkmaz.
 
-**Nasıl açılır:** Varsayılan dönüşte yer alır, ayrıca bir şey eklemen gerekmez (`oyun.html?lite=1`). Tek başına açmak için: `oyun.html?lite=1&oyunlar=halay`.
+**Nasıl açılır:** Varsayılan döngüde yer alır, ayrıca bir şey eklemen gerekmez (`oyun.html?lite=1`). Tek başına açmak için: `oyun.html?lite=1&oyunlar=halay`.
 Kaynak: `overlays/halay.html`.
 
 ### 🍲 Düdüklü (3D)
@@ -94,7 +94,7 @@ Herkesin birlikte oynadığı ortak oyun: büyük bir düdüklü tencereyi ateş
 - Hediye basınca sınırlı bir destek ekler. Tencereyi patlatan son itiş asla hediye olmaz. Gönderenin adı teşekkürle görünür.
 - Tencere genelde 1-1,5 dakikada patlar. Patlamazsa tur en geç yaklaşık 2,5 dakikada "kıvamında pişti" ile biter.
 
-**Nasıl açılır:** Varsayılan dönüşte yer alır (`oyun.html?lite=1`). Tek başına açmak için: `oyun.html?lite=1&oyunlar=tencere`.
+**Nasıl açılır:** Varsayılan döngüde yer alır (`oyun.html?lite=1`). Tek başına açmak için: `oyun.html?lite=1&oyunlar=tencere`.
 Kaynak: `overlays/tencere.html`.
 
 ---
@@ -207,7 +207,7 @@ Test için `?mock=1` ekle: sayfa sunucu olmadan sahte olaylarla çalışır. Ayr
 ```
 overlays/
   oyun.html          ← TEK LİNK: oyunları döndüren merkez
-  at.html  halay.html  tencere.html          (üç oyun, hepsi varsayılan dönüşte)
+  at.html  halay.html  tencere.html          (üç oyun, hepsi varsayılan döngüde)
   index.html         ← kontrol paneli (adresleri kopyala, test olayı gönder)
   kontrol.html                               (kaynak sınama sayfası: OBS / LIVE Studio)
   sahne3d-deneme.html                        (3D / GPU kontrol sayfası)

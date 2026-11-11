@@ -72,7 +72,7 @@ async function kullaniciAdi(argumandan) {
     console.log('');
     console.log('  Kullanici adi ayarlanmamis ve soru sorulacak bir konsol yok.');
     console.log('  TEST modunda aciliyor. Kontrol panelinden kullanici adini');
-    console.log('  girip "Bağlan" dersen kaydedilir ve bir daha sormaz.');
+    console.log('  girip "Baglan" dersen kaydedilir ve bir daha sormaz.');
     console.log('');
     return null;
   }

@@ -40,8 +40,8 @@ set "TT_USER="
 if exist "kullanici-adi.txt" set /p TT_USER=<kullanici-adi.txt
 
 if "%TT_USER%"=="" (
-    echo   TikTok kullanici adin nedir?  ^(bassindaki @ olmadan^)
-    echo   Bos birakirsan SAHTE veri ile calisir - test icin yeterli.
+    echo   TikTok kullanici adin nedir?  ^(basindaki @ olmadan^)
+    echo   Bos birakirsan SAHTE veri ile calisir, test icin yeterli.
     echo.
     set /p TT_USER="   Kullanici adi: "
     if not "%TT_USER%"=="" echo %TT_USER%>kullanici-adi.txt
@@ -49,7 +49,7 @@ if "%TT_USER%"=="" (
 
 echo.
 if "%TT_USER%"=="" (
-    echo   MOCK modu - sahte olaylarla baslatiliyor.
+    echo   MOCK modu: sahte olaylarla baslatiliyor.
     set "TT_ARGS=--mock"
 ) else (
     echo   @%TT_USER% yayinina baglanilacak.

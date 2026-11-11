@@ -15,8 +15,8 @@ echo      - Node'un Windows ikilisini indirir (~85 MB, bir kez)
 echo      - Butun oyunlari ve sunucuyu icine gomer
 echo      - dist\TikTokOyunlar.exe dosyasini uretir
 echo.
-echo    Uretilen exe'yi tek basina kopyalayabilirsin;
-echo    calistigi makinede Node kurulu olmasi GEREKMEZ.
+echo    Uretilen exe'yi tek basina kopyalayabilirsin.
+echo    Calistigi makinede Node kurulu olmasi GEREKMEZ.
 echo.
 
 where node >nul 2>nul

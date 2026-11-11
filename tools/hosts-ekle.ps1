@@ -65,7 +65,7 @@ try {
     Write-Host '  hosts dosyasi kilitli ya da salt-okunur olabilir (antivirus / ReadOnly).' -ForegroundColor Red
     Write-Host '  Hicbir sey degistirilmedi.' -ForegroundColor Red
     Write-Host ''
-    Write-Host '  Alternatif — hicbir kurulum gerektirmez:' -ForegroundColor Cyan
+    Write-Host '  Hicbir kurulum gerektirmeyen alternatif:' -ForegroundColor Cyan
     Write-Host '     http://localtest.me:8787/overlays/alerts.html?lite=1'
     exit 1
 }
@@ -117,7 +117,7 @@ if ($Kaldir) {
             Write-Host '  Muhtemel sebep: hosts salt-okunur, antivirus kilidi (Malwarebytes/Avast/Norton)' -ForegroundColor Red
             Write-Host '  ya da Defender HostsFileHijack korumasi.' -ForegroundColor Red
             Write-Host ''
-            Write-Host '  Alternatif — hicbir kurulum gerektirmez:' -ForegroundColor Cyan
+            Write-Host '  Hicbir kurulum gerektirmeyen alternatif:' -ForegroundColor Cyan
             Write-Host '     http://localtest.me:8787/overlays/alerts.html?lite=1'
             exit 1
         }
@@ -160,7 +160,7 @@ try {
     if (-not $Kaldir) {
         Write-Host "  $AlanAdi cozulemedi. hosts dosyasini elle kontrol et." -ForegroundColor Red
     } else {
-        Write-Host "  $AlanAdi artik cozulmuyor — kaldirma basarili." -ForegroundColor Green
+        Write-Host "  $AlanAdi artik cozulmuyor, kaldirma basarili." -ForegroundColor Green
     }
 }
 Write-Host ''

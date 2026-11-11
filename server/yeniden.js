@@ -75,7 +75,7 @@ function karar(hata, deneme, secenek) {
   switch (t) {
     case 'yayinBitti':
       return { delayMs: bekle, state: 'yayin bitti', tur: t,
-               message: 'yayin bitti — yeniden yayin beklemeye geciliyor.' };
+               message: 'yayin bitti, yeniden yayin bekleniyor.' };
 
     case 'cevrimdisi':
       return { delayMs: bekle, state: 'bekliyor', tur: t,
@@ -88,13 +88,13 @@ function karar(hata, deneme, secenek) {
       const ham = ra > 0 ? ra : LIMIT_MIN * Math.pow(2, Math.min(n - 1, 10));
       const ms = kirp(ham, LIMIT_MIN, LIMIT_MAX);
       return { delayMs: ms, state: 'limit', tur: t,
-               message: 'imzalama limiti — ' + sn(ms) + ' sn sonra tekrar denenecek' +
+               message: 'imzalama limiti, ' + sn(ms) + ' sn sonra tekrar denenecek' +
                         (ra > 0 ? ' (sunucu retry-after: ' + sn(ra) + ' sn).' : '.') };
     }
 
     case 'ucretli':
       return { delayMs: UCRETLI_BEKLEME, state: 'ucretli plan', tur: t,
-               message: 'imzalama ucretli plan istiyor — ' + sn(UCRETLI_BEKLEME) + ' sn sonra tekrar denenecek.' };
+               message: 'imzalama ucretli plan istiyor, ' + sn(UCRETLI_BEKLEME) + ' sn sonra tekrar denenecek.' };
 
     default: {
       const ms = ustel(n, USTEL_TABAN, USTEL_TAVAN, o.rng);
@@ -102,16 +102,16 @@ function karar(hata, deneme, secenek) {
                : hata?.olay === 'sessiz' ? 'yayin sessiz kaldi'
                : 'baglanti hatasi';
       return { delayMs: ms, state: hata?.olay === 'sessiz' ? 'sessiz' : 'hata', tur: t,
-               message: ne + ' (' + n + '. deneme) — ' + sn(ms) + ' sn sonra tekrar denenecek.' };
+               message: ne + ' (' + n + '. deneme), ' + sn(ms) + ' sn sonra tekrar denenecek.' };
     }
   }
 }
 
-/** Panelde gosterilecek kisa metin: "limit — 90 sn sonra tekrar". */
+/** Panelde gosterilecek kisa metin: "limit, 90 sn sonra tekrar". */
 function durumMetni(etiket, kalanMs) {
   const s = Math.max(0, Math.ceil(kalanMs / SN));
   const sure = s >= 120 ? Math.round(s / 60) + ' dk' : s + ' sn';
-  return etiket + ' — ' + sure + ' sonra tekrar';
+  return etiket + ', ' + sure + ' sonra tekrar';
 }
 
 module.exports = {

@@ -391,7 +391,7 @@ function sessizMs() {
   return Math.max(30, Number(args.sessiz) || 180) * 1000 * baglanti.sessizCarpan;
 }
 
-/** Panelde gosterilecek: "limit — 120 sn sonra tekrar" ya da bos. */
+/** Panelde gosterilecek: "limit, 120 sn sonra tekrar" ya da bos. */
 function durumDetay() {
   if (!baglanti.zamanlayici || !baglanti.etiket) return '';
   return yeniden.durumMetni(baglanti.etiket, baglanti.tekrarAt - Date.now());

@@ -117,7 +117,7 @@ async function nodeIkilisiHazirla(platform, arch) {
 
   const cikti = path.join(GECICI, `node-${platform}-${arch}`);
   if (!fs.existsSync(cikti)) {
-    bilgi('acilıyor...');
+    bilgi('aciliyor...');
     execFileSync('tar', ['-xzf', inen, '-C', GECICI, icYol], { stdio: 'inherit' });
     fs.copyFileSync(path.join(GECICI, icYol), cikti);
     fs.chmodSync(cikti, 0o755);
@@ -218,7 +218,7 @@ async function enjekteEt(hedef, blob) {
 
 // ---------------------------------------------------------------------------
 async function main() {
-  console.log('\n=== TikTok Oyunları — paketleme ===');
+  console.log('\n=== TikTok Oyunlari: paketleme ===');
   console.log('    kaynak:', KOK);
   console.log('    node  :', NODE_SURUM);
 
@@ -237,7 +237,7 @@ async function main() {
   for (const s of sonuclar) {
     console.log(`  ${path.relative(KOK, s.cikti)}   ${s.mb} MB   sha256:${s.ozet}`);
   }
-  console.log('\n  Bu dosyayi tek basina kopyalayabilirsin — yanina klasor gerekmiyor.');
+  console.log('\n  Bu dosyayi tek basina kopyalayabilirsin, yanina klasor gerekmiyor.');
   console.log('  Cift tiklayinca kontrol paneli tarayicida aciliyor.\n');
 }
 

@@ -256,7 +256,7 @@ async function listen(port) {
   });
 
   console.log('\nDinlemede. LIVE Studio icinde sahne degistir, kaynak ac/kapat,');
-  console.log('mikrofonu sustur — ne mesaj dondugunu burada goreceksin.');
+  console.log('mikrofonu sustur, ne mesaj dondugunu burada goreceksin.');
   console.log('Cikmak icin Ctrl+C.\n');
 }
 

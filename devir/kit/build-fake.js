@@ -1,9 +1,11 @@
 'use strict';
 /**
- * build-fake.js [2.5.0|2.4.3]
+ * build-fake.js
  *
  * Gercek tiktok-live-connector paketinin METNINDEN (calistirmadan) sahte bir
- * paket uretir: danisman/node_modules/tiktok-live-connector
+ * paket uretir: devir/kit/node_modules/tiktok-live-connector (git'e girmez).
+ * reconnect.js bunu kullanir; uretilmemisse kopru sessizce MOCK'a duser ve
+ * senaryolar anlamsiz sonuc verir.
  *   - ayni package.json "exports" haritasi (".", "./legacy"), ayni ESM tipi
  *   - index.js: gercek paketin export ettigi BUTUN adlar
  *   - hata siniflari, ControlEvent/WebcastEvent/ConnectState, RoomIdRouteConfig,
@@ -14,8 +16,14 @@
 const fs = require('fs');
 const path = require('path');
 
-const SURUM = process.argv[2] || '2.5.0';
-const KAYNAK = path.join(__dirname, '..', 'repo-arastirma', 's4-baglanti', 'npm', 'tlc-' + SURUM, 'package');
+// Kaynak: deponun kurulu paketi (server/node_modules). Yalnizca METNI okunur, calistirilmaz.
+// Baska bir kopya icin: TT_TLC=<paket klasoru>. Once `cd server && npm ci` gerekir.
+const REPO = process.env.TT_REPO || path.resolve(__dirname, '..', '..');
+const KAYNAK = process.env.TT_TLC || path.join(REPO, 'server', 'node_modules', 'tiktok-live-connector');
+if (!fs.existsSync(path.join(KAYNAK, 'dist'))) {
+  console.error('gercek paket bulunamadi: ' + KAYNAK + '\n  once:  cd server && npm ci   (ya da TT_TLC=<paket klasoru>)');
+  process.exit(1);
+}
 const HEDEF = path.join(__dirname, 'node_modules', 'tiktok-live-connector');
 
 const dist = path.join(KAYNAK, 'dist');

@@ -282,7 +282,7 @@ const TESTLER = {
       const src = await p.evaluate(() => document.getElementById('sahne').src);
       const kaynak = fs.readFileSync(path.join(kok, 'overlays', 'oyun.html'), 'utf8');
       const m = kaynak.match(/q\.get\('oyunlar'\)\s*\|\|\s*'([^']+)'/);
-      if (m && m[1] === 'bilye,bilgi,pk,at' && /bilye\.html/.test(src)) GECTI('merkez', 'varsayilan dizilim bilye,bilgi,pk,at (halay yok), ilk oyun bilye'); else KALDI('merkez', `varsayilan dizilim degismis: ${m && m[1]} ; ilk cerceve ${src}`);
+      if (m && m[1] === 'at,halay,tencere' && /at\.html/.test(src)) GECTI('merkez', 'varsayilan dizilim at,halay,tencere, ilk oyun at'); else KALDI('merkez', `varsayilan dizilim degismis: ${m && m[1]} ; ilk cerceve ${src}`);
       await ctx.close();
     }
     const SN = 12, SARKI = 30;

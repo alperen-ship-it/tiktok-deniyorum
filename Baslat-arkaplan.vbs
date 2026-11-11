@@ -36,7 +36,7 @@ End If
 ' kullanici hicbir sey gormez). O durumda gorunur baslaticiya yonlendir.
 If Not dosya.FolderExists(klasor & "server\node_modules") And kullanici <> "" Then
     MsgBox "Ilk kurulum gerekiyor." & vbCrLf & vbCrLf & _
-           "Lutfen once Baslat.bat dosyasini cift tikla — paketleri kurup" & vbCrLf & _
+           "Lutfen once Baslat.bat dosyasini cift tikla. Paketleri kurup" & vbCrLf & _
            "kullanici adini soracak. Sonraki acilislarda bunu kullanabilirsin.", _
            vbInformation, "TikTok Yayin Oyuncaklari"
     WScript.Quit

@@ -209,7 +209,7 @@ function cmdSetUrl(file, targetName, newUrl) {
   console.log(`${hit} kaynak guncellendi.`);
   console.log(`Yedek: ${backup}`);
   console.log('');
-  console.log('LIVE Studio ACIKSA simdi kapatip yeniden ac — acikken yaptigin');
+  console.log('LIVE Studio ACIKSA simdi kapatip yeniden ac, acikken yaptigin');
   console.log('degisiklik uygulamanin kendi yazmasiyla ezilir.');
 }
 

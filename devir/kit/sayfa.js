@@ -230,6 +230,11 @@ function GUVENLI(o) {
     const el = n.parentElement; if (!el || /^(SCRIPT|STYLE)$/.test(el.tagName)) continue;
     let op = 1, gizli = false; for (let e = el; e; e = e.parentElement) { const c = getComputedStyle(e); op *= Number(c.opacity); if (c.display === 'none' || c.visibility === 'hidden') gizli = true; }
     if (gizli || op < 0.05) continue;
+    // giris/cikis animasyonunun ORTASINDAKI eleman olculmez (PUNTO ile ayni kural): gecici olcek
+    // (bant girisindeki scaleX 1.03 gibi) durgun yerlesim degildir. Sonsuz animasyonlar olculur.
+    let canli = false;
+    for (let e = el; e && e !== document.documentElement; e = e.parentElement) { if (e.getAnimations && e.getAnimations().some((a) => a.playState === 'running' && a.effect && a.effect.getComputedTiming().iterations !== Infinity)) { canli = true; break; } }
+    if (canli) continue;
     const r = document.createRange(); r.selectNodeContents(n);
     for (const k of r.getClientRects()) {
       if (k.width < 1 || k.height < 1) continue;

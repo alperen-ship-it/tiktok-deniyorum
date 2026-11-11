@@ -1,0 +1,270 @@
+// ---- SAHTE TikTokLiveConnection (danisman) ---------------------------------
+// Gercek sinifin yuzeyi ve durum makinesi (lib satir ~1647-2100) taklit edilir:
+//   - connect(): CONNECTED -> AlreadyConnectedError, CONNECTING -> AlreadyConnectingError
+//   - hata: setDisconnected + handleError(err,'Error while connecting') + throw
+//   - disconnect(): bagli degilse sadece setDisconnected; bagliysa soket kapanir
+//     ve 'disconnected' olayi YAYILIR (gercekte ws 'close' dinleyicisi yapiyor —
+//     kimin kapattigina bakmaz)
+//   - streamEnd: once 'streamEnd', sonra kendi disconnect()'i -> 'disconnected'
+//   - connect() ucustayken disconnect() gelirse: gercek kutuphane ucustaki
+//     _connect'i IPTAL ETMEZ; bitince CONNECTED olur (soket acik kalir).
+function __sahteWebClient(inst) {
+  return {
+    roomId: '',
+    clientParams: { cursor: '', room_id: '', internal_ext: '' },
+    apiClient: {},
+    oAuthSessionBundle: undefined,
+    cookieJar: {
+      setSessionBundle(b) { __T.calls.push({ t: Date.now(), ad: 'cookieJar.setSessionBundle', inst: inst.__id, tip: b && b.type }); },
+      async getSessionBundle() { return null; },
+      async getCookieString() { return ''; },
+      async getAnonymousCookieString() { return ''; },
+      async processSetCookieHeader() {},
+    },
+  };
+}
+function __adim(inst) {
+  const q = (__T.byUser && __T.byUser[inst.uniqueId]) || __T.script;
+  if (q.length) return q[0];
+  return __T.opts.sonra || { r: 'offline' };
+}
+function __tuket(inst) {
+  const q = (__T.byUser && __T.byUser[inst.uniqueId]) || __T.script;
+  if (q.length) return q.shift();
+  return __T.opts.sonra || { r: 'offline' };
+}
+const __bekle = (ms) => new Promise((r) => setTimeout(r, ms));
+
+var TikTokLiveConnection = class extends EventEmitter {
+  options;
+  _webClient;
+  _wsClientInstance = null;
+  _roomInfo = null;
+  _availableGifts = null;
+  _connectState = "DISCONNECTED";
+  constructor(uniqueId, options) {
+    super();
+    if (typeof uniqueId !== "string") throw new InvalidUniqueIdError("Missing or invalid value for 'uniqueId'. Please provide the username from TikTok URL.");
+    this.uniqueId = uniqueId.replace("https://www.tiktok.com/", "").replace("/live", "").replace("@", "").trim();
+    this.options = {
+      processInitialData: options.processInitialData ?? true,
+      fetchRoomInfoOnConnect: options.fetchRoomInfoOnConnect ?? true,
+      enableExtendedGiftInfo: options.enableExtendedGiftInfo ?? false,
+      authenticateWs: options.authenticateWs,
+      useMobile: options.useMobile
+    };
+    if (options.signApiKey) SignConfig.apiKey = options.signApiKey;
+    this.__id = __T.instances.length;
+    this.__zamanlar = [];
+    this.__kayit = { id: this.__id, t: Date.now(), uniqueId: this.uniqueId, options: JSON.parse(JSON.stringify(options, (k, v) => (typeof v === 'function' ? '[fn]' : v))), olaylar: [], durum: 'DISCONNECTED' };
+    __T.instances.push(this.__kayit);
+    __T.canli = __T.canli || [];
+    __T.canli.push(this);
+    this._webClient = __sahteWebClient(this);
+    this.setDisconnected();
+  }
+  __durum(d) { this._connectState = d; this.__kayit.durum = d; }
+  __olay(ad, ek) { this.__kayit.olaylar.push(Object.assign({ t: Date.now(), ad }, ek || {})); }
+  __temizle() { this.__zamanlar.forEach((z) => clearTimeout(z)); this.__zamanlar = []; }
+  async connect(roomId) {
+    const digerleri = (__T.canli || []).filter((c) => c !== this && c._connectState !== 'DISCONNECTED' && !c.__kapaniyor).map((c) => ({ id: c.__id, durum: c._connectState }));
+    const kayit = {
+      tur: 'connect', t: Date.now(), inst: this.__id, uniqueId: this.uniqueId,
+      onceki: this._connectState, digerleri,
+      enYeniInst: __T.instances.length - 1,
+      skipEulerRoomId: RoomIdRouteConfig.skipFetchRoomIdFromEulerRoute,
+      skipEulerIsLive: IsLiveRouteConfig.skipFetchRoomIdFromEulerRoute,
+      dinleyici: { error: this.listenerCount('error'), disconnected: this.listenerCount('disconnected'), streamEnd: this.listenerCount('streamEnd'), chat: this.listenerCount('chat') },
+    };
+    __T.connects.push(kayit);
+    switch (this._connectState) {
+      case "CONNECTED": kayit.sonuc = 'AlreadyConnectedError'; throw new AlreadyConnectedError("Already connected!");
+      case "CONNECTING": kayit.sonuc = 'AlreadyConnectingError'; throw new AlreadyConnectingError("Already connecting!");
+      default:
+      case "DISCONNECTED": try {
+        this.__durum("CONNECTING");
+        const adim = __tuket(this);
+        kayit.adim = adim.r;
+        await this.__oyna(adim, kayit);
+        this.__durum("CONNECTED");
+        kayit.sonuc = 'ok'; kayit.tBitti = Date.now();
+        this.__olay('connected');
+        this.emit("connected", this.state);
+        return this.state;
+      } catch (err) {
+        kayit.sonuc = kayit.sonuc || (err && err.constructor && err.constructor.name) || 'Error';
+        kayit.tBitti = Date.now();
+        this.setDisconnected();
+        this.handleError(err, "Error while connecting");
+        throw err;
+      }
+    }
+  }
+  async __oyna(adim, kayit) {
+    const gecikme = adim.gecikme ?? 250;
+    if (adim.r === 'hang') { await new Promise(() => {}); }
+    await __bekle(gecikme);
+    switch (adim.r) {
+      case 'offline': throw new UserOfflineError("The requested user isn't online :(");
+      case 'roomid': {
+        if (!RoomIdRouteConfig.skipFetchRoomIdFromEulerRoute) { kayit.eulerRoomIdCagrildi = true; __T.eulerCagri = (__T.eulerCagri || 0) + 1; }
+        const e = new InvalidResponseCompositeError({ routeId: 'fetchRoomIdRoute', requestErrs: [] }, "Failed to retrieve Room ID from all sources.");
+        this.handleError(e, "Failed to retrieve Room ID from all sources.");
+        throw e;
+      }
+      case 'ratelimit':
+        throw new SignatureRateLimitError(adim.apiMesaj ?? null, "Too many connections started, try again later.",
+          { headers: adim.retryAfter == null ? {} : { 'retry-after': String(adim.retryAfter) } });
+      case 'premium':
+        throw new PremiumFeatureError(adim.apiMesaj ?? "This feature requires a Business plan or higher.", "Error fetching the signed TikTok WebSocket");
+      case 'missingtokens':
+        throw new SignatureMissingTokensError("[fetchWebcastSignatureFromEulerRoute] Failed to sign a request due to missing tokens in response!");
+      case 'timeout': throw new ConnectTimeoutError("Timed out whilst connecting to WebSocket");
+      case 'signerror': throw new SignAPIError("Connect Error", void 0, void 0, "Failed to connect to sign server.", new Error("read ECONNRESET"));
+      case 'error': throw new Error(adim.msg || 'socket hang up');
+      case 'ok': break;
+      default: throw new Error('SAHTE: bilinmeyen adim ' + adim.r);
+    }
+    // --- baglandi: sonraki olaylari planla ---
+    this._webClient.roomId = '7400000000000000' + String(this.__id).padStart(3, '0');
+    const her = adim.chatHer ?? 2000;
+    const basla = Date.now();
+    const ben = this;
+    let n = 0;
+    const olayYay = (tip, veri) => {
+      ben.emit('websocketData', Buffer.alloc(0));
+      ben.emit('decodedData', tip, veri, Buffer.alloc(0));
+    };
+    const chat = () => {
+      if (ben._connectState !== 'CONNECTED') return;
+      const gecen = Date.now() - basla;
+      if (adim.sessizlik != null && gecen >= adim.sessizlik) return;        // zombi soket: hicbir sey gelmez
+      n++;
+      __T.chatSayisi = (__T.chatSayisi || {}); __T.chatSayisi[ben.__id] = n;
+      if (adim.sadeceRoomUser) {
+        olayYay('WebcastRoomUserSeqMessage', {});
+        ben.emit('roomUser', { viewerCount: 100 + n, totalUser: 100 + n });
+      } else {
+        const d = { user: { userId: '9001', uniqueId: 'sahte_izleyici', nickname: 'Sahte Izleyici' }, comment: 'inst' + ben.__id + ' mesaj ' + n };
+        olayYay('WebcastChatMessage', d);
+        ben.emit('chat', d);
+      }
+      ben.__zamanlar.push(setTimeout(chat, her));
+    };
+    this.__zamanlar.push(setTimeout(chat, her));
+    if (adim.kop != null) this.__zamanlar.push(setTimeout(() => ben.__soketKapandi(1006, ''), adim.kop));
+    if (adim.yayinBitti != null) this.__zamanlar.push(setTimeout(async () => {
+      if (ben._connectState !== 'CONNECTED') return;
+      ben.__olay('streamEnd');
+      ben.emit('controlMessage', { action: 3 });
+      ben.emit("streamEnd", { action: 3 });
+      await ben.disconnect(true);
+    }, adim.yayinBitti));
+  }
+  __soketKapandi(code, reason) {
+    if (this._connectState !== 'CONNECTED') return;
+    this.__temizle();
+    this.setDisconnected();
+    this.__olay('disconnected', { code });
+    this.emit("disconnected", { code, reason });
+  }
+  async disconnect(__ic) {
+    __T.connects.push({ tur: 'disconnect', t: Date.now(), inst: this.__id, uniqueId: this.uniqueId, onceki: this._connectState, ic: !!__ic });
+    if (!this.isConnected) { this.setDisconnected(); return; }
+    this.__kapaniyor = true;
+    await __bekle(5);
+    this.__kapaniyor = false;
+    this.__soketKapandi(1000, '');
+  }
+  get webClient() { return this._webClient; }
+  get apiClient() { return this._webClient.apiClient; }
+  get wsClient() { return this._wsClientInstance; }
+  setDisconnected() {
+    this.__durum("DISCONNECTED");
+    this._roomInfo = null;
+    this._availableGifts = null;
+    this.clientParams.cursor = "";
+    this.clientParams.room_id = "";
+    this.clientParams.internal_ext = "";
+  }
+  get roomInfo() { return this._roomInfo; }
+  get availableGifts() { return this._availableGifts; }
+  get isConnecting() { return this._connectState === "CONNECTING"; }
+  get isConnected() { return this._connectState === "CONNECTED"; }
+  get clientParams() { return this.webClient.clientParams; }
+  get roomId() { return this.webClient.roomId; }
+  get state() {
+    return { isConnected: this.isConnected, isConnecting: this.isConnecting, roomId: this.roomId, roomInfo: this.roomInfo, availableGifts: this.availableGifts };
+  }
+  async fetchRoomId(uniqueId = this.uniqueId) {
+    const adim = __adim(this);
+    const kayit = { tur: 'fetchRoomId', t: Date.now(), inst: this.__id, uniqueId, skipEulerRoomId: RoomIdRouteConfig.skipFetchRoomIdFromEulerRoute };
+    __T.connects.push(kayit);
+    await __bekle(100);
+    if (adim.r === 'roomid') {
+      __tuket(this);
+      if (!RoomIdRouteConfig.skipFetchRoomIdFromEulerRoute) { kayit.eulerRoomIdCagrildi = true; __T.eulerCagri = (__T.eulerCagri || 0) + 1; }
+      const e = new InvalidResponseCompositeError({ routeId: 'fetchRoomIdRoute', requestErrs: [] }, "Failed to retrieve Room ID from all sources.");
+      this.handleError(e, "Failed to retrieve Room ID from all sources.");
+      throw e;
+    }
+    this._webClient.roomId = '7400000000000000' + String(this.__id).padStart(3, '0');
+    return this._webClient.roomId;
+  }
+  async fetchIsLive(uniqueId = this.uniqueId) {
+    const adim = __adim(this);
+    const kayit = { tur: 'fetchIsLive', t: Date.now(), inst: this.__id, uniqueId, skipEulerIsLive: IsLiveRouteConfig.skipFetchRoomIdFromEulerRoute };
+    __T.connects.push(kayit);
+    await __bekle(100);
+    if (adim.r === 'offline') { __tuket(this); kayit.sonuc = false; return false; }
+    if (adim.r === 'roomid') {
+      __tuket(this);
+      if (!IsLiveRouteConfig.skipFetchRoomIdFromEulerRoute) { kayit.eulerIsLiveCagrildi = true; __T.eulerCagri = (__T.eulerCagri || 0) + 1; }
+      const e = new InvalidResponseCompositeError({ routeId: 'fetchIsLiveRoute', requestErrs: [] }, "Failed to retrieve live status from all sources.");
+      this.handleError(e, "Failed to retrieve live status from all sources.");
+      throw e;
+    }
+    kayit.sonuc = true;
+    return true;
+  }
+  async fetchRoomInfo(roomId = this.roomId) {
+    const adim = __adim(this);
+    __T.connects.push({ tur: 'fetchRoomInfo', t: Date.now(), inst: this.__id });
+    await __bekle(100);
+    if (adim.r === 'offline') { __tuket(this); this._roomInfo = { data: { status: 4 } }; }
+    else this._roomInfo = { data: { status: 2 } };
+    return this._roomInfo;
+  }
+  async fetchAvailableGifts() { __T.calls.push({ t: Date.now(), ad: 'fetchAvailableGifts', inst: this.__id }); return []; }
+  async sendMessage(content) {
+    __T.calls.push({ t: Date.now(), ad: 'sendMessage', inst: this.__id, content });
+    throw new PremiumFeatureError("Sending chats requires an API key & a paid plan, as it uses cloud managed services.", "Unauthorized", "{}");
+  }
+  handleError(exception, info) {
+    if (this.listenerCount("error") < 1) return;
+    this.emit("error", { info, exception });
+  }
+  async waitUntilLive(seconds = 60, abortSignal) {
+    seconds = Math.max(30, seconds);
+    __T.calls.push({ t: Date.now(), ad: 'waitUntilLive', inst: this.__id, seconds });
+    return new Promise((resolve, reject) => {
+      if (abortSignal?.aborted) return reject(abortSignal.reason);
+      let timer;
+      const cleanup = () => { if (timer !== void 0) clearTimeout(timer); abortSignal?.removeEventListener("abort", onAbort); };
+      const onAbort = () => { cleanup(); reject(abortSignal.reason); };
+      const check = async () => {
+        try {
+          const isLive = await this.fetchIsLive();
+          if (abortSignal?.aborted) return;
+          if (isLive) { cleanup(); resolve(); return; }
+          timer = setTimeout(check, seconds * 1e3);
+        } catch (err) {
+          if (abortSignal?.aborted) return;
+          cleanup(); reject(err);
+        }
+      };
+      abortSignal?.addEventListener("abort", onAbort, { once: true });
+      check();
+    });
+  }
+};

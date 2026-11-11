@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>3D Sahne Denemesi — GPU kontrolü</title>
+<title>3D Sahne Denemesi: GPU kontrolü</title>
 <link rel="stylesheet" href="_shared/base.css">
 <link rel="stylesheet" href="_shared/oyun-tema.css">
 <style>
@@ -44,7 +44,7 @@
   </div>
 
   <div id="okuma"><div id="okKalite"></div><div id="okGpu"></div><div id="okSimge"></div></div>
-  <div id="domGorunum"><div class="big" id="domBuyuk">%0</div><div class="alt">3D kapalı — yalnız DOM görünümü</div><div class="tahta" id="domTahta"></div></div>
+  <div id="domGorunum"><div class="big" id="domBuyuk">%0</div><div class="alt">3D kapalı, yalnız DOM görünümü</div><div class="tahta" id="domTahta"></div></div>
   <div id="pano"></div>
   <div id="akis"></div>
 </div>
@@ -153,7 +153,7 @@ function simgeSonuc(ad, deger) { $('okSimge').textContent = 'simge · ' + ad + '
 const SIMGE_ISLER = {
   hey()      { return ['HEY (nida)', s.simge(hedefKid(), ['HEY'])]; },
   emoji()    { return ['🔥 (izinli emoji)', s.simge(hedefKid(), ['🔥', '👏'], { renk: '#ffd25a' })]; },
-  tablo()    { return ['sirada + 42 (tablo anahtari + sayi)', s.simge(hedefKid(), ['sirada', 42])]; },
+  tablo()    { return ['sirada + 42 (tablo anahtarı + sayı)', s.simge(hedefKid(), ['sirada', 42])]; },
   serbest()  { return ['serbest metin', s.simge(hedefKid(), ['merhaba dunya'])]; },
   disemoji() { return ['izin dışı emoji', s.simge(hedefKid(), ['🦄'])]; },
   bes()      { return ['5 parça', s.simge(hedefKid(), ['HEY', 'HOP', 'HOPPA', 'OLEY', '🔥'])]; },
@@ -193,7 +193,7 @@ function okuma() {
   const fps = o.kareMs > 0 ? Math.round(1000 / o.kareMs) : 0;
   const k = $('okKalite'); k.textContent = '';
   const b = document.createElement('b'); b.textContent = 'KALİTE ' + o.kalite; k.appendChild(b);
-  k.appendChild(document.createTextNode(' · kare ' + o.kareMs.toFixed(1) + ' ms (' + fps + ' fps)' + (o.yazilim ? ' · yazılım' : '')));
+  k.appendChild(document.createTextNode(' · kare ' + o.kareMs.toFixed(1).replace('.', ',') + ' ms (' + fps + ' fps)' + (o.yazilim ? ' · yazılım' : '')));
   $('okGpu').textContent = 'GPU: ' + (o.webgl || 'WebGL yok');
   if (s.kalite === 'yok') domGuncelle();
 }
