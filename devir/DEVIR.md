@@ -121,16 +121,14 @@ derlenmiştir, bu bilgisayarda doğrulanmamıştır.
 5. **D** (Sonnet): three.js / sahne3d / sahne3d-deneme üründen çıkar; README, panel, `paketle.js`.
 6. Son kapı, exe.
 
-Yeni oyun (sohbetin yönettiği, yorum / beğeni / hediyeyle katılınan): üç araştırma
-raporu `fikir/` altında. Danışmanın sıralaması bu dosya yazılırken bitmemişti;
-`fikir/SIRALAMA.md` varsa onu kullan, yoksa şu ölçütlerle sen sırala: 3 saniyede
-anlaşılır; her izleyicinin ~10 saniyede bir yapacağı iş var; izleyiciden izleyiciye
-eylem; insan karakter + yüz + zoom kullanır; 2 kişi + botla da 300 kişiyle de oynanır;
-yapım maliyeti; kötüye kullanım ve hassasiyet (izleyiciye gelin/damat gibi cinsiyetli
-rol atama); platform kuralı riski. Raporlarda iki yakınsama var:
-- **Pas zinciri** (üç araştırmacı da ayrı ayrı önerdi; F3'te "Çay Zinciri"): elindekini
-  süre dolmadan `@isim` ya da numarayla başkasına uzatırsın; kimse elenmez; oda birlikte zincir kurar.
-- **Düğün sahnesi** (kına / düğün fotoğrafı / pasta).
+Yeni oyun (sohbetin yönettiği, yorum / beğeni / hediyeyle katılınan): **ÇAY ZİNCİRİ**
+seçildi. Özet ve gerekçe `fikir/SIRALAMA.md`'de, tam tasarım `PLAN-INSAN.md` bölüm
+11.2'de, işçi brifi bölüm 9'da (işçi K, Sonnet; sahne çekirdeğinin deneme sayfası
+hazır olunca başlar). Üç araştırma raporu `fikir/` altında.
+Yayıncı bu seçimi henüz görmedi; itiraz ederse ikinci sıradaki "açık teklifler"dir.
+
+Danışmanın "şimdi başlayabilir" dediği işler: M (pişirme aracı), C (sahne çekirdeği)
+ve E (estetik geçiş). C, `devir/spike/atlas.png` deneme atlasıyla geliştirilebilir.
 
 Karakter kaynakları (`varlik-raporu.md`):
 - Kalabalık için seçilen paket depoda: `tools/sprite-pisir/varlik/quaternius-animated-people/`
@@ -146,8 +144,9 @@ Karakter kaynakları (`varlik-raporu.md`):
 - Hiçbir pakette halay adımı yok: yana yürüyüşü yavaşlatmak ya da kısa bir el yapımı
   kemik döngüsü gerekir (rapor bölüm 3).
 
-Danışmanın temizlik işi için bağımsız kontrolü de bitmemişti (ana oturumun kendi
-kontrolü geçti: regress dikey 4/4, yatay 2/2, ölü referans yok).
+Temizlik danışmanın bağımsız kontrolünden geçti (sec-probe 117 denemede 0 bulgu;
+merkez at → halay → tencere sırasıyla tur sınırında dönüyor; panelde ölü bağlantı
+yok; dört yayıncı aracı üç kipte hatasız; README kodla uyumlu).
 
 ## 7. Test kiti (`devir/kit/`)
 
@@ -198,6 +197,18 @@ node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 | `varlik-raporu.md` | CC0 insan karakter paketleri: hangisi indirilebildi, lisansları, klipleri, öneri |
 | `kit/` | Danışmanın test betikleri |
 
-## Ek: devir anındaki durum
+| `fikir/SIRALAMA.md` | Yeni oyun kararı: ÇAY ZİNCİRİ, sıralama tablosu, gerekçe |
+| `spike/` | Danışmanın sprite denemesi: `atlas.png` (bir karakter, 8 yön × 16 kare) ve deneme sayfaları |
 
-Bu bölüm, önceki oturum kapanmadan önce son kez güncellenir.
+## Ek: devir anındaki durum (11 Kasım 2026)
+
+- Son exe: https://github.com/alperen-ship-it/tiktok-deniyorum/actions/runs/42934129788
+  (commit `53e9ce9`). Üç oyun + merkez + `kontrol.html`. Temizlik danışman
+  kontrolünden geçti; `kontrol.html` yalnızca ana oturumca sınandı (köprü deneme
+  kipinde, 1080×1920, 405×720 ve 1280×720).
+- Çalışan alt ajan kalmadı. Bitmemiş uygulama işi yok: PLAN-INSAN'daki işlerin
+  hiçbirine (M, C, E, K, H, N, A, D) başlanmadı.
+- Yayıncıdan beklenen: `kontrol.html` ekran görüntüsü (TikTok LIVE Studio ve OBS).
+- Yayıncıya sorulacak: profil resimleri karakterin yüzünde varsayılan olarak açık mı
+  olsun (kendisi istedi; `?yuz=0` ve panel anahtarı planlandı), ÇAY ZİNCİRİ seçimine
+  itirazı var mı.

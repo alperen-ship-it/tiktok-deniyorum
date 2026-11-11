@@ -1,0 +1,4 @@
+<!doctype html><canvas id="c" width="200" height="200"></canvas><script>
+const im = new Image(); im.referrerPolicy = 'no-referrer'; im.onload = () => { const x = document.getElementById('c').getContext('2d'); const d = document.createElement('canvas'); d.width = d.height = 100; const dx = d.getContext('2d'); dx.beginPath(); dx.arc(50, 50, 48, 0, 7); dx.clip(); dx.drawImage(im, 0, 0, 96, 128, 0, 0, 100, 100); x.fillStyle = '#0a0'; x.fillRect(0, 0, 200, 200); x.drawImage(d, 50, 50);
+  const r = {}; try { x.getImageData(0, 0, 1, 1); r.oku = 'OKUNDU'; } catch (e) { r.oku = e.name; } try { document.getElementById('c').toDataURL(); r.url = 'OKUNDU'; } catch (e) { r.url = e.name; } window.__r = r; }; im.onerror = () => { window.__r = { hata: 1 }; }; im.src = 'http://localhost:9068/a.png';
+</script>

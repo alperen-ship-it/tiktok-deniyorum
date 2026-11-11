@@ -1,0 +1,4 @@
+<!doctype html><canvas id="c" width="1080" height="1920"></canvas><script>
+const t0 = performance.now(); const N = +(new URLSearchParams(location.search).get('n') || 12); const cx = document.getElementById('c').getContext('2d', { alpha: false }); let ok = 0; const ims = [];
+for (let i = 0; i < N; i++) { const im = new Image(); im.onload = async () => { try { await im.decode(); } catch (e) {} ok++; if (ok === 1) window.__ilk = performance.now() - t0; if (ok === N) { const a = performance.now(); for (const x of ims) for (let k = 0; k < 150 / N; k++) cx.drawImage(x, 0, 0, 96, 128, Math.random() * 900, Math.random() * 1700, 96, 128); cx.getImageData(0, 0, 1, 1); window.__r = { n: N, ilkAtlasMs: Math.round(window.__ilk), hepsiMs: Math.round(a - t0), ilkKareMs: Math.round(performance.now() - t0), heap: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) : null }; } }; im.src = 'atlas.png?v=' + i; ims.push(im); }
+</script>

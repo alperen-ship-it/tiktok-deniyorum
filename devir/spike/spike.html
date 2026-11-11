@@ -1,0 +1,65 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#241a3a}canvas{display:block}</style><body><script type="module">
+import * as THREE from './v/three.module.min.js';
+import { GLTFLoader } from './v/jsm/loaders/GLTFLoader.js';
+import * as SkeletonUtils from './v/jsm/utils/SkeletonUtils.js';
+import { mergeGeometries } from './v/jsm/utils/BufferGeometryUtils.js';
+const q = new URLSearchParams(location.search); const N = +(q.get('n') || 150), H = +(q.get('h') || 0), BIRLES = q.get('birles') === '1', YUZ = q.get('yuz') !== '0', PR = +(q.get('pr') || 1);
+const r = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' }); r.setPixelRatio(PR); r.setSize(1080, 1920); document.body.appendChild(r.domElement);
+const sc = new THREE.Scene(); sc.background = new THREE.Color(0x3a2748);
+const cam = new THREE.PerspectiveCamera(32, 1080 / 1920, 0.5, 80); cam.position.set(0, 13, 17); cam.lookAt(0, 0.5, 0);
+sc.add(new THREE.HemisphereLight(0xfff0dd, 0x4a3a66, 1.5)); const dl = new THREE.DirectionalLight(0xffffff, 1.2); dl.position.set(4, 9, 6); sc.add(dl);
+const zemin = new THREE.Mesh(new THREE.CircleGeometry(12, 40), new THREE.MeshLambertMaterial({ color: 0xb98b4a })); zemin.rotation.x = -Math.PI / 2; sc.add(zemin);
+// ---- kalabalik: parca-ornekli insan (govde, kafa, yuz, sapka, kol x4 parca, bacak x4 parca)
+const L = () => new THREE.MeshLambertMaterial({});
+const gTorso = new THREE.CylinderGeometry(0.2, 0.26, 0.62, 8, 1); gTorso.translate(0, 0.31, 0);
+const gKafa = new THREE.SphereGeometry(0.2, 10, 8);
+const gYuz = new THREE.CircleGeometry(0.17, 12);
+const gSapka = new THREE.CylinderGeometry(0.21, 0.23, 0.1, 8); gSapka.translate(0, 0.17, 0);
+const gUzuv = new THREE.CylinderGeometry(0.065, 0.055, 0.3, 6, 1); gUzuv.translate(0, -0.15, 0);
+const gBacak = new THREE.CylinderGeometry(0.085, 0.07, 0.36, 6, 1); gBacak.translate(0, -0.18, 0);
+const IM = (g, m, n) => { const x = new THREE.InstancedMesh(g, m, n); x.frustumCulled = false; sc.add(x); return x; };
+const mTorso = IM(gTorso, L(), N), mKafa = IM(gKafa, L(), N), mSapka = IM(gSapka, L(), N), mKol = IM(gUzuv, L(), N * 4), mBacak = IM(gBacak, L(), N * 4);
+// yuz: avatar atlasi (8x8 hucre, 64px) — tek doku, ornek basina uv ofseti
+const AT = document.createElement('canvas'); AT.width = AT.height = 512; const ax = AT.getContext('2d');
+for (let i = 0; i < 64; i++) { const x = (i % 8) * 64, y = (i >> 3) * 64; ax.fillStyle = `hsl(${i * 47 % 360} 70% 60%)`; ax.fillRect(x, y, 64, 64); ax.fillStyle = '#fff'; ax.font = 'bold 40px sans-serif'; ax.textAlign = 'center'; ax.textBaseline = 'middle'; ax.fillText(String.fromCharCode(65 + i % 26), x + 32, y + 34); }
+const atTex = new THREE.CanvasTexture(AT); atTex.colorSpace = THREE.SRGBColorSpace;
+const yuzMat = new THREE.MeshBasicMaterial({ map: atTex });
+yuzMat.onBeforeCompile = (s) => { s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 hucre;').replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv = (uv + hucre) / 8.0;'); };
+gYuz.setAttribute('hucre', new THREE.InstancedBufferAttribute(new Float32Array(N * 2), 2));
+const mYuz = YUZ ? IM(gYuz, yuzMat, N) : null;
+const fig = []; const halkalar = [[24, 3.4], [48, 5.6], [78, 7.8]]; let k = 0;
+for (const [n, rr] of halkalar) for (let i = 0; i < n && k < N; i++, k++) fig.push({ a: i / n * 6.283, r: rr, f: Math.random() * 6.283 });
+const c = new THREE.Color();
+fig.forEach((f, i) => { c.setHSL((i * 0.137) % 1, 0.6, 0.5); mTorso.setColorAt(i, c); c.setHSL(0.07, 0.5, 0.72); mKafa.setColorAt(i, c); c.setHSL((i * 0.31) % 1, 0.5, 0.35); mSapka.setColorAt(i, c); for (let j = 0; j < 4; j++) { c.setHSL((i * 0.137) % 1, 0.6, j % 2 ? 0.72 : 0.5); mKol.setColorAt(i * 4 + j, c); c.setHSL(0.6, 0.3, j % 2 ? 0.2 : 0.3); mBacak.setColorAt(i * 4 + j, c); } if (mYuz) { gYuz.attributes.hucre.setXY(i, i % 8, (i >> 3) % 8); } });
+const M = new THREE.Matrix4(), M2 = new THREE.Matrix4(), M3 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), S1 = new THREE.Vector3(1, 1, 1);
+const kur = (px, py, pz, rx, ry, rz) => M2.compose(V.set(px, py, pz), Q.setFromEuler(E.set(rx, ry, rz)), S1);
+function kalabalik(t) {
+  for (let i = 0; i < fig.length; i++) { const f = fig[i]; const a = f.a + t * 0.25 * (f.r > 5 && f.r < 7 ? -1 : 1); const x = Math.cos(a) * f.r, z = Math.sin(a) * f.r; const ph = t * 4.2 + f.f * 0; const zip = Math.abs(Math.sin(ph)) * 0.08;
+    M.compose(V.set(x, 0.74 + zip, z), Q.setFromEuler(E.set(0, -a + Math.PI / 2 + Math.PI / 2, 0)), S1);   // kok: kalca
+    mTorso.setMatrixAt(i, M);
+    M3.multiplyMatrices(M, kur(0, 0.82, 0, 0, Math.sin(ph * 0.5) * 0.15, 0)); mKafa.setMatrixAt(i, M3); mSapka.setMatrixAt(i, M3);
+    if (mYuz) { M3.multiplyMatrices(M3, kur(0, 0, 0.165, -0.05, 0, 0)); mYuz.setMatrixAt(i, M3); }
+    for (let s = 0; s < 2; s++) { const sg = s ? 1 : -1; const kol = 1.25 + Math.sin(ph + s) * 0.15;   // kollar yana, omuz hizasinda (halay tutusu)
+      M3.multiplyMatrices(M, kur(sg * 0.24, 0.56, 0, 0, 0, sg * kol)); mKol.setMatrixAt(i * 4 + s * 2, M3);
+      M3.multiplyMatrices(M3, kur(0, -0.3, 0, -0.5 - Math.sin(ph) * 0.2, 0, 0)); mKol.setMatrixAt(i * 4 + s * 2 + 1, M3);
+      const bac = Math.sin(ph + s * Math.PI) * 0.55;
+      M3.multiplyMatrices(M, kur(sg * 0.11, 0.02, 0, bac, 0, 0)); mBacak.setMatrixAt(i * 4 + s * 2, M3);
+      M3.multiplyMatrices(M3, kur(0, -0.36, 0, Math.max(0, -bac) * 1.2, 0, 0)); mBacak.setMatrixAt(i * 4 + s * 2 + 1, M3); } }
+  for (const m of [mTorso, mKafa, mSapka, mKol, mBacak, mYuz]) if (m) m.instanceMatrix.needsUpdate = true;
+}
+// ---- kahramanlar: KayKit iskeletli
+const mixers = [];
+if (H > 0) { const g = await new GLTFLoader().loadAsync('./Rogue.glb'); const klip = (ad) => g.animations.find((a) => a.name === ad);
+  for (let h = 0; h < H; h++) { const o = SkeletonUtils.clone(g.scene); const sil = []; o.traverse((x) => { if (x.isMesh && !x.isSkinnedMesh) sil.push(x); if (x.isSkinnedMesh) x.frustumCulled = false; }); sil.forEach((x) => x.parent.remove(x));
+    if (BIRLES) { const sk = []; o.traverse((x) => { if (x.isSkinnedMesh) sk.push(x); }); const geo = mergeGeometries(sk.map((x) => x.geometry), false); const tek = new THREE.SkinnedMesh(geo, sk[0].material); tek.frustumCulled = false; tek.bind(sk[0].skeleton, sk[0].bindMatrix); sk[0].parent.add(tek); sk.forEach((x) => x.parent.remove(x)); }
+    let kafa = null; o.traverse((x) => { if (x.isBone && x.name === 'head') kafa = x; });
+    if (YUZ && kafa) { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const cx = cv.getContext('2d'); cx.fillStyle = `hsl(${h * 60} 70% 55%)`; cx.beginPath(); cx.arc(64, 64, 64, 0, 7); cx.fill(); cx.fillStyle = '#fff'; cx.font = 'bold 80px sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('AMZK'[h % 4], 64, 68); const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; const yz = new THREE.Mesh(new THREE.CircleGeometry(0.42, 20), new THREE.MeshBasicMaterial({ map: tx })); yz.position.set(0, 0.45, 0.52); kafa.add(yz); }
+    const a = h / H * 6.283; o.position.set(Math.cos(a) * 1.6, 0, Math.sin(a) * 1.6); o.rotation.y = -a + Math.PI / 2; o.scale.setScalar(0.95); sc.add(o);
+    const mx = new THREE.AnimationMixer(o); mx.clipAction(klip(h % 2 ? 'Cheer' : 'Walking_A')).play(); mixers.push(mx); } }
+// ---- olcum
+const ras = []; const js = []; let son = 0, t0 = performance.now();
+function kare(now) { requestAnimationFrame(kare); if (son) ras.push(now - son); const dt = son ? (now - son) / 1000 : 0; son = now; const a = performance.now(); kalabalik((now - t0) / 1000); for (const m of mixers) m.update(Math.min(dt, 0.1)); const b = performance.now(); r.render(sc, cam); js.push(b - a); if (ras.length > 400) { ras.shift(); js.shift(); } }
+requestAnimationFrame(kare);
+window.__olc = () => { const s = ras.slice(-150).sort((x, y) => x - y), j = js.slice(-150); return { n: N, h: H, birles: BIRLES, cagri: r.info.render.calls, ucgen: r.info.render.triangles, kareMs: +(s.reduce((x, y) => x + y, 0) / s.length).toFixed(1), p95: +s[Math.floor(s.length * 0.95)].toFixed(1), jsMs: +(j.reduce((x, y) => x + y, 0) / j.length).toFixed(2), gl: r.getContext().getParameter(r.getContext().VERSION) }; };
+window.__hazir = true;
+</script>

@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#241a3a;overflow:hidden}canvas{display:block}</style><body><canvas id="c" width="1080" height="1920"></canvas><script>
+const q = new URLSearchParams(location.search); const N = +(q.get('n') || 150), ZOOM = q.get('zoom') === '1', YUZ = q.get('yuz') !== '0', ETIKET = +(q.get('etiket') || 8), DPR = +(q.get('pr') || 1);
+const cv = document.getElementById('c'); const cx = cv.getContext('2d', { alpha: false });
+const CW = 96, CH = 128, YON = 8, KARE = 8;
+const at = new Image(); at.src = 'atlas.png';
+// avatarlar: capraz kaynakli gibi davranan gorseller (data: SVG) -> kisi basi onceden kirpilmis 40px disk
+const disk = []; for (let i = 0; i < 24; i++) { const im = new Image(); im.src = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="hsl(${i * 47 % 360} 70% 55%)"/><text x="48" y="66" font-size="56" font-family="sans-serif" font-weight="bold" text-anchor="middle" fill="#fff">${String.fromCharCode(65 + i)}</text></svg>`);
+  const d = document.createElement('canvas'); d.width = d.height = 44; im.onload = () => { const x = d.getContext('2d'); x.beginPath(); x.arc(22, 22, 21, 0, 7); x.clip(); x.drawImage(im, 0, 0, 44, 44); x.lineWidth = 3; x.strokeStyle = '#fff'; x.stroke(); }; disk.push(d); }
+const halkalar = [[24, 250], [48, 390], [78, 520]]; const fig = []; let k = 0;
+for (const [n, r] of halkalar) for (let i = 0; i < n && k < N; i++, k++) fig.push({ a: i / n * 6.283, r, yon: r === 390 ? -1 : 1, i: k, f: (k * 7) % KARE });
+const EGIM = 0.53, MX = 540, MY = 860;          // sahne merkezi (tasarim px), yer duzlemi y ezilmesi
+const ras = [], ciz = []; let son = 0; const sirali = fig.slice();
+function kare(now) { requestAnimationFrame(kare); if (son) ras.push(now - son); son = now; const t0 = performance.now(); const t = now / 1000;
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.fillStyle = '#3a2748'; cx.fillRect(0, 0, 1080, 1920);
+  let z = 1, zx = MX, zy = MY; if (ZOOM) { const u = (Math.sin(t * 0.8) + 1) / 2; z = 1 + 1.2 * u; const h = fig[0]; zx = MX + Math.cos(h.a + t * 0.25) * h.r; zy = MY + Math.sin(h.a + t * 0.25) * h.r * EGIM - 60; }
+  cx.translate(MX, MY); cx.scale(z, z); cx.translate(-zx, -zy);
+  cx.fillStyle = '#b98b4a'; cx.beginPath(); cx.ellipse(MX, MY, 600, 600 * EGIM, 0, 0, 7); cx.fill(); cx.fillStyle = '#8a6a3a'; cx.beginPath(); cx.ellipse(MX, MY, 170, 170 * EGIM, 0, 0, 7); cx.fill();
+  for (const f of fig) { const a = f.a + t * 0.25 * f.yon; f.x = MX + Math.cos(a) * f.r; f.y = MY + Math.sin(a) * f.r * EGIM; f.ya = a; }
+  sirali.sort((p, r) => p.y - r.y);
+  cx.fillStyle = 'rgba(0,0,0,.28)';
+  for (const f of sirali) { cx.beginPath(); cx.ellipse(f.x, f.y, 26, 10, 0, 0, 7); cx.fill(); }
+  const fr = Math.floor(t * 10);
+  for (const f of sirali) { // yon: yuruyus yonu (teget) -> 8 yonden biri ; 0 = kameraya bakan
+    const bak = f.ya + (f.yon > 0 ? Math.PI / 2 : -Math.PI / 2); let yi = Math.round(((Math.PI / 2 - bak) / (Math.PI * 2)) * YON) % YON; if (yi < 0) yi += YON;
+    const kf = (fr + f.f) % KARE + (f.i % 9 === 0 ? KARE : 0); const s = 0.86 + (f.y - MY) / 2600;
+    const w = CW * s * 1.25, h = CH * s * 1.25; cx.drawImage(at, kf * CW, yi * CH, CW, CH, f.x - w / 2, f.y - h * 0.86, w, h);
+    if (YUZ && (yi <= 1 || yi === 7) && f.i % 6 === 0) { const d = disk[f.i % 24]; cx.drawImage(d, f.x - 20 * s + (yi === 1 ? 6 : yi === 7 ? -6 : 0), f.y - h * 0.62, 40 * s, 40 * s); } }
+  cx.font = '800 40px sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  for (let e = 0; e < ETIKET; e++) { const f = fig[(e * 19) % fig.length]; const ad = 'Kisi' + f.i; const w = cx.measureText(ad).width + 28; cx.fillStyle = '#1a1438'; cx.beginPath(); cx.roundRect(f.x - w / 2, f.y - 170, w, 54, 14); cx.fill(); cx.fillStyle = '#fff'; cx.fillText(ad, f.x, f.y - 142); }
+  if (q.get('oku') === '1') cx.getImageData(5, 5, 1, 1);
+  ciz.push(performance.now() - t0); if (ras.length > 400) { ras.shift(); ciz.shift(); } }
+at.onload = () => { requestAnimationFrame(kare); window.__hazir = true; };
+window.__olc = () => { const s = ras.slice(-200).sort((a, b) => a - b), c = ciz.slice(-200).sort((a, b) => a - b); const ort = (a) => +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(2); return { n: N, zoom: ZOOM, rafMs: ort(s), rafP95: +s[Math.floor(s.length * 0.95)].toFixed(1), cizMs: ort(c), cizP95: +c[Math.floor(c.length * 0.95)].toFixed(2) }; };
+</script>

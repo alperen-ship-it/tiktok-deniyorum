@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><body><script type="module">
+import * as THREE from './v/three.module.min.js';
+import { GLTFLoader } from './v/jsm/loaders/GLTFLoader.js';
+const CW = 96, CH = 128, YON = 8, KARE = 8, KLIP = ['Walking_A', 'Cheer'];
+const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(CW * 2, CH * 2); r.setClearColor(0, 0);
+const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xfff4e6, 0x5a4a7a, 1.9)); const dl = new THREE.DirectionalLight(0xffffff, 1.4); dl.position.set(3, 8, 6); sc.add(dl);
+const cam = new THREE.OrthographicCamera(-1.39, 1.39, 1.85, -1.85, 0.1, 50); const EGIM = 32 * Math.PI / 180; cam.position.set(0, 10 * Math.sin(EGIM) + 1.3, 10 * Math.cos(EGIM)); cam.lookAt(0, 1.3, 0);
+const g = await new GLTFLoader().loadAsync('./Rogue.glb'); const o = g.scene; const sil = []; o.traverse((x) => { if (x.isMesh && !x.isSkinnedMesh) sil.push(x); if (x.isSkinnedMesh) x.frustumCulled = false; }); sil.forEach((x) => x.parent.remove(x)); sc.add(o);
+const mx = new THREE.AnimationMixer(o);
+const at = document.createElement('canvas'); at.width = CW * KARE * KLIP.length; at.height = CH * YON; const ax = at.getContext('2d'); ax.imageSmoothingQuality = 'high';
+for (let k = 0; k < KLIP.length; k++) { const klip = g.animations.find((a) => a.name === KLIP[k]); mx.stopAllAction(); const ac = mx.clipAction(klip); ac.play();
+  for (let f = 0; f < KARE; f++) { mx.setTime(klip.duration * f / KARE); for (let y = 0; y < YON; y++) { o.rotation.y = y / YON * Math.PI * 2; r.render(sc, cam); ax.drawImage(r.domElement, (k * KARE + f) * CW, y * CH, CW, CH); } } }
+window.__atlas = at.toDataURL('image/png'); window.__bilgi = { w: at.width, h: at.height, ucgen: r.info.render.triangles };
+</script>
