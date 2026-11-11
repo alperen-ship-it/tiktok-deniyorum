@@ -836,7 +836,7 @@ function hediyeAl(ev) {
   if (uygulanabilir) hediyeUygula(d, tip);
   else bekleyenHediye.push({ d: { kid: d.kid, ad: d.ad }, tur: tip === 'kepce' ? 'cifte' : tip });
   if (bekleyenHediye.length > 60) bekleyenHediye.shift();
-  const not = uygulanabilir ? (tip === 'odun' ? 'Ateşe odun geldi' : 'Körük çalışıyor') : 'Hediyen sıradaki tura gider';
+  const not = uygulanabilir ? (tip === 'odun' ? 'Odun ateşte' : 'Körük çalışıyor') : 'Hediyen sıradaki tura gider';
   soyle(['🎁 ', { kim: d.ad }, ', sağ ol! ' + not], { oncelik: 3, sure: 3400 });
   if (tip === 'kepce') soyle(['🥄 ', { kim: d.ad }, ' ALTIN KEPÇE'], { oncelik: 3, sure: 3000 });
   d.sonAktif = L; panoKirli = true;
