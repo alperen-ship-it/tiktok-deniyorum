@@ -182,6 +182,8 @@ node c4-sim.js 14 1.5 14 10 0.5             # Düdüklü basınç benzetimi
 - `reconnect.js` 135 denetimden 1'inde kalır (`ucusta-basari`): hesap değiştirilirken iki
   bağlantı kısa süre birlikte CONNECTED görünür, sonunda tek bağlantı kalır. İncelenmiş
   eski sürümlerde de aynıdır.
+- `ses-karsilastir.js` karşılaştırma tabanını `kit/head/` altında arar (git'e girmez).
+  Bir kez hazırla: `mkdir -p head && (cd ../.. && git archive 6d2594b overlays server) | tar -x -C head`
 - Güvenli bölge ve punto ölçümleri giriş ya da çıkış animasyonunun ortasındaki öğeyi
   atlar, durağan hâli ölçer. Hediye bandı girerken %3 esner. Banda tam sığan bir ad bu
   150 ms içinde kenar payına 8 piksel taşar, durağan hâlde payın içindedir.
